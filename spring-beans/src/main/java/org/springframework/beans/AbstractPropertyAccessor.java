@@ -16,12 +16,12 @@
 
 package org.springframework.beans;
 
+import org.springframework.lang.Nullable;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import org.springframework.lang.Nullable;
 
 /**
  * Abstract implementation of the {@link PropertyAccessor} interface.
@@ -34,6 +34,9 @@ import org.springframework.lang.Nullable;
  * @see #getPropertyValue
  * @see #setPropertyValue
  */
+// {@link PropertyAccessor} 接口的抽象实现。提供所有便利方法的基本实现，实际属性访问的实现留给子类
+// 存储介质 和 后续的数据绑定密切相关 {@link DataBinder}
+// 存储访问器
 public abstract class AbstractPropertyAccessor extends TypeConverterSupport implements ConfigurablePropertyAccessor {
 
 	private boolean extractOldValueForEditor = false;
@@ -84,6 +87,7 @@ public abstract class AbstractPropertyAccessor extends TypeConverterSupport impl
 		setPropertyValues(pvs, ignoreUnknown, false);
 	}
 
+	// 批量操作：
 	@Override
 	public void setPropertyValues(PropertyValues pvs, boolean ignoreUnknown, boolean ignoreInvalid)
 			throws BeansException {
@@ -101,6 +105,7 @@ public abstract class AbstractPropertyAccessor extends TypeConverterSupport impl
 				// here, if there is a critical failure such as no matching field.
 				// We can attempt to deal only with less serious exceptions.
 				try {
+					// 迭代将 PropertyValue 逐一操作
 					setPropertyValue(pv);
 				}
 				catch (NotWritablePropertyException ex) {
