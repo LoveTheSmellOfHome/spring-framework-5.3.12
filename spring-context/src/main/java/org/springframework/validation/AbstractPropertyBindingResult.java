@@ -57,6 +57,7 @@ public abstract class AbstractPropertyBindingResult extends AbstractBindingResul
 	}
 
 
+	// ConversionService：类型转换服务，替代 Java Beans 提供的 PropertyEditor
 	public void initConversion(ConversionService conversionService) {
 		Assert.notNull(conversionService, "ConversionService must not be null");
 		this.conversionService = conversionService;

@@ -36,6 +36,9 @@ import org.springframework.util.StringUtils;
  * @see #setConfigLocations
  * @see #getDefaultConfigLocations
  */
+// AbstractRefreshableApplicationContext 子类，添加了对指定配置位置的通用处理。
+// 作为基于 XML 的应用程序上下文实现的基类，例如 ClassPathXmlApplicationContext 和 FileSystemXmlApplicationContext ，
+// 以及 org.springframework.web.context.support.XmlWebApplicationContext
 public abstract class AbstractRefreshableConfigApplicationContext extends AbstractRefreshableApplicationContext
 		implements BeanNameAware, InitializingBean {
 
@@ -48,6 +51,7 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	/**
 	 * Create a new AbstractRefreshableConfigApplicationContext with no parent.
 	 */
+	// 创建一个没有父级的新 AbstractRefreshableConfigApplicationContext。
 	public AbstractRefreshableConfigApplicationContext() {
 	}
 
@@ -55,6 +59,8 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	 * Create a new AbstractRefreshableConfigApplicationContext with the given parent context.
 	 * @param parent the parent context
 	 */
+	// 使用给定的父上下文创建一个新的 AbstractRefreshableConfigApplicationContext。
+	// 参形：parent – 父上下文
 	public AbstractRefreshableConfigApplicationContext(@Nullable ApplicationContext parent) {
 		super(parent);
 	}
@@ -65,6 +71,8 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	 * i.e. with distinct locations separated by commas, semicolons or whitespace.
 	 * <p>If not set, the implementation may use a default as appropriate.
 	 */
+	// 以 init-param 样式设置此应用程序上下文的配置位置，即用逗号、分号或空格分隔的不同位置。
+	// 如果未设置，则实现可能会酌情使用默认值。
 	public void setConfigLocation(String location) {
 		setConfigLocations(StringUtils.tokenizeToStringArray(location, CONFIG_LOCATION_DELIMITERS));
 	}
@@ -73,6 +81,8 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	 * Set the config locations for this application context.
 	 * <p>If not set, the implementation may use a default as appropriate.
 	 */
+	// 设置此应用程序上下文的配置位置。
+	// 如果未设置，则实现可能会酌情使用默认值
 	public void setConfigLocations(@Nullable String... locations) {
 		if (locations != null) {
 			Assert.noNullElements(locations, "Config locations must not be null");
@@ -96,6 +106,11 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	 * @see #getResources
 	 * @see #getResourcePatternResolver
 	 */
+	// 返回资源位置数组，引用构建此上下文的 XML bean 定义文件。 还可以包括位置模式，
+	// 这将通过 ResourcePatternResolver 得到解决。
+	// 默认实现返回null 。 子类可以覆盖它以提供一组资源位置以从中加载 bean 定义。
+	// 返回值：
+	//			资源位置数组，如果没有则为null
 	@Nullable
 	protected String[] getConfigLocations() {
 		return (this.configLocations != null ? this.configLocations : getDefaultConfigLocations());
@@ -109,6 +124,10 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	 * @return an array of default config locations, if any
 	 * @see #setConfigLocations
 	 */
+	// 在未指定显式配置位置的情况下，返回要使用的默认配置位置。
+	// 默认实现返回null ，需要明确的配置位置。
+	// 返回值：
+	//			一组默认配置位置（如果有）
 	@Nullable
 	protected String[] getDefaultConfigLocations() {
 		return null;
@@ -121,6 +140,11 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	 * @return the resolved file path
 	 * @see org.springframework.core.env.Environment#resolveRequiredPlaceholders(String)
 	 */
+	// 解析给定的路径，如有必要，将占位符替换为相应的环境属性值。 应用于配置位置。
+	// 参形：
+	//			path – 原始文件路径
+	// 返回值：
+	//			解析的文件路径
 	protected String resolvePath(String path) {
 		return getEnvironment().resolveRequiredPlaceholders(path);
 	}
@@ -136,6 +160,7 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	 * Sets the id of this context to the bean name by default,
 	 * for cases where the context instance is itself defined as a bean.
 	 */
+	// 默认情况下将此上下文的 id 设置为 bean 名称，对于上下文实例本身定义为 bean 的情况。
 	@Override
 	public void setBeanName(String name) {
 		if (!this.setIdCalled) {
@@ -148,6 +173,7 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	 * Triggers {@link #refresh()} if not refreshed in the concrete context's
 	 * constructor already.
 	 */
+	// 如果尚未在具体上下文的构造函数中刷新，则触发refresh() 。
 	@Override
 	public void afterPropertiesSet() {
 		if (!isActive()) {

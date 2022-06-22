@@ -81,6 +81,9 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 		return cs;
 	}
 
+	// 使用指定的 ConfigurableConversionService，替换默认实现。
+	// 其中 Spring Boot 或者 Spring Cloud 中它的实现并不是默认实现 {@link DefaultConversionService}
+	// Spring Boot 中是 {@link DefaultFormattingConversionService}
 	@Override
 	public void setConversionService(ConfigurableConversionService conversionService) {
 		Assert.notNull(conversionService, "ConversionService must not be null");
@@ -140,6 +143,7 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 		Collections.addAll(this.requiredProperties, requiredProperties);
 	}
 
+	// 预设哪些属性是必要的
 	@Override
 	public void validateRequiredProperties() {
 		MissingRequiredPropertiesException ex = new MissingRequiredPropertiesException();
@@ -236,6 +240,7 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 	}
 
 	private String doResolvePlaceholders(String text, PropertyPlaceholderHelper helper) {
+		// 解析占位符，委托 PropertyPlaceholderHelper 去解析
 		return helper.replacePlaceholders(text, this::getPropertyAsRawString);
 	}
 
@@ -247,12 +252,19 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 	 * is necessary
 	 * @since 4.3.5
 	 */
+	// 如有必要，将给定值转换为指定的目标类型
+	// @param value 原始属性值
+	// @param targetType 属性检索的指定目标类型
+	// @return 转换后的值，如果不需要转换则返回原始值
+	// Spring 类型转换在 Environment 中的运用的核心方法
 	@SuppressWarnings("unchecked")
 	@Nullable
 	protected <T> T convertValueIfNecessary(Object value, @Nullable Class<T> targetType) {
+		// 如果不需要转换直接返回目标类型 T
 		if (targetType == null) {
 			return (T) value;
 		}
+		// 类型转换服务
 		ConversionService conversionServiceToUse = this.conversionService;
 		if (conversionServiceToUse == null) {
 			// Avoid initialization of shared DefaultConversionService if
@@ -260,8 +272,10 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 			if (ClassUtils.isAssignableValue(targetType, value)) {
 				return (T) value;
 			}
+			// 如果本地没有类型转换服务就用当前上下文中的共享实例（单例）
 			conversionServiceToUse = DefaultConversionService.getSharedInstance();
 		}
+		// 调用类型转换，将 value 转换成指定类型
 		return conversionServiceToUse.convert(value, targetType);
 	}
 

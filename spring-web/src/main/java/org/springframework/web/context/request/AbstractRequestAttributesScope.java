@@ -35,6 +35,9 @@ import org.springframework.lang.Nullable;
  * @author Rob Harrop
  * @since 2.0
  */
+// 从当前线程绑定的 RequestAttributes 对象中的特定范围读取的抽象 Scope 实现。
+// 子类只需要实现 getScope()来指示此类从哪个 RequestAttributes 范围读取属性。
+// 子类可能希望覆盖 get 和 remove 方法，以将回调周围的同步添加到这个超类中。
 public abstract class AbstractRequestAttributesScope implements Scope {
 
 	@Override
@@ -46,10 +49,12 @@ public abstract class AbstractRequestAttributesScope implements Scope {
 			attributes.setAttribute(name, scopedObject, getScope());
 			// Retrieve object again, registering it for implicit session attribute updates.
 			// As a bonus, we also allow for potential decoration at the getAttribute level.
+			// 再次检索对象，为隐式会话属性更新注册它。作为奖励，我们还允许在 getAttribute 级别进行潜在的修饰。
 			Object retrievedObject = attributes.getAttribute(name, getScope());
 			if (retrievedObject != null) {
 				// Only proceed with retrieved object if still present (the expected case).
 				// If it disappeared concurrently, we return our locally created instance.
+				// 如果仍然存在（预期的情况），则仅继续处理检索到的对象。如果它同时消失，我们返回本地创建的实例。
 				scopedObject = retrievedObject;
 			}
 		}
@@ -91,6 +96,9 @@ public abstract class AbstractRequestAttributesScope implements Scope {
 	 * @see RequestAttributes#SCOPE_REQUEST
 	 * @see RequestAttributes#SCOPE_SESSION
 	 */
+	// 确定实际目标范围的模板方法。
+	// 返回值：目标范围，以适当的 RequestAttributes 常量的形式
+	// 请参阅：RequestAttributes.SCOPE_REQUEST , RequestAttributes.SCOPE_SESSION
 	protected abstract int getScope();
 
 }
