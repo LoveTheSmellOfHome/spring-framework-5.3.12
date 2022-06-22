@@ -16,15 +16,6 @@
 
 package org.springframework.context.event;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
-
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanFactory;
@@ -40,6 +31,10 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 /**
  * Abstract implementation of the {@link ApplicationEventMulticaster} interface,
@@ -64,8 +59,10 @@ import org.springframework.util.ObjectUtils;
 public abstract class AbstractApplicationEventMulticaster
 		implements ApplicationEventMulticaster, BeanClassLoaderAware, BeanFactoryAware {
 
+	// DefaultListenerRetriever 事件监听获取器
 	private final DefaultListenerRetriever defaultRetriever = new DefaultListenerRetriever();
 
+	// 事件类型，多个 Listener 的 Map 关联
 	final Map<ListenerCacheKey, CachedListenerRetriever> retrieverCache = new ConcurrentHashMap<>(64);
 
 	@Nullable
@@ -102,6 +99,7 @@ public abstract class AbstractApplicationEventMulticaster
 
 	@Override
 	public void addApplicationListener(ApplicationListener<?> listener) {
+		// 加锁，操作时同步的，原子的，这个锁主要两方面同步，一个是 defaultRetriever 和它的默认实现，
 		synchronized (this.defaultRetriever) {
 			// Explicitly remove target for a proxy, if registered already,
 			// in order to avoid double invocations of the same listener.
@@ -109,6 +107,7 @@ public abstract class AbstractApplicationEventMulticaster
 			if (singletonTarget instanceof ApplicationListener) {
 				this.defaultRetriever.applicationListeners.remove(singletonTarget);
 			}
+			// 将事件加入并缓存卡里
 			this.defaultRetriever.applicationListeners.add(listener);
 			this.retrieverCache.clear();
 		}
@@ -184,17 +183,23 @@ public abstract class AbstractApplicationEventMulticaster
 	 * @return a Collection of ApplicationListeners
 	 * @see org.springframework.context.ApplicationListener
 	 */
+	// 返回与给定事件类型匹配的 ApplicationListeners 的集合。不匹配的听众会被提前排除
+	// @param event 要传播的事件。允许根据缓存的匹配信息尽早排除不匹配的监听器
+	// @param eventType 事件类型
+	// @return 一组与当前事件相关的 ApplicationListeners
 	protected Collection<ApplicationListener<?>> getApplicationListeners(
 			ApplicationEvent event, ResolvableType eventType) {
 
 		Object source = event.getSource();
 		Class<?> sourceType = (source != null ? source.getClass() : null);
+		// 构造一个 ListenerCacheKey
 		ListenerCacheKey cacheKey = new ListenerCacheKey(eventType, sourceType);
 
 		// Potential new retriever to populate
 		CachedListenerRetriever newRetriever = null;
 
 		// Quick check for existing entry on ConcurrentHashMap
+		// 从缓存中取出 CachedListenerRetriever(多个和当前事件相关的 Listener)
 		CachedListenerRetriever existingRetriever = this.retrieverCache.get(cacheKey);
 		if (existingRetriever == null) {
 			// Caching a new ListenerRetriever if possible
@@ -382,16 +387,19 @@ public abstract class AbstractApplicationEventMulticaster
 	/**
 	 * Cache key for ListenerRetrievers, based on event type and source type.
 	 */
+	// ListenerRetrievers 的缓存键，基于事件类型和源类型，通过事件的类型来做一个区分
 	private static final class ListenerCacheKey implements Comparable<ListenerCacheKey> {
 
+		// ApplicationListener<MySpringEvent> 代表监听器中的具体事件类型 MySpringEvent，不可为空
 		private final ResolvableType eventType;
 
+		// 事件的原始类型是可以为空的
 		@Nullable
 		private final Class<?> sourceType;
 
 		public ListenerCacheKey(ResolvableType eventType, @Nullable Class<?> sourceType) {
 			Assert.notNull(eventType, "Event type must not be null");
-			this.eventType = eventType;
+			this.eventType = eventType; // 具体类型代表参数化，如 ApplicationListener<MySpringEvent> 中的 MySpringEvent
 			this.sourceType = sourceType;
 		}
 
@@ -483,6 +491,11 @@ public abstract class AbstractApplicationEventMulticaster
 	/**
 	 * Helper class that encapsulates a general set of target listeners.
 	 */
+	// 封装一组通用目标监听器的帮助器类，它是一个集合封装对象，一个 DefaultListenerRetriever 会包含多个 Listeners
+	// 它和 Set<ApplicationListener> 的区别：在于 ListenerCacheKey 中我们指定的事件类型被具体化了，
+	// 当我们注册这么多监听器时候，我们在发布监听的时候，我们用类型的方式进行筛选，ListenerCacheKey 的属性 ResolvableType就是
+	// 事件类型具体化后的类型，如：ApplicationListener<MySpringEvent> (ListenerCacheKey#ResolvableType)
+	// 就是代表监听器中的具体事件类型 MySpringEvent
 	private class DefaultListenerRetriever {
 
 		public final Set<ApplicationListener<?>> applicationListeners = new LinkedHashSet<>();
@@ -506,6 +519,7 @@ public abstract class AbstractApplicationEventMulticaster
 					catch (NoSuchBeanDefinitionException ex) {
 						// Singleton listener instance (without backing bean definition) disappeared -
 						// probably in the middle of the destruction phase
+						// 单例监听器实例（没有支持 bean 定义）消失了——可能在销毁阶段的中间
 					}
 				}
 			}

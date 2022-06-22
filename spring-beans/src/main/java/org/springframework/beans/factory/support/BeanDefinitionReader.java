@@ -37,6 +37,9 @@ import org.springframework.lang.Nullable;
  * @since 1.1
  * @see org.springframework.core.io.Resource
  */
+// bean 定义阅读器的简单接口。使用 Resource 和 String 位置参数指定加载方法。是一个面向资源的接口
+// <p>具体的 bean 定义读者当然可以为 bean 定义添加额外的加载和注册方法，特定于他们的 bean 定义格式。
+// <p>请注意，bean 定义阅读器不必实现此接口。它仅作为想要遵循标准命名约定的 bean 定义读者的建议
 public interface BeanDefinitionReader {
 
 	/**
@@ -44,6 +47,8 @@ public interface BeanDefinitionReader {
 	 * <p>The factory is exposed through the BeanDefinitionRegistry interface,
 	 * encapsulating the methods that are relevant for bean definition handling.
 	 */
+	// 返回 bean 工厂以注册 bean 定义。
+	// <p>工厂通过 BeanDefinitionRegistry 接口公开，封装了与 bean 定义处理相关的方法。
 	BeanDefinitionRegistry getRegistry();
 
 	/**
@@ -63,6 +68,14 @@ public interface BeanDefinitionReader {
 	 * @see #loadBeanDefinitions(String)
 	 * @see org.springframework.core.io.support.ResourcePatternResolver
 	 */
+	// 返回用于资源位置的资源加载器。可以检查 <b>ResourcePatternResolver<b> 接口并进行相应的转换，以便为给定的资源模式加载多个资源。
+	// <p>{@code null} 返回值表明绝对资源加载不可用于此 bean 定义阅读器。
+	// <p>这主要用于从 bean 定义资源中导入更多资源，例如通过 XML bean 定义中的“import”标签。
+	// 但是，建议相对于定义资源应用此类导入；只有明确的完整资源位置才会触发绝对资源加载。
+	// <p>还有一个 {@code loadBeanDefinitions(String)} 方法可用，用于从资源位置（或位置模式）加载 bean 定义。
+	// 这是避免显式 ResourceLoader 处理的便利。
+	// @see loadBeanDefinitions(String)
+	// @see org.springframework.core.io.support.ResourcePatternResolver
 	@Nullable
 	ResourceLoader getResourceLoader();
 
@@ -72,6 +85,8 @@ public interface BeanDefinitionReader {
 	 * but rather to just register bean definitions with class names,
 	 * with the corresponding Classes to be resolved later (or never).
 	 */
+	// 返回用于 bean 类的类加载器。
+	// <p>{@code null} 建议不要急切地加载 bean 类，而是只用类名注册 bean 定义，稍后（或永远不会）解析相应的类
 	@Nullable
 	ClassLoader getBeanClassLoader();
 
@@ -79,6 +94,7 @@ public interface BeanDefinitionReader {
 	 * Return the BeanNameGenerator to use for anonymous beans
 	 * (without explicit bean name specified).
 	 */
+	// 返回 BeanNameGenerator 以用于匿名 bean（未指定显式 bean 名称）。
 	BeanNameGenerator getBeanNameGenerator();
 
 
@@ -88,6 +104,10 @@ public interface BeanDefinitionReader {
 	 * @return the number of bean definitions found
 	 * @throws BeanDefinitionStoreException in case of loading or parsing errors
 	 */
+	// 从指定的资源加载 bean 定义。
+	// @param resource 资源描述符
+	// @return 找到的 bean 定义数
+	// @throws BeanDefinitionStoreException 在加载或解析错误的情况下
 	int loadBeanDefinitions(Resource resource) throws BeanDefinitionStoreException;
 
 	/**
@@ -96,6 +116,10 @@ public interface BeanDefinitionReader {
 	 * @return the number of bean definitions found
 	 * @throws BeanDefinitionStoreException in case of loading or parsing errors
 	 */
+	// 从指定的资源加载 bean 定义。
+	// @param resources 资源描述符
+	// @return 找到的 bean 定义的数量
+	// @throws BeanDefinitionStoreException 在加载或解析错误的情况下
 	int loadBeanDefinitions(Resource... resources) throws BeanDefinitionStoreException;
 
 	/**
@@ -110,6 +134,14 @@ public interface BeanDefinitionReader {
 	 * @see #loadBeanDefinitions(org.springframework.core.io.Resource)
 	 * @see #loadBeanDefinitions(org.springframework.core.io.Resource[])
 	 */
+	// 从指定的资源位置加载 bean 定义。
+	// <p>位置也可以是位置模式，前提是这个 bean 定义阅读器的 ResourceLoader 是一个 ResourcePatternResolver。
+	// @param location 资源位置，用这个bean定义读取器的ResourceLoader（或ResourcePatternResolver）加载
+	// @return找到的bean定义数
+	// @throws BeanDefinitionStoreException以防加载或解析错误
+	// @see getResourceLoader()
+	// @see loadBeanDefinitions(org .springframework.core.io.Resource)
+	// @see loadBeanDefinitions(org.springframework.core.io.Resource[])
 	int loadBeanDefinitions(String location) throws BeanDefinitionStoreException;
 
 	/**
@@ -119,6 +151,9 @@ public interface BeanDefinitionReader {
 	 * @return the number of bean definitions found
 	 * @throws BeanDefinitionStoreException in case of loading or parsing errors
 	 */
+	// 从指定的资源位置加载 bean 定义。
+	// @param 定位资源位置，用这个 bean 定义读取器的 ResourceLoader（或 ResourcePatternResolver）加载
+	// @return 找到的 bean 定义的数量 @throws BeanDefinitionStoreException 在加载或解析错误的情况
 	int loadBeanDefinitions(String... locations) throws BeanDefinitionStoreException;
 
 }

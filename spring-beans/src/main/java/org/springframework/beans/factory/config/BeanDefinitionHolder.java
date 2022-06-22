@@ -37,6 +37,9 @@ import org.springframework.util.StringUtils;
  * @see org.springframework.beans.factory.support.RootBeanDefinition
  * @see org.springframework.beans.factory.support.ChildBeanDefinition
  */
+// 带有名称和别名的 BeanDefinition 的持有者。可以注册为内部 bean 的占位符。
+//
+// <p>也可用于内部 bean 定义的编程注册。如果你不关心 BeanNameAware 之类的，注册 RootBeanDefinition 或 ChildBeanDefinition 就足够了
 public class BeanDefinitionHolder implements BeanMetadataElement {
 
 	private final BeanDefinition beanDefinition;
@@ -95,6 +98,7 @@ public class BeanDefinitionHolder implements BeanMetadataElement {
 	/**
 	 * Return the primary name of the bean, as specified for the bean definition.
 	 */
+	// 返回 bean 的主要名称，如为 bean 定义指定的。
 	public String getBeanName() {
 		return this.beanName;
 	}
@@ -103,6 +107,8 @@ public class BeanDefinitionHolder implements BeanMetadataElement {
 	 * Return the alias names for the bean, as specified directly for the bean definition.
 	 * @return the array of alias names, or {@code null} if none
 	 */
+	// 返回 bean 的别名，如为 bean 定义直接指定的那样。
+	// @return 别名数组，或者 {@code null} 如果没有
 	@Nullable
 	public String[] getAliases() {
 		return this.aliases;
@@ -112,6 +118,7 @@ public class BeanDefinitionHolder implements BeanMetadataElement {
 	 * Expose the bean definition's source object.
 	 * @see BeanDefinition#getSource()
 	 */
+	// 公开 bean 定义的源对象。
 	@Override
 	@Nullable
 	public Object getSource() {
@@ -122,6 +129,7 @@ public class BeanDefinitionHolder implements BeanMetadataElement {
 	 * Determine whether the given candidate name matches the bean name
 	 * or the aliases stored in this bean definition.
 	 */
+	// 确定给定的候选名称是否与存储在此 bean 定义中的 bean 名称或别名匹配
 	public boolean matchesName(@Nullable String candidateName) {
 		return (candidateName != null && (candidateName.equals(this.beanName) ||
 				candidateName.equals(BeanFactoryUtils.transformedBeanName(this.beanName)) ||
@@ -134,6 +142,7 @@ public class BeanDefinitionHolder implements BeanMetadataElement {
 	 * @see #getBeanName()
 	 * @see #getAliases()
 	 */
+	// 为 bean 返回一个友好的简短描述，说明名称和别名
 	public String getShortDescription() {
 		if (this.aliases == null) {
 			return "Bean definition with name '" + this.beanName + "'";
@@ -147,6 +156,7 @@ public class BeanDefinitionHolder implements BeanMetadataElement {
 	 * @see #getShortDescription()
 	 * @see #getBeanDefinition()
 	 */
+	// 返回 bean 的详细描述，包括名称和别名以及包含的 {@link BeanDefinition} 的描述
 	public String getLongDescription() {
 		return getShortDescription() + ": " + this.beanDefinition;
 	}
@@ -157,6 +167,7 @@ public class BeanDefinitionHolder implements BeanMetadataElement {
 	 * @see #getLongDescription()
 	 * @see #getShortDescription()
 	 */
+	// 此实现返回长描述。可以覆盖以返回简短描述或任何类型的自定义描述。
 	@Override
 	public String toString() {
 		return getLongDescription();

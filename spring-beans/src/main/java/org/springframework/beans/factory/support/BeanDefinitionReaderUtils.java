@@ -100,6 +100,7 @@ public abstract class BeanDefinitionReaderUtils {
 	 * @throws BeanDefinitionStoreException if no unique name can be generated
 	 * for the given bean definition
 	 */
+	// 为给定的 bean 定义生成一个 bean 名称，在给定的 bean 工厂中是唯一的。
 	public static String generateBeanName(
 			BeanDefinition definition, BeanDefinitionRegistry registry, boolean isInnerBean)
 			throws BeanDefinitionStoreException {
@@ -136,11 +137,13 @@ public abstract class BeanDefinitionReaderUtils {
 	 * @return the unique bean name to use
 	 * @since 5.1
 	 */
+	// 将给定的 bean 名称转换为给定 bean 工厂的唯一 bean 名称，如有必要，附加一个唯一的计数器作为后缀
 	public static String uniqueBeanName(String beanName, BeanDefinitionRegistry registry) {
 		String id = beanName;
 		int counter = -1;
 
 		// Increase counter until the id is unique.
+		// 增加计数器直到 id 是唯一的
 		String prefix = beanName + GENERATED_BEAN_NAME_SEPARATOR;
 		while (counter == -1 || registry.containsBeanDefinition(id)) {
 			counter++;
@@ -155,18 +158,28 @@ public abstract class BeanDefinitionReaderUtils {
 	 * @param registry the bean factory to register with
 	 * @throws BeanDefinitionStoreException if registration failed
 	 */
+	// 使用给定的 bean 工厂注册给定的 bean 定义。
+	// @param definitionHolder 包含名称和别名的 bean 定义
+	// @param registry 要注册的 bean 工厂
+	// 如果注册失败 @throws BeanDefinitionStoreException
+	//
+	// 重点，@Component 注册重点
 	public static void registerBeanDefinition(
 			BeanDefinitionHolder definitionHolder, BeanDefinitionRegistry registry)
 			throws BeanDefinitionStoreException {
 
 		// Register bean definition under primary name.
+		// 在主名称下注册 bean 定义。
 		String beanName = definitionHolder.getBeanName();
+		// 向注册中心注册 bean 定义
 		registry.registerBeanDefinition(beanName, definitionHolder.getBeanDefinition());
 
 		// Register aliases for bean name, if any.
+		// 注册 bean 名称的别名（如果有）
 		String[] aliases = definitionHolder.getAliases();
 		if (aliases != null) {
 			for (String alias : aliases) {
+				// 注册别名
 				registry.registerAlias(beanName, alias);
 			}
 		}
@@ -181,6 +194,8 @@ public abstract class BeanDefinitionReaderUtils {
 	 * @throws BeanDefinitionStoreException if no unique name can be generated
 	 * for the given bean definition or the definition cannot be registered
 	 */
+	// 使用生成的名称注册给定的 bean 定义，在给定的 bean 工厂中是唯一的。
+	// @throws BeanDefinitionStoreException 如果无法为给定的 bean 定义生成唯一名称或定义无法注册
 	public static String registerWithGeneratedName(
 			AbstractBeanDefinition definition, BeanDefinitionRegistry registry)
 			throws BeanDefinitionStoreException {

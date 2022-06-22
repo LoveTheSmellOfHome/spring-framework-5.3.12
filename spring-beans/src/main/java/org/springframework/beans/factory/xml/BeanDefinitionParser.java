@@ -36,6 +36,9 @@ import org.springframework.lang.Nullable;
  * @see NamespaceHandler
  * @see AbstractBeanDefinitionParser
  */
+// {@link DefaultBeanDefinitionDocumentReader} 用于处理自定义顶级（直接在 {@code <beans>} 下）标签的接口。
+// <p>实现可以自由地将自定义标签中的元数据转换为所需数量的 {@link BeanDefinition BeanDefinitions}。
+// <p>解析器从自定义标签所在的命名空间的关联 {@link NamespaceHandler} 中找到一个 {@link BeanDefinitionParser}
 public interface BeanDefinitionParser {
 
 	/**
@@ -52,7 +55,16 @@ public interface BeanDefinitionParser {
 	 * provides access to a {@link org.springframework.beans.factory.support.BeanDefinitionRegistry}
 	 * @return the primary {@link BeanDefinition}
 	 */
-	@Nullable
+	// 解析指定的 {@link Element} 并将生成的 {@link BeanDefinition BeanDefinition(s)} 注册到嵌入在提供的
+	// {@link ParserContext} 中的
+	// {@link org.springframework.beans.factory.xml.ParserContextgetRegistry() BeanDefinitionRegistry}
+	// <p>如果实现以嵌套方式使用（例如作为 {@code <property>} 标记中的内部标记），则实现必须返回从解析产生的主要
+	// {@link BeanDefinition}。如果实现以嵌套方式<strong>not<strong> 使用，则它们可能返回 {@code null}。
+	// @param element 要解析成一个或多个的元素 {@link BeanDefinition BeanDefinitions}
+	// @param parserContext 封装解析过程当前状态的对象；提供对
+	// {@link org.springframework.beans.factory.support.BeanDefinitionRegistry}
+	// @return 主要 {@link BeanDefinition} 的访问
+	// 通过 元素，ParserContext 返回一个 BeanDefinition
 	BeanDefinition parse(Element element, ParserContext parserContext);
 
 }

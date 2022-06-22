@@ -16,14 +16,14 @@
 
 package org.springframework.aop.framework;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.springframework.aop.Advisor;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.SmartClassLoader;
 import org.springframework.lang.Nullable;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Base class for {@link BeanPostProcessor} implementations that apply a
@@ -32,9 +32,11 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 3.2
  */
+// 将 Spring AOP Advisor 应用于特定 bean 的 BeanPostProcessor 实现的基类。
 @SuppressWarnings("serial")
 public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSupport implements BeanPostProcessor {
 
+	// Spring Advisor 链路
 	@Nullable
 	protected Advisor advisor;
 
@@ -52,6 +54,11 @@ public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSu
 	 * <p>Note: Check the concrete post-processor's javadoc whether it possibly
 	 * changes this flag by default, depending on the nature of its advisor.
 	 */
+	// 设置当遇到预先建议的对象时，此后处理器的顾问是否应该在现有顾问之前应用。
+	//
+	// 默认为 “false”，在现有顾问之后应用顾问，即尽可能接近目标方法。将此切换为 “true”，以便此后处理器的顾问也包装现有顾问。
+	//
+	// 注意：检查具体后处理器的 javadoc 是否可能默认更改此标志，具体取决于其顾问的性质。
 	public void setBeforeExistingAdvisors(boolean beforeExistingAdvisors) {
 		this.beforeExistingAdvisors = beforeExistingAdvisors;
 	}
@@ -62,10 +69,17 @@ public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSu
 		return bean;
 	}
 
+	// @EnableAsync Spring AOP 在 Spring 本地调度（Scheduling）中并没有使用 AbstractAutoProxyCreator
+	// EnableAsync 的实现和 Spring Transaction,Spring Cashing 是不一样的，尽管它创建了 Proxy 的 ConfigurationClass,
+	// 但是它没有直接创建（注入） 一个 AbstractAutoProxyCreator bean(即没有利用 Spring BeanDefinition 去注册一个
+	// AbstractAutoProxyCreator),而是利用生命周期(BeanPostProcessor#postProcessAfterInitialization)，
+	// 通过 BeanFactory 的 API 来创建一个代理对象，同时它利用到 PointcutAdvisor 的特点，注入 Advisor
+	// 此种实现更加优雅(毕竟 @Async 是在 Spring 后期提供)，不会和 Spring 内部产生冲突。
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) {
 		if (this.advisor == null || bean instanceof AopInfrastructureBean) {
 			// Ignore AOP infrastructure such as scoped proxies.
+			// 忽略 AOP 基础架构，例如作用域代理。
 			return bean;
 		}
 
@@ -73,6 +87,7 @@ public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSu
 			Advised advised = (Advised) bean;
 			if (!advised.isFrozen() && isEligible(AopUtils.getTargetClass(bean))) {
 				// Add our local Advisor to the existing proxy's Advisor chain...
+				// 将我们的本地顾问添加到现有代理的顾问链中......
 				if (this.beforeExistingAdvisors) {
 					advised.addAdvisor(0, this.advisor);
 				}
@@ -83,15 +98,20 @@ public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSu
 			}
 		}
 
+		// 如果是目标 bean
 		if (isEligible(bean, beanName)) {
+			// 利用生命周期，通过 BeanFactory 的 API 创建一个代理对象
 			ProxyFactory proxyFactory = prepareProxyFactory(bean, beanName);
+			// 排除一些接口
 			if (!proxyFactory.isProxyTargetClass()) {
 				evaluateProxyInterfaces(bean.getClass(), proxyFactory);
 			}
+			// 在这里关联了  @EnableAsync 注解的 advisor
 			proxyFactory.addAdvisor(this.advisor);
 			customizeProxyFactory(proxyFactory);
 
 			// Use original ClassLoader if bean class not locally loaded in overriding class loader
+			// 如果 bean 类未在覆盖类加载器中本地加载，则使用原始 ClassLoader
 			ClassLoader classLoader = getProxyClassLoader();
 			if (classLoader instanceof SmartClassLoader && classLoader != bean.getClass().getClassLoader()) {
 				classLoader = ((SmartClassLoader) classLoader).getOriginalClassLoader();
@@ -100,6 +120,7 @@ public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSu
 		}
 
 		// No proxy needed.
+		// 不需要代理
 		return bean;
 	}
 
@@ -118,6 +139,12 @@ public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSu
 	 * @param beanName the name of the bean
 	 * @see #isEligible(Class)
 	 */
+	// 检查给定的 bean 是否有资格使用此后处理器的 Advisor 提供建议。
+	//
+	// 委托 isEligible(Class) 进行目标类检查。可以被覆盖，例如通过名称专门排除某些bean。
+	//
+	// 注意：仅对常规 bean 实例调用，而不对实现 Advised 并允许将本地 Advisor 添加到现有代理的 Advisor 链的现有代理实例调用。
+	// 对于后者，直接调用 isEligible(Class) ，实际目标类位于现有代理后面（由AopUtils.getTargetClass(Object)确定）。
 	protected boolean isEligible(Object bean, String beanName) {
 		return isEligible(bean.getClass());
 	}
@@ -129,6 +156,10 @@ public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSu
 	 * @param targetClass the class to check against
 	 * @see AopUtils#canApply(Advisor, Class)
 	 */
+	// 检查给定的类是否有资格使用此后处理器的Advisor提供建议。
+	// 实现每个 bean 目标类的canApply结果缓存。
+	// 参形：
+	//			targetClass – 要检查的类
 	protected boolean isEligible(Class<?> targetClass) {
 		Boolean eligible = this.eligibleBeans.get(targetClass);
 		if (eligible != null) {
@@ -156,9 +187,21 @@ public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSu
 	 * @since 4.2.3
 	 * @see #customizeProxyFactory
 	 */
+	// 为给定的 bean 准备一个 ProxyFactory 。
+	//
+	// 子类可以自定义目标实例的处理，特别是目标类的公开。非目标类代理和配置顾问的默认接口自省将在之后应用；
+	// customizeProxyFactory 允许在代理创建之前对这些部分进行后期定制。
+	// 参形：
+	//			bean -- 要为其创建代理的 bean 实例
+	//			beanName – 对应的 bean 名称
+	// 返回值：
+	//			ProxyFactory，使用此处理器的 ProxyConfig 设置和指定的 bean 进行初始化
+	// 产生一个代理对象
 	protected ProxyFactory prepareProxyFactory(Object bean, String beanName) {
 		ProxyFactory proxyFactory = new ProxyFactory();
+		// 辅助配置
 		proxyFactory.copyFrom(this);
+		// 设置代理的目标 bean
 		proxyFactory.setTarget(bean);
 		return proxyFactory;
 	}
@@ -173,6 +216,11 @@ public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSu
 	 * @since 4.2.3
 	 * @see #prepareProxyFactory
 	 */
+	// 子类可以选择实现这一点：例如，更改公开的接口。
+	// 默认实现为空。
+	// 参形：
+	//				proxyFactory – 已配置目标、顾问和接口的 ProxyFactory，
+	//				将在此方法返回后立即用于创建代理
 	protected void customizeProxyFactory(ProxyFactory proxyFactory) {
 	}
 
