@@ -59,6 +59,25 @@ import org.springframework.core.io.ResourceLoader;
  * @see org.springframework.core.io.ResourceLoader
  * @see org.springframework.core.io.support.ResourcePatternResolver
  */
+// 由任何希望被通知它运行的ResourceLoader （通常是 ApplicationContext）的对象实现的接口。这是通过
+// ApplicationContextAware 接口的完整ApplicationContext依赖项的替代方案。
+//
+// 请注意， org.springframework.core.io.Resource依赖项也可以作为Resource或Resource[]类型的 bean 属性公开，
+// 通过由 bean 工厂自动类型转换的字符串填充。 这消除了为了访问特定文件资源而实现任何回调接口的需要。
+//
+// 当您的应用程序对象必须访问其名称已计算的各种文件资源时，您通常需要一个ResourceLoader 。
+// 一个好的策略是让对象使用 org.springframework.core.io.DefaultResourceLoader 但仍然实现
+// ResourceLoaderAware 以允许在 ApplicationContext 运行时覆盖。 有关示例，
+// 请参阅org.springframework.context.support.ReloadableResourceBundleMessageSource 。
+//
+// 还可以检查传入的 ResourceLoader 以获取 org.springframework.core.io.support.ResourcePatternResolver
+// 接口并进行相应的转换，以便将资源模式解析为 Resource 对象的数组。 在 ApplicationContext 中运行时，
+// 这将始终有效（因为上下文接口扩展了 ResourcePatternResolver 接口）。 使用
+// org.springframework.core.io.support.PathMatchingResourcePatternResolver 作为默认值；
+// 另请参阅 ResourcePatternUtils.getResourcePatternResolver 方法。
+//
+// 作为 ResourcePatternResolver 依赖项的替代方案，考虑公开 Resource[] 数组类型的 bean 属性，
+// 通过模式字符串填充，bean 工厂在绑定时自动进行类型转换。
 public interface ResourceLoaderAware extends Aware {
 
 	/**
@@ -73,6 +92,13 @@ public interface ResourceLoaderAware extends Aware {
 	 * @see org.springframework.core.io.support.ResourcePatternResolver
 	 * @see org.springframework.core.io.support.ResourcePatternUtils#getResourcePatternResolver
 	 */
+	// 设置运行此对象的 ResourceLoader
+	//
+	// 这可能是一个 ResourcePatternResolver，可以通过instanceof ResourcePatternResolver进行检查。
+	// 另请参阅ResourcePatternUtils.getResourcePatternResolver方法。
+	//
+	// 在填充普通 bean 属性之后但在初始化回调（如 InitializingBean 的afterPropertiesSet或自定义初始化方法）之前调用。
+	// 在 ApplicationContextAware 的setApplicationContext之前调用
 	void setResourceLoader(ResourceLoader resourceLoader);
 
 }

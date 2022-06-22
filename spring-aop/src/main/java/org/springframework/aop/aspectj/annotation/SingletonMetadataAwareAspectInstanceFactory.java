@@ -16,11 +16,11 @@
 
 package org.springframework.aop.aspectj.annotation;
 
-import java.io.Serializable;
-
 import org.springframework.aop.aspectj.SingletonAspectInstanceFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.OrderUtils;
+
+import java.io.Serializable;
 
 /**
  * Implementation of {@link MetadataAwareAspectInstanceFactory} that is backed
@@ -32,6 +32,7 @@ import org.springframework.core.annotation.OrderUtils;
  * @since 2.0
  * @see SimpleMetadataAwareAspectInstanceFactory
  */
+// 由指定的单例对象支持的 MetadataAwareAspectInstanceFactory 的实现，为每个 getAspectInstance() 调用返回相同的实例。
 @SuppressWarnings("serial")
 public class SingletonMetadataAwareAspectInstanceFactory extends SingletonAspectInstanceFactory
 		implements MetadataAwareAspectInstanceFactory, Serializable {
@@ -44,6 +45,10 @@ public class SingletonMetadataAwareAspectInstanceFactory extends SingletonAspect
 	 * @param aspectInstance the singleton aspect instance
 	 * @param aspectName the name of the aspect
 	 */
+	// 为给定方面创建一个新的 SingletonMetadataAwareAspectInstanceFactory。
+	// 参形：
+	//			aspectInstance – 单例切面实例
+	//			aspectName – 切面的名称
 	public SingletonMetadataAwareAspectInstanceFactory(Object aspectInstance, String aspectName) {
 		super(aspectInstance);
 		this.metadata = new AspectMetadata(aspectInstance.getClass(), aspectName);

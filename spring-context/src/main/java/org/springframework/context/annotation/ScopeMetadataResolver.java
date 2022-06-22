@@ -25,6 +25,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
  * @since 2.5
  * @see org.springframework.context.annotation.Scope
  */
+// 用于解析 bean 定义范围的策略接口
 @FunctionalInterface
 public interface ScopeMetadataResolver {
 
@@ -40,6 +41,14 @@ public interface ScopeMetadataResolver {
 	 * @param definition the target bean definition
 	 * @return the relevant scope metadata; never {@code null}
 	 */
+	// 解析适合于提供的 bean definition 的 ScopeMetadata 。
+	//
+	// 实现当然可以使用他们喜欢的任何策略来确定范围元数据，但是一些立即浮现在脑海中的实现可能是使用提供 definition the class
+	// 上存在的源级别注解，或者使用BeanDefinition.attributeNames()提供的definition 。
+	//
+	// 参形：
+	//			定义- 目标 bean 定义
+	//			返回值：相关范围元数据；从不 null
 	ScopeMetadata resolveScopeMetadata(BeanDefinition definition);
 
 }

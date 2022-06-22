@@ -16,22 +16,18 @@
 
 package org.springframework.core.type;
 
+import org.springframework.core.annotation.*;
+import org.springframework.core.annotation.MergedAnnotations.SearchStrategy;
+import org.springframework.lang.Nullable;
+import org.springframework.util.MultiValueMap;
+import org.springframework.util.ReflectionUtils;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.core.annotation.MergedAnnotation;
-import org.springframework.core.annotation.MergedAnnotations;
-import org.springframework.core.annotation.MergedAnnotations.SearchStrategy;
-import org.springframework.core.annotation.RepeatableContainers;
-import org.springframework.lang.Nullable;
-import org.springframework.util.MultiValueMap;
-import org.springframework.util.ReflectionUtils;
 
 /**
  * {@link AnnotationMetadata} implementation that uses standard reflection
@@ -44,6 +40,8 @@ import org.springframework.util.ReflectionUtils;
  * @author Sam Brannen
  * @since 2.5
  */
+// {@link AnnotationMetadata} 实现，使用标准反射来内省(有意识的检查，X 光透视内部元素)给定的 {@link Class}
+// 标准注解元信息：基于 Java 反射
 public class StandardAnnotationMetadata extends StandardClassMetadata implements AnnotationMetadata {
 
 	private final MergedAnnotations mergedAnnotations;
@@ -60,6 +58,7 @@ public class StandardAnnotationMetadata extends StandardClassMetadata implements
 	 * @see #StandardAnnotationMetadata(Class, boolean)
 	 * @deprecated since 5.2 in favor of the factory method {@link AnnotationMetadata#introspect(Class)}
 	 */
+	// 为给定的类创建一个新的 {@code StandardAnnotationMetadata} 包装器。
 	@Deprecated
 	public StandardAnnotationMetadata(Class<?> introspectedClass) {
 		this(introspectedClass, false);
@@ -80,6 +79,19 @@ public class StandardAnnotationMetadata extends StandardClassMetadata implements
 	 * from {@link #getAnnotations()} rather than {@link #getAnnotationAttributes(String)}
 	 * if {@code nestedAnnotationsAsMap} is {@code false}
 	 */
+	// 为给定的类创建一个新的 {@link StandardAnnotationMetadata} 包装器，
+	// 提供以 {@link org.springframework.core.annotation.AnnotationAttributes} 的形式返回任何嵌套注解或
+	// 注解数组的选项，而不是实际的 {@link Annotation}实例
+	//
+	// @param introspectedClass 要内省的类
+	// @param nestedAnnotationsAsMap 返回嵌套注解和注解数组作为
+	// {@link org.springframework.core.annotation.AnnotationAttributes} 以与基于 ASM 的
+	// {@link AnnotationMetadata} 实现兼容 @since 3.1.1
+	//
+	// @deprecated 自 5.2 起支持工厂方法 {@link AnnotationMetadataintrospect(Class)}。
+	// 使用 {@link MergedAnnotationasMap(org.springframework.core.annotation.MergedAnnotation.Adapt...)
+	// MergedAnnotation.asMap} 来自 {@link getAnnotations()} 而不是
+	// {@link getAnnotationAttributes(String)} 如果 {@code nestedAnnotationsAsMap} 是{@code false}
 	@Deprecated
 	public StandardAnnotationMetadata(Class<?> introspectedClass, boolean nestedAnnotationsAsMap) {
 		super(introspectedClass);
@@ -94,6 +106,7 @@ public class StandardAnnotationMetadata extends StandardClassMetadata implements
 		return this.mergedAnnotations;
 	}
 
+	// 通过反射 Class 来获取注解类型集合
 	@Override
 	public Set<String> getAnnotationTypes() {
 		Set<String> annotationTypes = this.annotationTypes;

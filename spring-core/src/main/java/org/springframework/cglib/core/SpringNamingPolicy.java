@@ -27,10 +27,15 @@ package org.springframework.cglib.core;
  * @author Juergen Hoeller
  * @since 3.2.8
  */
+// CGLIB 的 DefaultNamingPolicy 自定义扩展，将生成的类名中的标签从“ByCGLIB”修改为“BySpringCGLIB”。
+// 这主要是为了避免常规 CGLIB 版本（由其他一些库使用）和 Spring 的嵌入式变体之间的冲突，以防同一个类碰巧被代理用于不同的目的。
+//
+// Spring 命名策略；Tag 标记当前类是 Spring Aop 代理的类，它的命名信息就决定了 Spring 代理类型是 Cglib 还是 Jdk 动态代理
 public class SpringNamingPolicy extends DefaultNamingPolicy {
 
 	public static final SpringNamingPolicy INSTANCE = new SpringNamingPolicy();
 
+	// Spring 默认使用 Cglib 代理
 	@Override
 	protected String getTag() {
 		return "BySpringCGLIB";

@@ -35,6 +35,11 @@ import org.springframework.lang.Nullable;
  * @since 2.0.3
  * @see InstantiationAwareBeanPostProcessorAdapter
  */
+// {@link InstantiationAwareBeanPostProcessor} 接口的扩展，添加了用于预测已处理 bean 最终类型的回调。
+//
+//	p><b>注意：<b>这个接口是一个特殊用途的接口，主要供框架内部使用。通常，应用程序提供的后处理器应该简单地实现普通的
+//	{@link BeanPostProcessor} 接口或派生自 {@link InstantiationAwareBeanPostProcessorAdapter} 类。
+//	即使在小版本发布中，新方法也可能添加到此接口中
 public interface SmartInstantiationAwareBeanPostProcessor extends InstantiationAwareBeanPostProcessor {
 
 	/**
@@ -46,6 +51,8 @@ public interface SmartInstantiationAwareBeanPostProcessor extends InstantiationA
 	 * @return the type of the bean, or {@code null} if not predictable
 	 * @throws org.springframework.beans.BeansException in case of errors
 	 */
+	// 预测最终从此处理器的 {@link postProcessBeforeInstantiation} 回调返回的 bean 的类型。
+	// <p>默认实现返回 {@code null}。
 	@Nullable
 	default Class<?> predictBeanType(Class<?> beanClass, String beanName) throws BeansException {
 		return null;
@@ -59,6 +66,11 @@ public interface SmartInstantiationAwareBeanPostProcessor extends InstantiationA
 	 * @return the candidate constructors, or {@code null} if none specified
 	 * @throws org.springframework.beans.BeansException in case of errors
 	 */
+	// 在 bean 中提供拦截机制，确定用于给定 bean 的候选构造函数。
+	// <p>默认实现返回 {@code null}。 @param beanClass bean 的原始类（从不{@code null}）
+	// @param beanName bean 的名称
+	// @return 候选构造函数，或者 {@code null} 如果没有指定
+	// @throws org.springframework.beans.BeansException 以防止错误情况
 	@Nullable
 	default Constructor<?>[] determineCandidateConstructors(Class<?> beanClass, String beanName)
 			throws BeansException {
@@ -87,6 +99,13 @@ public interface SmartInstantiationAwareBeanPostProcessor extends InstantiationA
 	 * (typically with the passed-in bean instance as default)
 	 * @throws org.springframework.beans.BeansException in case of errors
 	 */
+	// 获取早期访问指定 bean 的引用，通常用于解析循环引用。
+	// <p>此回调使后处理器有机会尽早暴露包装器 - 即在目标 bean 实例完全初始化之前。
+	// 公开的对象应该等同于 {@link postProcessBeforeInitialization} {@link postProcessAfterInitialization} 否则会公开的内容。
+	// 请注意，此方法返回的对象将用作 bean 引用，除非后处理器从所述后处理回调返回不同的包装器。
+	// 换句话说：这些后处理回调可能最终公开相同的引用，或者从这些后续回调中返回原始 bean 实例（如果已经构建了受影响 bean 的包装器来调用此方法，
+	// 则它将公开默认情况下作为最终的 bean 引用）。
+	// <p>默认实现按原样返回给定的 {@code bean}。
 	default Object getEarlyBeanReference(Object bean, String beanName) throws BeansException {
 		return bean;
 	}

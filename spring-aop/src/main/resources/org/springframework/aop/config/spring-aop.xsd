@@ -23,8 +23,8 @@
 	aspects, pointcuts, etc).
 			]]></xsd:documentation>
 		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:sequence>
+		<xsd:complexType> <!--复杂类型，类似于 Java 中的类-->
+			<xsd:sequence> <!--代表有序，定义了如果下边元素同时存在，那么必须 pointcut 在前，advisor 在中间，aspect 在后...-->
 				<xsd:element name="pointcut" type="pointcutType" minOccurs="0" maxOccurs="unbounded">
 					<xsd:annotation>
 						<xsd:documentation><![CDATA[
@@ -107,7 +107,7 @@
 		</xsd:complexType>
 	</xsd:element>
 
-	<xsd:element name="scoped-proxy">
+	<xsd:element name="scoped-proxy"> <!--根元素，与 config 元素一样都是根元素-->
 		<xsd:complexType>
 			<xsd:annotation>
 				<xsd:documentation source="java:org.springframework.aop.scope.ScopedProxyFactoryBean"><![CDATA[
@@ -118,7 +118,7 @@
 	HttpSession) as and when required.
 				]]></xsd:documentation>
 			</xsd:annotation>
-			<xsd:attribute name="proxy-target-class" type="xsd:boolean" default="true">
+			<xsd:attribute name="proxy-target-class" type="xsd:boolean" default="true"> <!--是否创建基于 类的代理(CGLIB),默认是 true-->
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
 	Are class-based (CGLIB) proxies to be created? This is the default; in order to
@@ -207,7 +207,7 @@
 	</xsd:complexType>
 
 	<xsd:complexType name="includeType">
-		<xsd:attribute name="name" type="xsd:string">
+		<xsd:attribute name="name" type="xsd:string"> <!--属性和元素不同的是属性无序按顺序出现-->
 			<xsd:annotation>
 				<xsd:documentation source="java:java.util.regex.Pattern"><![CDATA[
 	The regular expression defining which beans are to be included in the
@@ -245,7 +245,7 @@
 	</xsd:complexType>
 
 	<xsd:complexType name="declareParentsType">
-		<xsd:attribute name="types-matching" type="xsd:string" use="required">
+		<xsd:attribute name="types-matching" type="xsd:string" use="required"> <!--是否已类型匹配，必须要有-->
 			<xsd:annotation>
 				<xsd:documentation source="java:org.springframework.aop.aspectj.TypePatternClassFilter"><![CDATA[
 	The AspectJ type expression that defines what types (classes) the
@@ -255,14 +255,14 @@
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="implement-interface" type="xsd:string" use="required">
+		<xsd:attribute name="implement-interface" type="xsd:string" use="required"> <!--实现接口全类名，非必须的-->
 			<xsd:annotation>
 				<xsd:documentation source="java:java.lang.Class"><![CDATA[
 	The fully qualified name of the interface that will be introduced.
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="default-impl" type="xsd:string">
+		<xsd:attribute name="default-impl" type="xsd:string"> <!--默认实现全类名-->
 			<xsd:annotation>
 				<xsd:documentation source="java:java.lang.Class"><![CDATA[
 	The fully qualified name of the class that will be instantiated to serve
@@ -270,7 +270,7 @@
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="delegate-ref" type="xsd:string">
+		<xsd:attribute name="delegate-ref" type="xsd:string"> <!--委派实现 bean 引用-->
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 	A reference to the bean that will serve
@@ -322,8 +322,8 @@
 
 	<xsd:complexType name="afterReturningAdviceType">
 		<xsd:complexContent>
-			<xsd:extension base="basicAdviceType">
-				<xsd:attribute name="returning" type="xsd:string">
+			<xsd:extension base="basicAdviceType"> <!--继承了基本属性 pointcut，pointcut-ref，method，arg-names -->
+				<xsd:attribute name="returning" type="xsd:string"> <!--增加了 returning 属性-->
 					<xsd:annotation>
 						<xsd:documentation><![CDATA[
 	The name of the method parameter to which the return value must
@@ -337,8 +337,8 @@
 
 	<xsd:complexType name="afterThrowingAdviceType">
 		<xsd:complexContent>
-			<xsd:extension base="basicAdviceType">
-				<xsd:attribute name="throwing" type="xsd:string">
+			<xsd:extension base="basicAdviceType"> <!-- 继承了基本属性 pointcut，pointcut-ref，method，arg-names -->
+				<xsd:attribute name="throwing" type="xsd:string"> <!--增加了 throwing 属性-->
 					<xsd:annotation>
 						<xsd:documentation><![CDATA[
 	The name of the method parameter to which the thrown exception must
@@ -354,11 +354,11 @@
 		<xsd:annotation>
 			<xsd:appinfo>
 				<tool:annotation>
-					<tool:exports type="org.springframework.aop.Advisor"/>
+					<tool:exports type="org.springframework.aop.Advisor"/> <!--和 Spring API Advisor 有关-->
 				</tool:annotation>
 			</xsd:appinfo>
 		</xsd:annotation>
-		<xsd:attribute name="id" type="xsd:string"/>
+		<xsd:attribute name="id" type="xsd:string"/><!--有 id,advice-ref,pointcut,pointcut-ref,order 5 种属性-->
 		<xsd:attribute name="advice-ref" type="xsd:string" use="required">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[

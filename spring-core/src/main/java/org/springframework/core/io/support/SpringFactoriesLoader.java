@@ -16,28 +16,17 @@
 
 package org.springframework.core.io.support;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.stream.Collectors;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.io.UrlResource;
 import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.util.*;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * General purpose factory loading mechanism for internal use within the framework.
@@ -65,6 +54,7 @@ public final class SpringFactoriesLoader {
 	 * The location to look for factories.
 	 * <p>Can be present in multiple JAR files.
 	 */
+	// 静态资源的配置位置
 	public static final String FACTORIES_RESOURCE_LOCATION = "META-INF/spring.factories";
 
 
@@ -128,7 +118,9 @@ public final class SpringFactoriesLoader {
 		if (classLoaderToUse == null) {
 			classLoaderToUse = SpringFactoriesLoader.class.getClassLoader();
 		}
+		// 获取配置类的名称
 		String factoryTypeName = factoryType.getName();
+		// 获取配置类的包名
 		return loadSpringFactories(classLoaderToUse).getOrDefault(factoryTypeName, Collections.emptyList());
 	}
 
@@ -140,9 +132,11 @@ public final class SpringFactoriesLoader {
 
 		result = new HashMap<>();
 		try {
+			// 加载配置文件，获取 url
 			Enumeration<URL> urls = classLoader.getResources(FACTORIES_RESOURCE_LOCATION);
 			while (urls.hasMoreElements()) {
 				URL url = urls.nextElement();
+				// url 封装成资源
 				UrlResource resource = new UrlResource(url);
 				Properties properties = PropertiesLoaderUtils.loadProperties(resource);
 				for (Map.Entry<?, ?> entry : properties.entrySet()) {

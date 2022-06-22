@@ -29,6 +29,8 @@ import org.springframework.util.Assert;
  * @see org.springframework.beans.factory.BeanFactory#getBean(String)
  * @see org.springframework.beans.factory.BeanFactory#getBean(Class)
  */
+// 用于属性值对象的不可变占位符类，当它是对工厂中另一个 bean 的引用时，将在运行时解析
+// 在运行时通过 bean 的名称去找到这个 bean,最终合成 RootBeanDefinition
 public class RuntimeBeanReference implements BeanReference {
 
 	private final String beanName;

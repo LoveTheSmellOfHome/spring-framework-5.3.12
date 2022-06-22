@@ -34,16 +34,20 @@ import org.springframework.beans.factory.xml.ParserContext;
  * @author Mark Fisher
  * @since 2.0
  */
+// BeanDefinitionDecorator 负责解析标签
 class ScopedProxyBeanDefinitionDecorator implements BeanDefinitionDecorator {
 
-	private static final String PROXY_TARGET_CLASS = "proxy-target-class";
+	// spring-aop.xsd 中 <scoped-proxy> 根元素解析
+	private static final String PROXY_TARGET_CLASS = "proxy-target-class"; // 这个根元素的属性
 
 
 	@Override
 	public BeanDefinitionHolder decorate(Node node, BeanDefinitionHolder definition, ParserContext parserContext) {
+		// 默认是true
 		boolean proxyTargetClass = true;
 		if (node instanceof Element) {
 			Element ele = (Element) node;
+			// 如果 xml 中配置了 proxy-target-class 属性
 			if (ele.hasAttribute(PROXY_TARGET_CLASS)) {
 				proxyTargetClass = Boolean.parseBoolean(ele.getAttribute(PROXY_TARGET_CLASS));
 			}
@@ -51,6 +55,7 @@ class ScopedProxyBeanDefinitionDecorator implements BeanDefinitionDecorator {
 
 		// Register the original bean definition as it will be referenced by the scoped proxy
 		// and is relevant for tooling (validation, navigation).
+		// 将 BeanDefinition 和 Bean 名称做一个封装
 		BeanDefinitionHolder holder =
 				ScopedProxyUtils.createScopedProxy(definition, parserContext.getRegistry(), proxyTargetClass);
 		String targetBeanName = ScopedProxyUtils.getTargetBeanName(definition.getBeanName());

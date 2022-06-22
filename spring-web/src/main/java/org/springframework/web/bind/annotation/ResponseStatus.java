@@ -16,14 +16,10 @@
 
 package org.springframework.web.bind.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.http.HttpStatus;
+
+import java.lang.annotation.*;
 
 /**
  * Marks a method or exception class with the status {@link #code} and
@@ -55,6 +51,18 @@ import org.springframework.http.HttpStatus;
  * @see org.springframework.web.servlet.mvc.annotation.ResponseStatusExceptionResolver
  * @see javax.servlet.http.HttpServletResponse#sendError(int, String)
  */
+// 使用应返回的状态 code 和 reason 标记方法或异常类。
+//
+// 当调用处理程序方法并覆盖通过其他方式设置的状态信息时，状态代码将应用于 HTTP 响应，例如 ResponseEntity 或 "redirect:" 。
+//
+// 警告：在异常类上使用此注解，或设置此注解的 reason 属性时，将使用 HttpServletResponse.sendError方法。
+//
+// 使用 HttpServletResponse.sendError ，响应被认为是完整的，不应再写入任何内容。此外，Servlet
+// 容器通常会编写一个 HTML 错误页面，因此会使用不适合 REST API 的reason 。对于这种情况，最好使用
+// org.springframework.http.ResponseEntity作为返回类型，并完全避免使用 @ResponseStatus 。
+//
+// 请注意，控制器类也可以用 @ResponseStatus 注释，然后由该类及其子类中的所有 @RequestMapping 和 @ExceptionHandler
+// 方法继承，除非被方法上的本地 @ResponseStatus 声明覆盖
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -74,6 +82,8 @@ public @interface ResponseStatus {
 	 * @see javax.servlet.http.HttpServletResponse#setStatus(int)
 	 * @see javax.servlet.http.HttpServletResponse#sendError(int)
 	 */
+	// 用于响应的状态代码。
+	// 默认值为 HttpStatus.INTERNAL_SERVER_ERROR ，通常应将其更改为更合适的内容。
 	@AliasFor("value")
 	HttpStatus code() default HttpStatus.INTERNAL_SERVER_ERROR;
 
@@ -83,6 +93,8 @@ public @interface ResponseStatus {
 	 * non-empty value to have it used for the response.
 	 * @see javax.servlet.http.HttpServletResponse#sendError(int, String)
 	 */
+	// 用于响应的原因。
+	// 默认为将被忽略的空字符串。将原因设置为非空值以将其用于响应。
 	String reason() default "";
 
 }

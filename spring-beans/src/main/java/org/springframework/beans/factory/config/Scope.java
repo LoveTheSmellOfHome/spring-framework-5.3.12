@@ -57,6 +57,18 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.web.context.request.RequestScope
  * @see org.springframework.web.context.request.SessionScope
  */
+// ConfigurableBeanFactory使用的 Strategy 接口，代表一个目标范围来保存 bean 实例。
+// 这允许使用自定义的进一步范围扩展 BeanFactory 的标准范围"singleton"和"prototype" ，为specific key注册。
+//
+// org.springframework.context.ApplicationContext实现，例如
+// org.springframework.web.context.WebApplicationContext 可以注册额外的标准范围特定于他们的环境，
+// 例如"request"和"session" ，基于这个范围 SPI。
+//
+// 即使它的主要用途是用于 Web 环境中的扩展范围，该 SPI 也是完全通用的：它提供了从任何底层存储
+// 机制（例如 HTTP 会话或自定义对话机制）获取和放置对象的能力。 传递给此类的get和remove方法的名称将标识当前范围内的目标对象。
+//
+// Scope实现预计是线程安全的。 如果需要，一个Scope实例可以同时与多个 bean 工厂一起使用（除非它明确想知道包含的 BeanFactory），
+// 任意数量的线程从任意数量的工厂并发访问Scope 。
 public interface Scope {
 
 	/**
@@ -71,6 +83,14 @@ public interface Scope {
 	 * @return the desired object (never {@code null})
 	 * @throws IllegalStateException if the underlying scope is not currently active
 	 */
+	// 从底层范围返回具有给定名称的对象，如果在底层存储机制中找不到，则creating it 。
+	// 这是 Scope 的核心操作，也是唯一绝对需要的操作。
+	// 形参：
+	//			name - 要检索的对象的名称
+	//			objectFactory – 用于创建作用域对象的ObjectFactory ，如果它不存在于底层存储机制中
+	// 返回值：
+	//			所需的对象（从不为null ）
+	// IllegalStateException – 如果基础作用域当前未处于活动状态
 	Object get(String name, ObjectFactory<?> objectFactory);
 
 	/**
@@ -89,6 +109,16 @@ public interface Scope {
 	 * @throws IllegalStateException if the underlying scope is not currently active
 	 * @see #registerDestructionCallback
 	 */
+	// 从底层作用域中删除具有给定name的对象。
+	// 如果没有找到对象，则返回null ； 否则返回移除的Object 。
+	// 请注意，实现还应删除指定对象的注册销毁回调（如果有）。 它，然而，没有必要在这种情况下要执行的注册破坏的回调，
+	// 因为对象将被调用者被破坏（如适用）。
+	// 注意：这是一个可选操作。 如果实现不支持显式删除对象，则它们可能会抛出UnsupportedOperationException 。
+	// 形参：
+	//			name - 要删除的对象的名称
+	// 返回值：
+	//			删除的对象，如果不存在对象，则为null
+	// IllegalStateException – 如果基础作用域当前未处于活动状态
 	@Nullable
 	Object remove(String name);
 
@@ -121,6 +151,20 @@ public interface Scope {
 	 * @see org.springframework.beans.factory.support.AbstractBeanDefinition#getDestroyMethodName()
 	 * @see DestructionAwareBeanPostProcessor
 	 */
+	// 注册一个回调，以在销毁范围内的指定对象时执行（或在销毁整个范围时，如果范围不销毁单个对象而是仅整个终止）。
+	//
+	// 注意：这是一个可选操作。 只会为具有实际销毁配置（DisposableBean、destroy-method、
+	// DestructionAwareBeanPostProcessor）的作用域 bean 调用此方法。 实现应该尽力在适当的时间执行给定的回调。
+	// 如果底层运行时环境根本不支持这种回调，则必须忽略该回调并记录相应的警告。
+	//
+	// 请注意，“销毁”是指将对象作为范围自身生命周期的一部分自动销毁，而不是指已被应用程序明确删除的单个范围对象。
+	// 如果一个作用域对象通过这个门面的remove(String)方法被移除，任何注册的销毁回调也应该被移除，
+	// 假设被移除的对象将被重用或手动销毁。
+	// 形参：
+	// 			name - 要为其执行销毁回调的对象的名称
+	// 			callback - 要执行的销毁回调。 请注意，传入的 Runnable 永远不会抛出异常，因此它可以在没有封闭的 try-catch
+	// 块的情况下安全地执行。 此外，Runnable 通常是可序列化的，前提是它的目标对象也是可序列化的。
+	// IllegalStateException – 如果基础作用域当前未处于活动状态
 	void registerDestructionCallback(String name, Runnable callback);
 
 	/**
@@ -130,6 +174,12 @@ public interface Scope {
 	 * @return the corresponding object, or {@code null} if none found
 	 * @throws IllegalStateException if the underlying scope is not currently active
 	 */
+	// 解析给定键的上下文对象（如果有）。 例如，键“请求”的 HttpServletRequest 对象。
+	// 形参：
+	// 			key – 上下文键
+	// 返回值：
+	//			相应的对象，如果没有找到，则为null
+	// IllegalStateException – 如果基础作用域当前未处于活动状态
 	@Nullable
 	Object resolveContextualObject(String key);
 
@@ -148,6 +198,15 @@ public interface Scope {
 	 * conversation ID for the current scope
 	 * @throws IllegalStateException if the underlying scope is not currently active
 	 */
+	// 返回当前基础范围的对话 ID （如果有）。
+	//
+	// 会话 ID 的确切含义取决于底层存储机制。 在会话范围对象的情况下，会话 ID 通常等于（或派生自） session ID ；
+	// 对于位于整个会话中的自定义对话，当前对话的特定 ID 将是合适的。
+	//
+	// 注意：这是一个可选操作。 如果底层存储机制没有明显的此类 ID 候选者，则在此方法的实现中返回null是完全有效的。
+	// 返回值：
+	//			对话 ID，如果当前范围没有对话 ID，则为null
+	// IllegalStateException – 如果基础作用域当前未处于活动状态
 	@Nullable
 	String getConversationId();
 

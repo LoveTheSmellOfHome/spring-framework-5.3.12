@@ -39,9 +39,17 @@ import org.springframework.util.ResourceUtils;
  * @see org.springframework.context.ApplicationContext
  * @see org.springframework.context.ResourceLoaderAware
  */
+// 用于加载资源（例如，类路径或文件系统资源）的策略接口。需要 {@link org.springframework.context.ApplicationContext}
+// 来提供此功能以及扩展的 {@link org.springframework.core.io.support.ResourcePatternResolver} 支持。
+//
+// <p>{@link DefaultResourceLoader} 是一个独立的实现，可以在 ApplicationContext 之外使用，也被 {@link ResourceEditor} 使用。
+//
+// <p>{@code Resource} 和 {@code Resource[]} 类型的 Bean 属性可以在 ApplicationContext 中运行时从字符串填充，
+// 使用特定上下文的资源加载策略
 public interface ResourceLoader {
 
 	/** Pseudo URL prefix for loading from the class path: "classpath:". */
+	// 从类路径加载的伪 URL 前缀： "classpath:"，匹配当前 classpath: 下的资源（当前jar 包）
 	String CLASSPATH_URL_PREFIX = ResourceUtils.CLASSPATH_URL_PREFIX;
 
 
@@ -64,6 +72,12 @@ public interface ResourceLoader {
 	 * @see Resource#exists()
 	 * @see Resource#getInputStream()
 	 */
+	// 返回指定资源位置的 {@code Resource} 句柄。
+	// <p>句柄应该始终是一个可重用的资源描述符，允许多个 {@link ResourcegetInputStream()} 调用
+	// <p><ul> <li>必须支持完全限定的 URL，例如“文件：C:/test.dat”。
+	// <li>必须支持类路径伪 URL，例如“classpath:test.dat”。
+	// <li>应该支持相对文件路径，例如“WEB-INF/test.dat”。 （这将是特定于实现的，通常由 ApplicationContext 实现提供。） <ul>
+	// <p>请注意，{@code Resource} 句柄并不意味着现有资源；您需要调用 {@link Resource#exists} 来检查是否存在。
 	Resource getResource(String location);
 
 	/**
@@ -76,6 +90,9 @@ public interface ResourceLoader {
 	 * @see org.springframework.util.ClassUtils#getDefaultClassLoader()
 	 * @see org.springframework.util.ClassUtils#forName(String, ClassLoader)
 	 */
+	// 公开此 {@code ResourceLoader} 使用的 {@link ClassLoader}。
+	// <p>需要直接访问 {@code ClassLoader} 的客户端可以通过 {@code ResourceLoader} 以统一的方式访问，
+	// 而不是依赖于线程上下文 {@code ClassLoader}。
 	@Nullable
 	ClassLoader getClassLoader();
 

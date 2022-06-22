@@ -47,6 +47,9 @@ import org.springframework.util.concurrent.ListenableFutureTask;
  * @see org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
  * @see org.springframework.scheduling.commonj.WorkManagerTaskExecutor
  */
+// TaskExecutor 实现为每个任务启动一个新线程，异步执行它。
+// 支持通过“concurrencyLimit” bean 属性限制并发线程。默认情况下，并发线程数是无限的。
+// 注意：此实现不重用线程！考虑一个线程池 TaskExecutor 实现，特别是用于执行大量短期任务。
 @SuppressWarnings("serial")
 public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 		implements AsyncListenableTaskExecutor, Serializable {
@@ -55,21 +58,26 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	 * Permit any number of concurrent invocations: that is, don't throttle concurrency.
 	 * @see ConcurrencyThrottleSupport#UNBOUNDED_CONCURRENCY
 	 */
+	// 允许任意数量的并发调用：也就是说，不要限制并发
 	public static final int UNBOUNDED_CONCURRENCY = ConcurrencyThrottleSupport.UNBOUNDED_CONCURRENCY;
 
 	/**
 	 * Switch concurrency 'off': that is, don't allow any concurrent invocations.
 	 * @see ConcurrencyThrottleSupport#NO_CONCURRENCY
 	 */
+	// 关闭并发：即不允许任何并发调用。
 	public static final int NO_CONCURRENCY = ConcurrencyThrottleSupport.NO_CONCURRENCY;
 
 
 	/** Internal concurrency throttle used by this executor. */
+	// 此执行程序使用的内部并发限制。
 	private final ConcurrencyThrottleAdapter concurrencyThrottle = new ConcurrencyThrottleAdapter();
 
+	// 线程工厂
 	@Nullable
 	private ThreadFactory threadFactory;
 
+	// 任务装饰器
 	@Nullable
 	private TaskDecorator taskDecorator;
 
@@ -77,6 +85,7 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	/**
 	 * Create a new SimpleAsyncTaskExecutor with default thread name prefix.
 	 */
+	// 使用默认线程名称前缀创建一个新的 SimpleAsyncTaskExecutor。
 	public SimpleAsyncTaskExecutor() {
 		super();
 	}
@@ -85,6 +94,9 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	 * Create a new SimpleAsyncTaskExecutor with the given thread name prefix.
 	 * @param threadNamePrefix the prefix to use for the names of newly created threads
 	 */
+	// 使用给定的线程名称前缀创建一个新的 SimpleAsyncTaskExecutor。
+	// 参形：
+	//			threadNamePrefix – 用于新创建线程名称的前缀
 	public SimpleAsyncTaskExecutor(String threadNamePrefix) {
 		super(threadNamePrefix);
 	}
@@ -93,6 +105,9 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	 * Create a new SimpleAsyncTaskExecutor with the given external thread factory.
 	 * @param threadFactory the factory to use for creating new Threads
 	 */
+	// 使用给定的外部线程工厂创建一个新的 SimpleAsyncTaskExecutor。
+	// 参形：
+	//			threadFactory – 用于创建新线程的工厂
 	public SimpleAsyncTaskExecutor(ThreadFactory threadFactory) {
 		this.threadFactory = threadFactory;
 	}
@@ -106,6 +121,10 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	 * @see #setThreadNamePrefix
 	 * @see #setThreadPriority
 	 */
+	// 指定用于创建新线程的外部工厂，而不是依赖此执行程序的本地属性。
+	//
+	// 您可以指定一个内部 ThreadFactory bean 或从 JNDI（在 Java EE 6 服务器上）
+	// 或其他一些查找机制获得的 ThreadFactory 引用
 	public void setThreadFactory(@Nullable ThreadFactory threadFactory) {
 		this.threadFactory = threadFactory;
 	}
@@ -113,6 +132,7 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	/**
 	 * Return the external factory to use for creating new Threads, if any.
 	 */
+	// 返回外部工厂以用于创建新线程（如果有）
 	@Nullable
 	public final ThreadFactory getThreadFactory() {
 		return this.threadFactory;
@@ -133,6 +153,16 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	 * have to cast it and call {@code Future#get} to evaluate exceptions.
 	 * @since 4.3
 	 */
+	// 指定一个自定义TaskDecorator以应用于任何即将执行的Runnable 。
+	//
+	// 请注意，这样的装饰器不一定应用于用户提供的Runnable / Callable ，
+	// 而是应用于实际的执行回调（可能是用户提供的任务的包装器）。
+	//
+	// 主要用例是围绕任务的调用设置一些执行上下文，或者为任务执行提供一些监控/统计。
+	//
+	// 注意： TaskDecorator实现中的异常处理仅限于通过execute调用执行的普通Runnable执行。
+	// 在#submit调用的情况下，暴露的Runnable将是一个FutureTask ，它不会传播任何异常；
+	// 您可能必须强制转换它并调用Future#get来评估异常
 	public final void setTaskDecorator(TaskDecorator taskDecorator) {
 		this.taskDecorator = taskDecorator;
 	}
@@ -147,6 +177,10 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	 * of -1 effectively turns off concurrency counting completely.
 	 * @see #UNBOUNDED_CONCURRENCY
 	 */
+	// 设置允许的最大并行访问数。 -1 表示根本没有并发限制。
+	//
+	// 原则上，此限制可以在运行时更改，尽管它通常设计为配置时间设置。注意：不要在运行时在 -1 和任何具体限制之间切换，
+	// 因为这会导致并发计数不一致：-1 限制有效地完全关闭并发计数
 	public void setConcurrencyLimit(int concurrencyLimit) {
 		this.concurrencyThrottle.setConcurrencyLimit(concurrencyLimit);
 	}
@@ -154,6 +188,7 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	/**
 	 * Return the maximum number of parallel accesses allowed.
 	 */
+	// 返回允许的最大并行访问数。
 	public final int getConcurrencyLimit() {
 		return this.concurrencyThrottle.getConcurrencyLimit();
 	}
@@ -164,6 +199,9 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	 * @see #getConcurrencyLimit()
 	 * @see #setConcurrencyLimit
 	 */
+	// 返回此油门当前是否处于活动状态。
+	// 返回值：
+	//			如果此实例的并发限制处于活动状态，则为 true
 	public final boolean isThrottleActive() {
 		return this.concurrencyThrottle.isThrottleActive();
 	}
@@ -174,6 +212,7 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	 * if configured (through the superclass's settings).
 	 * @see #doExecute(Runnable)
 	 */
+	// 如果已配置（通过超类的设置），则在并发限制内执行给定的任务。
 	@Override
 	public void execute(Runnable task) {
 		execute(task, TIMEOUT_INDEFINITE);
@@ -188,6 +227,8 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	 * @see #TIMEOUT_IMMEDIATE
 	 * @see #doExecute(Runnable)
 	 */
+	// 如果已配置（通过超类的设置），则在并发限制内执行给定的任务。
+	// 绕过并发限制（如果处于活动状态）直接执行紧急任务（具有“立即”超时）。所有其他任务都受到限制
 	@Override
 	public void execute(Runnable task, long startTimeout) {
 		Assert.notNull(task, "Runnable must not be null");
@@ -201,6 +242,7 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 		}
 	}
 
+	// 提交任务
 	@Override
 	public Future<?> submit(Runnable task) {
 		FutureTask<Object> future = new FutureTask<>(task, null);
@@ -237,6 +279,10 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	 * @see #createThread
 	 * @see java.lang.Thread#start()
 	 */
+	// 用于实际执行任务的模板方法。
+	// 默认实现创建一个新线程并启动它。
+	// 参形：
+	//				task – 要执行的 Runnable
 	protected void doExecute(Runnable task) {
 		Thread thread = (this.threadFactory != null ? this.threadFactory.newThread(task) : createThread(task));
 		thread.start();
@@ -248,6 +294,7 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	 * making {@code beforeAccess()} and {@code afterAccess()}
 	 * visible to the surrounding class.
 	 */
+	// 通用 ConcurrencyThrottleSupport 类的子类，使 beforeAccess() 和 afterAccess() 对周围类可见。
 	private static class ConcurrencyThrottleAdapter extends ConcurrencyThrottleSupport {
 
 		@Override
@@ -266,6 +313,7 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	 * This Runnable calls {@code afterAccess()} after the
 	 * target Runnable has finished its execution.
 	 */
+	// 此 Runnable 在目标 Runnable 完成执行后调用 afterAccess() 。
 	private class ConcurrencyThrottlingRunnable implements Runnable {
 
 		private final Runnable target;
@@ -277,6 +325,7 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 		@Override
 		public void run() {
 			try {
+				// 目标线程执行
 				this.target.run();
 			}
 			finally {

@@ -41,6 +41,22 @@ package org.springframework.beans.factory;
  * @since 4.1
  * @see org.springframework.beans.factory.config.ConfigurableListableBeanFactory#preInstantiateSingletons()
  */
+// 在 {@link BeanFactory} 引导期间的单例预实例化阶段结束时触发的回调接口。
+// 这个接口可以由单例 bean 实现，以便在常规单例实例化算法之后执行一些初始化，
+// 避免意外早期初始化的副作用（例如来自 {@link ListableBeanFactorygetBeansOfType} 调用）。
+// 从这个意义上说，它是 {@link InitializingBean} 的替代方案，它在 bean 的本地构造阶段结束时被触发。
+//
+// <p>这个回调变量有点类似于 {@link org.springframework.context.event.ContextRefreshedEvent}
+// 但不需要实现 {@link org.springframework.context.ApplicationListener}，
+// 也不需要过滤上下文引用跨上下文层次结构等。它还意味着对 {@code beans} 包的依赖性更小，并且受到独立的
+// {@link ListableBeanFactory} 实现的支持，而不仅仅是在
+// {@link org.springframework.context.ApplicationContext} 环境
+//
+// <p><b>注意：
+// <b>如果你打算开始管理异步任务，最好实现 {@link org.springframework.context.Lifecycle}
+// 而不是它为运行时管理提供更丰富的模型并允许分阶段启动关闭。
+//
+// Spring 生命周期：Spring 单体的 Bean,在初始化后进行回调
 public interface SmartInitializingSingleton {
 
 	/**
@@ -53,6 +69,16 @@ public interface SmartInitializingSingleton {
 	 * and not for any other bean scope either. Carefully use it for beans
 	 * with the intended bootstrap semantics only.
 	 */
+	// 在单例预实例化阶段结束时调用，保证所有常规单例 bean 都已经创建。
+	// 此方法中的 {@link ListableBeanFactorygetBeansOfType} 调用不会在引导期间触发意外的副作用。
+	// <p><b>注意：<b>对于在 {@link BeanFactory} 引导后按需延迟初始化的单例 bean 不会触发此回调，
+	// 也不会为任何其他 bean 范围触发。小心地将它用于仅具有预期引导语义的 bean
+	//
+	// 确保 bean 完完整整的初始化了，任何一个对象在 getBean的时候，他所依赖的对象也会被初始化，比如在 beanPostProcessor()
+	// 调用之前所依赖的 bean 就有部分初始化啊
+	// 这导致依赖的对象过早的初始化(当前bean的初始化状态不正常)，没有经过 beanPostProcessor()方法的bean 初始化并不完整，
+	// 当你所依赖的bean完全初始化后可以通过本接口来进行显式回调，而本接口就是保证所创建的bean已经完全的初始化了，
+	// 确保当前bean初始化行为完全正常，比我们的 beanPostProcessor()更加有用
 	void afterSingletonsInstantiated();
 
 }

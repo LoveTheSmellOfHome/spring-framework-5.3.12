@@ -40,6 +40,7 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  * @since 2.5
  */
+// 解析 Spring 的 @Transactional 注解的策略实现。
 @SuppressWarnings("serial")
 public class SpringTransactionAnnotationParser implements TransactionAnnotationParser, Serializable {
 
@@ -68,18 +69,23 @@ public class SpringTransactionAnnotationParser implements TransactionAnnotationP
 	protected TransactionAttribute parseTransactionAnnotation(AnnotationAttributes attributes) {
 		RuleBasedTransactionAttribute rbta = new RuleBasedTransactionAttribute();
 
+		// 获取传播行为
 		Propagation propagation = attributes.getEnum("propagation");
 		rbta.setPropagationBehavior(propagation.value());
+		// 获取隔离级别
 		Isolation isolation = attributes.getEnum("isolation");
 		rbta.setIsolationLevel(isolation.value());
 
+		// 设置事务超时事件
 		rbta.setTimeout(attributes.getNumber("timeout").intValue());
 		String timeoutString = attributes.getString("timeoutString");
 		Assert.isTrue(!StringUtils.hasText(timeoutString) || rbta.getTimeout() < 0,
 				"Specify 'timeout' or 'timeoutString', not both");
 		rbta.setTimeoutString(timeoutString);
 
+		// 设置是否为只读事件
 		rbta.setReadOnly(attributes.getBoolean("readOnly"));
+		// 设置 TransactionManager bean 的名称，即 @Transactional 的 value 的值
 		rbta.setQualifier(attributes.getString("value"));
 		rbta.setLabels(Arrays.asList(attributes.getStringArray("label")));
 

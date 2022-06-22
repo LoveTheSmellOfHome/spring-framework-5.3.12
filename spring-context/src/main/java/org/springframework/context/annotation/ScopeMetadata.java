@@ -32,16 +32,21 @@ import org.springframework.util.Assert;
  * @see ScopeMetadataResolver
  * @see ScopedProxyMode
  */
+// 描述 Spring 管理的 bean 的范围特征，包括范围名称和范围代理行为
+// 默认作用域是“singleton”，默认是不创建作用域代理
 public class ScopeMetadata {
 
+	// 默认单例
 	private String scopeName = BeanDefinition.SCOPE_SINGLETON;
 
+	// 无范围
 	private ScopedProxyMode scopedProxyMode = ScopedProxyMode.NO;
 
 
 	/**
 	 * Set the name of the scope.
 	 */
+	// 设置范围的名称
 	public void setScopeName(String scopeName) {
 		Assert.notNull(scopeName, "'scopeName' must not be null");
 		this.scopeName = scopeName;
@@ -50,6 +55,7 @@ public class ScopeMetadata {
 	/**
 	 * Get the name of the scope.
 	 */
+	// 获取作用域名称
 	public String getScopeName() {
 		return this.scopeName;
 	}
@@ -57,6 +63,7 @@ public class ScopeMetadata {
 	/**
 	 * Set the proxy-mode to be applied to the scoped instance.
 	 */
+	// 设置要应用于作用域实例的代理模式
 	public void setScopedProxyMode(ScopedProxyMode scopedProxyMode) {
 		Assert.notNull(scopedProxyMode, "'scopedProxyMode' must not be null");
 		this.scopedProxyMode = scopedProxyMode;
@@ -65,6 +72,7 @@ public class ScopeMetadata {
 	/**
 	 * Get the proxy-mode to be applied to the scoped instance.
 	 */
+	// 获取要应用于作用域实例的代理模式
 	public ScopedProxyMode getScopedProxyMode() {
 		return this.scopedProxyMode;
 	}

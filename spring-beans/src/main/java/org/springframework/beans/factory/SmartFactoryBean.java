@@ -39,6 +39,14 @@ package org.springframework.beans.factory;
  * @see #isPrototype()
  * @see #isSingleton()
  */
+// {@link FactoryBean} 接口的扩展。实现可以指示它们是否总是返回独立实例，
+// 因为它们的 {@link isSingleton()} 实现返回 {@code false} 没有明确指示独立实例
+//
+// <p>如果它们的 {@link isSingleton()} 实现返回 {@code false}，
+// 则简单地假定未实现此扩展接口的普通 {@link FactoryBean} 实现始终返回独立实例；暴露的对象只能按需访问。
+//
+// <p><b>注意：<b>这个接口是一个特殊用途的接口，主要供框架内部和协作框架内部使用。
+// 通常，应用程序提供的 FactoryBeans 应该简单地实现普通的 {@link FactoryBean} 接口。即使在小版本发布中，新方法也可能被添加到这个扩展接口中。
 public interface SmartFactoryBean<T> extends FactoryBean<T> {
 
 	/**
@@ -56,6 +64,11 @@ public interface SmartFactoryBean<T> extends FactoryBean<T> {
 	 * @see #getObject()
 	 * @see #isSingleton()
 	 */
+	// 这个工厂管理的对象是原型吗？也就是说，{@link getObject()} 会一直返回一个独立的实例吗？
+	// <p>FactoryBean 本身的原型状态一般会由拥有者 {@link BeanFactory} 提供；通常，它必须在那里定义为单例。
+	// <p>这个方法应该严格检查独立实例；它不应为作用域对象或其他类型的非单一、非独立对象返回 {@code true}。
+	// 出于这个原因，这不仅仅是 {@link isSingleton()} 的倒置形式。
+	// <p>默认实现返回 {@code false}。
 	default boolean isPrototype() {
 		return false;
 	}
@@ -75,6 +88,11 @@ public interface SmartFactoryBean<T> extends FactoryBean<T> {
 	 * @return whether eager initialization applies
 	 * @see org.springframework.beans.factory.config.ConfigurableListableBeanFactory#preInstantiateSingletons()
 	 */
+	// 这个 FactoryBean 是否期望急切初始化，即急切初始化自身以及期望对其单例对象（如果有）的急切初始化？
+	// <p>标准 FactoryBean 不应该急切地初始化：它的 {@link getObject()} 只会在实际访问时被调用，即使是在单例对象的情况下。
+	// 从此方法返回 {@code true} 表明应该急切地调用 {@link getObject()}，也急切地应用后处理器。
+	// 在 {@link isSingleton() singleton} 对象的情况下，这可能是有意义的，特别是如果后处理器希望在启动时应用。
+	// <p>默认实现返回 {@code false}。
 	default boolean isEagerInit() {
 		return false;
 	}

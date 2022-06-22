@@ -16,12 +16,12 @@
 
 package org.springframework.web.context.support;
 
-import javax.servlet.ServletConfig;
-
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
+
+import javax.servlet.ServletConfig;
 
 /**
  * {@link PropertySource} that reads init parameters from a {@link ServletConfig} object.
@@ -30,6 +30,8 @@ import org.springframework.util.StringUtils;
  * @since 3.1
  * @see ServletContextPropertySource
  */
+// 从 {@link ServletConfig} 对象读取初始化参数的 {@link PropertySource}
+// Spring 內建的配置属性源 - ServletContext 配置属性源
 public class ServletConfigPropertySource extends EnumerablePropertySource<ServletConfig> {
 
 	public ServletConfigPropertySource(String name, ServletConfig servletConfig) {

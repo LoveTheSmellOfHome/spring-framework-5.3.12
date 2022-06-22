@@ -33,11 +33,14 @@ import org.springframework.util.ClassUtils;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// AspectInstanceFactory 的实现，它使用配置的 bean 名称从 BeanFactory 中定位切面。
 public class SimpleBeanFactoryAwareAspectInstanceFactory implements AspectInstanceFactory, BeanFactoryAware {
 
+	// 切面名称
 	@Nullable
 	private String aspectBeanName;
 
+	// IoC 底层工厂
 	@Nullable
 	private BeanFactory beanFactory;
 
@@ -46,6 +49,7 @@ public class SimpleBeanFactoryAwareAspectInstanceFactory implements AspectInstan
 	 * Set the name of the aspect bean. This is the bean that is returned when calling
 	 * {@link #getAspectInstance()}.
 	 */
+	// 设置切面 bean 的名称。这是调用 getAspectInstance() 时返回的 bean。
 	public void setAspectBeanName(String aspectBeanName) {
 		this.aspectBeanName = aspectBeanName;
 	}
@@ -61,6 +65,7 @@ public class SimpleBeanFactoryAwareAspectInstanceFactory implements AspectInstan
 	 * Look up the aspect bean from the {@link BeanFactory} and returns it.
 	 * @see #setAspectBeanName
 	 */
+	// 从 BeanFactory 中依赖查找切面 bean 并返回它
 	@Override
 	public Object getAspectInstance() {
 		Assert.state(this.beanFactory != null, "No BeanFactory set");

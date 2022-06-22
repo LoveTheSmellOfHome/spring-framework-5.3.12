@@ -44,6 +44,8 @@ import org.springframework.util.StringUtils;
  * @author Juergen Hoeller
  * @since 1.1.2
  */
+// PathMatchingResourcePatternResolver 的 ServletContext-aware 子类，
+// 能够通过 ServletContext.getResourcePaths 在 web 应用根目录下找到匹配的资源。回退到超类的文件系统检查其他资源。
 public class ServletContextResourcePatternResolver extends PathMatchingResourcePatternResolver {
 
 	private static final Log logger = LogFactory.getLog(ServletContextResourcePatternResolver.class);
@@ -54,6 +56,9 @@ public class ServletContextResourcePatternResolver extends PathMatchingResourceP
 	 * @param servletContext the ServletContext to load resources with
 	 * @see ServletContextResourceLoader#ServletContextResourceLoader(javax.servlet.ServletContext)
 	 */
+	// 创建一个新的 ServletContextResourcePatternResolver。
+	// 形参：
+	// 		servletContext – 用于加载资源的 ServletContext
 	public ServletContextResourcePatternResolver(ServletContext servletContext) {
 		super(new ServletContextResourceLoader(servletContext));
 	}
@@ -63,6 +68,8 @@ public class ServletContextResourcePatternResolver extends PathMatchingResourceP
 	 * @param resourceLoader the ResourceLoader to load root directories and
 	 * actual resources with
 	 */
+	// 创建一个新的 ServletContextResourcePatternResolver。
+	// 形参：resourceLoader – 用于加载根目录和实际资源的 ResourceLoader
 	public ServletContextResourcePatternResolver(ResourceLoader resourceLoader) {
 		super(resourceLoader);
 	}
@@ -77,6 +84,8 @@ public class ServletContextResourcePatternResolver extends PathMatchingResourceP
 	 * @see ServletContextResource
 	 * @see javax.servlet.ServletContext#getResourcePaths
 	 */
+	// 检查 ServletContextResource 并使用 ServletContext.getResourcePaths 在 Web 应用程序根目录下查找匹配资源的覆盖版本。
+	// 如果是其他资源，则委托给超类版本。
 	@Override
 	protected Set<Resource> doFindPathMatchingFileResources(Resource rootDirResource, String subPattern)
 			throws IOException {
@@ -106,6 +115,13 @@ public class ServletContextResourcePatternResolver extends PathMatchingResourceP
 	 * @see ServletContextResource
 	 * @see javax.servlet.ServletContext#getResourcePaths
 	 */
+	// 递归检索与给定模式匹配的 ServletContextResources，将它们添加到给定的结果集中。
+	// 形参：
+	// 			servletContext – 要处理的 ServletContext
+	//			fullPattern – 要匹配的模式，带有预先设定的根目录路径
+	//			dir – 当前目录
+	//			result - 要添加到的匹配资源集
+	//			IOException – 如果无法检索目录内容
 	protected void doRetrieveMatchingServletContextResources(
 			ServletContext servletContext, String fullPattern, String dir, Set<Resource> result)
 			throws IOException {
@@ -124,6 +140,7 @@ public class ServletContextResourcePatternResolver extends PathMatchingResourceP
 				if (!currPath.startsWith(dir)) {
 					// Returned resource path does not start with relative directory:
 					// assuming absolute path returned -> strip absolute path.
+					// 返回的资源路径不以相对目录开头：假设返回绝对路径 -> 去除绝对路径。
 					int dirIndex = currPath.indexOf(dir);
 					if (dirIndex != -1) {
 						currPath = currPath.substring(dirIndex);
@@ -133,10 +150,12 @@ public class ServletContextResourcePatternResolver extends PathMatchingResourceP
 						StringUtils.countOccurrencesOf(fullPattern, "/"))) {
 					// Search subdirectories recursively: ServletContext.getResourcePaths
 					// only returns entries for one directory level.
+					// 递归搜索子目录：ServletContext.getResourcePaths 只返回一个目录级别的条目。
 					doRetrieveMatchingServletContextResources(servletContext, fullPattern, currPath, result);
 				}
 				if (jarFilePath != null && getPathMatcher().match(jarFilePath, currPath)) {
 					// Base pattern matches a jar file - search for matching entries within.
+					// 基本模式匹配一​​个 jar 文件 - 在其中搜索匹配的条目
 					String absoluteJarPath = servletContext.getRealPath(currPath);
 					if (absoluteJarPath != null) {
 						doRetrieveMatchingJarEntries(absoluteJarPath, pathInJarFile, result);
@@ -155,6 +174,11 @@ public class ServletContextResourcePatternResolver extends PathMatchingResourceP
 	 * @param entryPattern the pattern for jar entries to match
 	 * @param result the Set of matching Resources to add to
 	 */
+	// 按模式从给定的 jar 中提取条目。
+	// 形参：
+	//		jarFilePath – jar 文件的路径
+	//		entryPattern – jar 条目匹配的模式
+	//		result - 要添加到的匹配资源集
 	private void doRetrieveMatchingJarEntries(String jarFilePath, String entryPattern, Set<Resource> result) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Searching jar file [" + jarFilePath + "] for entries matching [" + entryPattern + "]");

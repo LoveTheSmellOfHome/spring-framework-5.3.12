@@ -33,12 +33,17 @@ import org.springframework.lang.Nullable;
  * @see GenericApplicationListener
  * @see GenericApplicationListenerAdapter
  */
+// 标准 ApplicationListener 接口的扩展变体，公开更多元数据，例如支持的事件和源类型。
+//
+// 要全面了解通用事件类型，请考虑实现 GenericApplicationListener 接口。
 public interface SmartApplicationListener extends ApplicationListener<ApplicationEvent>, Ordered {
 
 	/**
 	 * Determine whether this listener actually supports the given event type.
 	 * @param eventType the event type (never {@code null})
 	 */
+	// 确定此侦听器是否真正支持给定的事件类型。
+	// 参形：eventType – 事件类型（从不为null ）
 	boolean supportsEventType(Class<? extends ApplicationEvent> eventType);
 
 	/**
@@ -46,6 +51,9 @@ public interface SmartApplicationListener extends ApplicationListener<Applicatio
 	 * <p>The default implementation always returns {@code true}.
 	 * @param sourceType the source type, or {@code null} if no source
 	 */
+	// 确定此侦听器是否真正支持给定的源类型。
+	// 默认实现总是返回true 。
+	// 参形：sourceType – 源类型，如果没有源，则为nul
 	default boolean supportsSourceType(@Nullable Class<?> sourceType) {
 		return true;
 	}
@@ -54,6 +62,8 @@ public interface SmartApplicationListener extends ApplicationListener<Applicatio
 	 * Determine this listener's order in a set of listeners for the same event.
 	 * <p>The default implementation returns {@link #LOWEST_PRECEDENCE}.
 	 */
+	// 在同一事件的一组侦听器中确定此侦听器的顺序。
+	// 默认实现返回 LOWEST_PRECEDENCE 。
 	@Override
 	default int getOrder() {
 		return LOWEST_PRECEDENCE;
@@ -66,6 +76,8 @@ public interface SmartApplicationListener extends ApplicationListener<Applicatio
 	 * @see EventListener#id
 	 * @see ApplicationEventMulticaster#removeApplicationListeners
 	 */
+	// 返回侦听器的可选标识符。
+	// 默认值为空字符串
 	default String getListenerId() {
 		return "";
 	}

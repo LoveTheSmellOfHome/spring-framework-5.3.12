@@ -32,6 +32,8 @@ import org.springframework.util.Assert;
  * @since 09.04.2003
  * @see NoRollbackRuleAttribute
  */
+// 确定给定异常（和任何子类）是否应导致回滚的规则
+// <p>可以应用多个这样的规则来确定事务在抛出异常后是应该提交还是回滚。
 @SuppressWarnings("serial")
 public class RollbackRuleAttribute implements Serializable{
 
@@ -39,6 +41,7 @@ public class RollbackRuleAttribute implements Serializable{
 	 * The {@link RollbackRuleAttribute rollback rule} for
 	 * {@link RuntimeException RuntimeExceptions}.
 	 */
+	// {@link RuntimeException RuntimeExceptions} 的 {@link RollbackRuleAttribute 回滚规则}。
 	public static final RollbackRuleAttribute ROLLBACK_ON_RUNTIME_EXCEPTIONS =
 			new RollbackRuleAttribute(RuntimeException.class);
 

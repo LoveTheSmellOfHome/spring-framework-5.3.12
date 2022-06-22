@@ -16,10 +16,10 @@
 
 package org.springframework.aop.interceptor;
 
-import java.lang.reflect.Method;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.lang.reflect.Method;
 
 /**
  * A default {@link AsyncUncaughtExceptionHandler} that simply logs the exception.
@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
  * @author Juergen Hoeller
  * @since 4.1
  */
+// 一个默认的 AsyncUncaughtExceptionHandler，它只记录异常
 public class SimpleAsyncUncaughtExceptionHandler implements AsyncUncaughtExceptionHandler {
 
 	private static final Log logger = LogFactory.getLog(SimpleAsyncUncaughtExceptionHandler.class);

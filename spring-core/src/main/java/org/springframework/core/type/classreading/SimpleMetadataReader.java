@@ -16,15 +16,15 @@
 
 package org.springframework.core.type.classreading;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.springframework.asm.ClassReader;
 import org.springframework.core.NestedIOException;
 import org.springframework.core.io.Resource;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.ClassMetadata;
 import org.springframework.lang.Nullable;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * {@link MetadataReader} implementation based on an ASM
@@ -39,8 +39,10 @@ final class SimpleMetadataReader implements MetadataReader {
 	private static final int PARSING_OPTIONS = ClassReader.SKIP_DEBUG
 			| ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES;
 
+	// class 资源信息,从 classpath 读取到的即从 JAR 包中特定位置的 ".class" 文件读取到的类资源信息
 	private final Resource resource;
 
+	// 注解元数据
 	private final AnnotationMetadata annotationMetadata;
 
 

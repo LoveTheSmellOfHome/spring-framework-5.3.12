@@ -16,9 +16,9 @@
 
 package org.springframework.beans.factory.serviceloader;
 
-import java.util.ServiceLoader;
-
 import org.springframework.beans.factory.BeanClassLoaderAware;
+
+import java.util.ServiceLoader;
 
 /**
  * {@link org.springframework.beans.factory.FactoryBean} that exposes the
@@ -28,6 +28,9 @@ import org.springframework.beans.factory.BeanClassLoaderAware;
  * @since 2.5
  * @see java.util.ServiceLoader
  */
+// 特殊实例化 bean 的方式之一：通过 ServiceLoaderFactoryBean（配置元信息：XML、Java 注解和 Java API ）
+// 通过 AutowireCapableBeanFactory#createBean(java.lang.Class, int, boolean)
+// 通过 BeanDefinitionRegistry#registerBeanDefinition(String,BeanDefinition)
 public class ServiceLoaderFactoryBean extends AbstractServiceLoaderBasedFactoryBean implements BeanClassLoaderAware {
 
 	@Override

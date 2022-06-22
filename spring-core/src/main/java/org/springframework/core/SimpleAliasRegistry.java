@@ -16,19 +16,18 @@
 
 package org.springframework.core;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
+import org.springframework.util.StringValueResolver;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
-import org.springframework.util.StringValueResolver;
 
 /**
  * Simple implementation of the {@link AliasRegistry} interface.
@@ -40,12 +39,16 @@ import org.springframework.util.StringValueResolver;
  * @author Qimiao Chen
  * @since 2.5.2
  */
+// AliasRegistry 接口的简单实现。
+//
+// 作为 org.springframework.beans.factory.support.BeanDefinitionRegistry 实现的基类
 public class SimpleAliasRegistry implements AliasRegistry {
 
 	/** Logger available to subclasses. */
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	/** Map from alias to canonical name. */
+	// 别名 map
 	private final Map<String, String> aliasMap = new ConcurrentHashMap<>(16);
 
 
@@ -54,7 +57,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 		Assert.hasText(name, "'name' must not be empty");
 		Assert.hasText(alias, "'alias' must not be empty");
 		synchronized (this.aliasMap) {
-			if (alias.equals(name)) {
+			if (alias.equals(name)) { // 别名和真名不能相同
 				this.aliasMap.remove(alias);
 				if (logger.isDebugEnabled()) {
 					logger.debug("Alias definition '" + alias + "' ignored since it points to same name");
@@ -65,9 +68,10 @@ public class SimpleAliasRegistry implements AliasRegistry {
 				if (registeredName != null) {
 					if (registeredName.equals(name)) {
 						// An existing alias - no need to re-register
+						// 存在 别名，直接 return
 						return;
 					}
-					if (!allowAliasOverriding()) {
+					if (!allowAliasOverriding()) { // 默认允许别名重写
 						throw new IllegalStateException("Cannot define alias '" + alias + "' for name '" +
 								name + "': It is already registered for name '" + registeredName + "'.");
 					}
@@ -193,6 +197,10 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	 * @see #registerAlias
 	 * @see #hasAlias
 	 */
+	// 检查给定名称是否已经作为另一个方向的别名指向给定别名，预先捕获循环引用并抛出相应的 IllegalStateException。
+	// 参形：
+	//			name – 候选人姓名
+	//			alias – 候选别名
 	protected void checkForAliasCircle(String name, String alias) {
 		if (hasAlias(alias, name)) {
 			throw new IllegalStateException("Cannot register alias '" + alias +

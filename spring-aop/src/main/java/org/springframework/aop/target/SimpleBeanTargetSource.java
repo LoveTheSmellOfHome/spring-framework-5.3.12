@@ -27,9 +27,14 @@ package org.springframework.aop.target;
  * @author Juergen Hoeller
  * @since 2.0.3
  */
+// 简单的 org.springframework.aop.TargetSource 实现，从其包含的 Spring org.springframework.beans.factory.BeanFactory中
+// 新获取指定的目标 bean。
+//
+// 可以获取任何类型的目标 bean：单例、作用域或原型。通常用于作用域 bean。
 @SuppressWarnings("serial")
 public class SimpleBeanTargetSource extends AbstractBeanFactoryBasedTargetSource {
 
+	// 依赖查找：获取代理目标对象实例
 	@Override
 	public Object getTarget() throws Exception {
 		return getBeanFactory().getBean(getTargetBeanName());

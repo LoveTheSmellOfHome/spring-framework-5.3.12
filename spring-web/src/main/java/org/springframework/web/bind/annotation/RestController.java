@@ -16,14 +16,10 @@
 
 package org.springframework.web.bind.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Controller;
+
+import java.lang.annotation.*;
 
 /**
  * A convenience annotation that is itself annotated with
@@ -42,6 +38,7 @@ import org.springframework.stereotype.Controller;
  * @author Sam Brannen
  * @since 4.0
  */
+// 用 @Controller 和 @ResponseBody 注解的符合注解
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -55,6 +52,8 @@ public @interface RestController {
 	 * @return the suggested component name, if any (or empty String otherwise)
 	 * @since 4.0.1
 	 */
+	// 该值可能表示对逻辑组件名称的建议，在自动检测到组件的情况下将其转换为 Spring bean。
+	// 返回值：建议的组件名称，如果有的话（否则为空字符串）
 	@AliasFor(annotation = Controller.class)
 	String value() default "";
 

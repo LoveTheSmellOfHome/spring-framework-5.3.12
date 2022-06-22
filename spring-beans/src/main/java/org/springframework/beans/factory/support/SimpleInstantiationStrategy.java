@@ -41,6 +41,8 @@ import org.springframework.util.StringUtils;
  * @author Juergen Hoeller
  * @since 1.1
  */
+// 在 BeanFactory 中使用的简单对象实例化策略。
+// 不支持方法注入，尽管它为子类提供钩子以覆盖以添加方法注入支持，例如通过覆盖方法
 public class SimpleInstantiationStrategy implements InstantiationStrategy {
 
 	private static final ThreadLocal<Method> currentlyInvokedFactoryMethod = new ThreadLocal<>();
@@ -51,6 +53,8 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 	 * <p>Allows factory method implementations to determine whether the current
 	 * caller is the container itself as opposed to user code.
 	 */
+	// 返回当前正在调用的工厂方法，如果没有则返回null 。
+	// 允许工厂方法实现确定当前调用者是否是容器本身，而不是用户代码
 	@Nullable
 	public static Method getCurrentlyInvokedFactoryMethod() {
 		return currentlyInvokedFactoryMethod.get();
@@ -60,6 +64,7 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 	@Override
 	public Object instantiate(RootBeanDefinition bd, @Nullable String beanName, BeanFactory owner) {
 		// Don't override the class with CGLIB if no overrides.
+		// 如果没有覆盖，不要用 CGLIB 覆盖类
 		if (!bd.hasMethodOverrides()) {
 			Constructor<?> constructorToUse;
 			synchronized (bd.constructorArgumentLock) {
@@ -84,10 +89,12 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 					}
 				}
 			}
+			// 使用构造器创造对象 constructorToUse 就是 java 反射默认无参构造器
 			return BeanUtils.instantiateClass(constructorToUse);
 		}
 		else {
 			// Must generate CGLIB subclass.
+			// 必须生成CGLIB 子类，使用 CGLIB
 			return instantiateWithMethodInjection(bd, beanName, owner);
 		}
 	}
@@ -98,6 +105,8 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 	 * the Method Injection specified in the given RootBeanDefinition.
 	 * Instantiation should use a no-arg constructor.
 	 */
+	// 如果子类可以使用给定 RootBeanDefinition 中指定的方法注入实例化对象，则子类可以覆盖此方法，
+	// 该方法被实现为抛出 UnsupportedOperationException。 实例化应该使用无参数构造函数。
 	protected Object instantiateWithMethodInjection(RootBeanDefinition bd, @Nullable String beanName, BeanFactory owner) {
 		throw new UnsupportedOperationException("Method Injection not supported in SimpleInstantiationStrategy");
 	}
@@ -109,6 +118,7 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 		if (!bd.hasMethodOverrides()) {
 			if (System.getSecurityManager() != null) {
 				// use own privileged to change accessibility (when security is on)
+				// 使用自己的特权来更改可访问性（当安全性打开时）
 				AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
 					ReflectionUtils.makeAccessible(ctor);
 					return null;
@@ -127,6 +137,8 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 	 * the Method Injection specified in the given RootBeanDefinition.
 	 * Instantiation should use the given constructor and parameters.
 	 */
+	// 如果子类可以使用给定 RootBeanDefinition 中指定的方法注入实例化对象，则子类可以覆盖此方法，
+	// 该方法被实现为抛出 UnsupportedOperationException。 实例化应该使用给定的构造函数和参数
 	protected Object instantiateWithMethodInjection(RootBeanDefinition bd, @Nullable String beanName,
 			BeanFactory owner, @Nullable Constructor<?> ctor, Object... args) {
 
@@ -148,9 +160,11 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 				ReflectionUtils.makeAccessible(factoryMethod);
 			}
 
+			// 事先被调用的工厂方法
 			Method priorInvokedFactoryMethod = currentlyInvokedFactoryMethod.get();
 			try {
 				currentlyInvokedFactoryMethod.set(factoryMethod);
+				// 根据 @Bean 标注的工厂方法，获取创建的对象
 				Object result = factoryMethod.invoke(factoryBean, args);
 				if (result == null) {
 					result = new NullBean();

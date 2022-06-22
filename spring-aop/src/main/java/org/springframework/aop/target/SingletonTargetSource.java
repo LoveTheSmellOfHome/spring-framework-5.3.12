@@ -16,11 +16,11 @@
 
 package org.springframework.aop.target;
 
-import java.io.Serializable;
-
 import org.springframework.aop.TargetSource;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
+
+import java.io.Serializable;
 
 /**
  * Implementation of the {@link org.springframework.aop.TargetSource} interface
@@ -35,6 +35,10 @@ import org.springframework.util.ObjectUtils;
  * @author Juergen Hoeller
  * @see org.springframework.aop.framework.AdvisedSupport#setTarget(Object)
  */
+// 包含给定对象的 TargetSource 接口的实现。这是 Spring AOP 框架使用的 TargetSource 接口的默认实现。
+// 通常不需要在应用程序代码中创建此类的对象。
+//
+// 这个类是可序列化的。但是，SingletonTargetSource 的实际可序列化性将取决于目标是否可序列化。
 public class SingletonTargetSource implements TargetSource, Serializable {
 
 	/** use serialVersionUID from Spring 1.2 for interoperability. */
@@ -42,6 +46,7 @@ public class SingletonTargetSource implements TargetSource, Serializable {
 
 
 	/** Target cached and invoked using reflection. */
+	// 使用反射缓存和调用目标。final 只允许被初始化一次
 	private final Object target;
 
 
@@ -49,6 +54,9 @@ public class SingletonTargetSource implements TargetSource, Serializable {
 	 * Create a new SingletonTargetSource for the given target.
 	 * @param target the target object
 	 */
+	// 为给定的目标创建一个新的 SingletonTargetSource。
+	// 参形：target – 目标对象,一般来说是 IoC 容器中的单例 bean.
+	// 所以这里还是通过 IoC 来实现基于容器级别的单例
 	public SingletonTargetSource(Object target) {
 		Assert.notNull(target, "Target object must not be null");
 		this.target = target;
@@ -65,11 +73,13 @@ public class SingletonTargetSource implements TargetSource, Serializable {
 		return this.target;
 	}
 
+	// 单例对象不需要释放目标对象至池内
 	@Override
 	public void releaseTarget(Object target) {
 		// nothing to do
 	}
 
+	// 单例对象返回 true
 	@Override
 	public boolean isStatic() {
 		return true;

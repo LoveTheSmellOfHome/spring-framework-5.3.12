@@ -64,6 +64,27 @@ package org.springframework.context;
  * @see LifecycleProcessor
  * @see ConfigurableApplicationContext
  */
+// {@link Lifecycle} 接口的扩展，用于需要以特定顺序在 {@code ApplicationContext} 刷新和/或关闭时启动的那些对象。
+//
+// <p>{@link isAutoStartup()} 返回值指示该对象是否应在上下文刷新时启动。
+// 接受回调的 {@link stop(Runnable)} 方法对于具有异步关闭过程的对象很有用。
+// 此接口的任何实现<i>必须<i>在关闭完成时调用回调的 {@code run()} 方法，
+// 以避免在整个 {@code ApplicationContext} 关闭中出现不必要的延迟。
+//
+// <p>这个接口扩展了{@link Phased}，{@link getPhase()} 方法的返回值指示了这个{@code Lifecycle} 组件
+// 应该在哪个阶段启动和停止。启动过程从 <i>lowest<i> 相位值开始，以 <i>highest<i> 相位值结束（{@code Integer.MIN_VALUE}
+// 是可能的最低值，而 {@code Integer.MAX_VALUE} 是尽可能高）。关闭过程将应用相反的顺序。任何具有相同值的组件将在同一阶段内任意排序。
+//
+// <p>例如：如果组件B依赖于组件A已经启动，那么组件A的相位值应该低于组件B。在关闭过程中，组件B会先于组件A停止。
+//
+// <p>任何显式的“依赖”关系都将优先于阶段顺序，这样依赖 bean 总是在其依赖之后开始，并始终在其依赖之前停止
+//
+// <p>上下文中未实现 {@code SmartLifecycle} 的任何 {@code Lifecycle} 组件将被视为具有 {@code 0} 的阶段值。
+// 如果 {@code SmartLifecycle} 组件具有负相位值，则这允许 {@code SmartLifecycle} 组件在这些 {@code Lifecycle} 组件之前启动，
+// 或者 {@code SmartLifecycle} 组件可能在这些 {@code Lifecycle} 之后启动如果 {@code SmartLifecycle} 组件具有正相位值。
+//
+// <p>请注意，由于 {@code SmartLifecycle} 中的自动启动支持，{@code SmartLifecycle} bean 实例通常会在
+// 任何情况下在应用程序上下文启动时进行初始化。因此，bean 定义lazy-init 标志对{@code SmartLifecycle} bean 的实际影响非常有限。
 public interface SmartLifecycle extends Lifecycle, Phased {
 
 	/**
@@ -76,6 +97,9 @@ public interface SmartLifecycle extends Lifecycle, Phased {
 	 * @see #getPhase()
 	 * @see org.springframework.context.support.DefaultLifecycleProcessor#getPhase(Lifecycle)
 	 */
+	// {@code SmartLifecycle} 的默认阶段：{@code Integer.MAX_VALUE}。
+	// <p>这与与常规 {@link Lifecycle} 实现相关联的公共阶段 {@code 0} 不同，
+	// 将通常自动启动的 {@code SmartLifecycle} bean 放入稍后的启动阶段和更早的关闭阶段
 	int DEFAULT_PHASE = Integer.MAX_VALUE;
 
 
@@ -92,6 +116,9 @@ public interface SmartLifecycle extends Lifecycle, Phased {
 	 * @see LifecycleProcessor#onRefresh()
 	 * @see ConfigurableApplicationContext#refresh()
 	 */
+	// 如果此 {@code Lifecycle} 组件应在包含 {@link ApplicationContext} 刷新时由容器自动启动，则返回 {@code true}。
+	// <p>{@code false} 值表示该组件旨在通过显式 {@link #start()} 调用启动，类似于普通的 {@link Lifecycle} 实现。
+	// <p>默认实现返回 {@code true}。
 	default boolean isAutoStartup() {
 		return true;
 	}
@@ -113,6 +140,13 @@ public interface SmartLifecycle extends Lifecycle, Phased {
 	 * @see #stop()
 	 * @see #getPhase()
 	 */
+	// 表示如果生命周期组件当前正在运行，它必须停止。
+	// <p>{@link LifecycleProcessor} 使用提供的回调来支持所有具有公共关闭顺序值的组件的有序且可能并发的关闭。
+	// 回调<b>必须<b>在{@code SmartLifecycle}组件确实停止后执行。
+	// <p>{@link LifecycleProcessor} 将<i>仅<i>调用 {@code stop} 方法的这个变体；即 {@link Lifecycle#stop()}
+	// 不会被 {@code SmartLifecycle} 实现调用，除非在此方法的实现中明确委托。
+	// <p>默认实现委托给 {@link #stop()} 并立即触发调用线程中的给定回调。
+	// 请注意，两者之间没有同步，因此自定义实现可能至少希望将相同的步骤放在其公共生命周期监视器（如果有）中。
 	default void stop(Runnable callback) {
 		stop();
 		callback.run();
@@ -128,6 +162,8 @@ public interface SmartLifecycle extends Lifecycle, Phased {
 	 * @see #stop(Runnable)
 	 * @see org.springframework.context.support.DefaultLifecycleProcessor#getPhase(Lifecycle)
 	 */
+	// 返回此生命周期对象应该运行的阶段。 <p>默认实现返回 {@link #DEFAULT_PHASE} 以便让 {@code stop()} 回调
+	// 在常规 {@code Lifecycle} 实现之后执行
 	@Override
 	default int getPhase() {
 		return DEFAULT_PHASE;

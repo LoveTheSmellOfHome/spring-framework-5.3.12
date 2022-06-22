@@ -16,11 +16,8 @@
 
 package org.springframework.context.event;
 
-import java.util.concurrent.Executor;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
@@ -28,6 +25,8 @@ import org.springframework.context.PayloadApplicationEvent;
 import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ErrorHandler;
+
+import java.util.concurrent.Executor;
 
 /**
  * Simple implementation of the {@link ApplicationEventMulticaster} interface.
@@ -48,11 +47,27 @@ import org.springframework.util.ErrorHandler;
  * @author Brian Clozel
  * @see #setTaskExecutor
  */
+// {@link ApplicationEventMulticaster} 接口的简单实现
+//
+// <p>将所有事件多播给所有注册的监听器，让监听器忽略他们不感兴趣的事件。
+// 监听器通常会对传入的事件对象执行相应的 {@code instanceof} 检查，也就是必须是当前类型才行，非基于接口契约编程，只是基于 当前API 编程
+//
+// <p>默认情况下，所有侦听器都在调用线程中调用。这允许流氓侦听器阻塞整个应用程序的危险，但增加了最小的开销。
+// 指定替代任务执行器以在不同线程中执行侦听器，例如从线程池中执行
+//
+// 同步执行是默认行为，SimpleApplicationEventMulticaster 它是一个全局的控制，一个应用上下文中只有一个
+// SimpleApplicationEventMulticaster 对象，是单例的，@EventListen 影响局部，它不会影响全局控制的线程执行
+//
+// 这个 API 非常重要，Spring Boot 和 Spring Cloud 都是基于这个 API扩展的
+// 不管是依赖查找还是依赖注入都得到唯一的单例 bean.
+// ApplicationEventMulticaster 在 Spring 上下文是唯一存在，并且必须存在
 public class SimpleApplicationEventMulticaster extends AbstractApplicationEventMulticaster {
 
+	// 默认是同步的，在主线程中顺序执行，在此处增加 执行器 增加异步的能力
 	@Nullable
 	private Executor taskExecutor;
 
+	// 错误处理
 	@Nullable
 	private ErrorHandler errorHandler;
 
@@ -63,12 +78,14 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 	/**
 	 * Create a new SimpleApplicationEventMulticaster.
 	 */
+	// 创建同步广播器
 	public SimpleApplicationEventMulticaster() {
 	}
 
 	/**
 	 * Create a new SimpleApplicationEventMulticaster for the given BeanFactory.
 	 */
+	// 为给定的 BeanFactory 创建一个新的 SimpleApplicationEventMulticaster
 	public SimpleApplicationEventMulticaster(BeanFactory beanFactory) {
 		setBeanFactory(beanFactory);
 	}
@@ -86,6 +103,10 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 	 * @see org.springframework.core.task.SyncTaskExecutor
 	 * @see org.springframework.core.task.SimpleAsyncTaskExecutor
 	 */
+	// 设置一个自定义执行器（通常是一个 {@link org.springframework.core.task.TaskExecutor}）来调用每个监听器。
+	// <p>默认相当于{@link org.springframework.core.task.SyncTaskExecutor}同步执行器，在调用线程中同步执行所有监听器。
+	// <p>考虑在此处指定一个异步任务执行器，在所有侦听器执行完毕之前不阻塞调用者。
+	// 但是，请注意异步执行不会参与调用者的线程上下文（类加载器、事务关联），除非 TaskExecutor 明确支持这一点。
 	public void setTaskExecutor(@Nullable Executor taskExecutor) {
 		this.taskExecutor = taskExecutor;
 	}
@@ -93,6 +114,7 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 	/**
 	 * Return the current task executor for this multicaster.
 	 */
+	// 返回此广播器的当前任务执行器
 	@Nullable
 	protected Executor getTaskExecutor() {
 		return this.taskExecutor;
@@ -113,6 +135,13 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 	 * (e.g. {@link org.springframework.scheduling.support.TaskUtils#LOG_AND_PROPAGATE_ERROR_HANDLER}).
 	 * @since 4.1
 	 */
+	// 设置 {@link ErrorHandler} 以在侦听器抛出异常时调用。
+	// <p>默认为无，侦听器异常停止当前广播并传播到当前事件的发布者。
+	// 如果指定了 {@linkplain setTaskExecutor task executor}，每个单独的侦听器异常将传播到执行器，但不一定会停止其他侦听器的执行。
+	// <p>考虑设置一个 {@link ErrorHandler} 实现来捕获和记录异常（a la
+	// {@link org.springframework.scheduling.support.TaskUtils#LOG_AND_SUPPRESS_ERROR_HANDLER}）或
+	// 一个记录异常同时传播它们的实现（例如
+	// {@link org .springframework.scheduling.support.TaskUtils#LOG_AND_PROPAGATE_ERROR_HANDLER}）。
 	public void setErrorHandler(@Nullable ErrorHandler errorHandler) {
 		this.errorHandler = errorHandler;
 	}
@@ -121,6 +150,7 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 	 * Return the current error handler for this multicaster.
 	 * @since 4.1
 	 */
+	// 返回此广播器的当前错误处理程序
 	@Nullable
 	protected ErrorHandler getErrorHandler() {
 		return this.errorHandler;
@@ -131,12 +161,16 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 		multicastEvent(event, resolveDefaultEventType(event));
 	}
 
+	// ApplicationEvent 事件类型  ResolvableType 事件包装类型
 	@Override
 	public void multicastEvent(final ApplicationEvent event, @Nullable ResolvableType eventType) {
 		ResolvableType type = (eventType != null ? eventType : resolveDefaultEventType(event));
 		Executor executor = getTaskExecutor();
+		// 获取和当前事件相关的应用监听器，逐一进行执行
 		for (ApplicationListener<?> listener : getApplicationListeners(event, type)) {
 			if (executor != null) {
+				// 当 listener 越多，如果 executor 有多个的话，每个 listener 可能会造成一些线程的浪费，
+				// 通常做异步处理，尽可能将 executor 核心数变为 1，线程放在事件处理，有些划不来
 				executor.execute(() -> invokeListener(listener, event));
 			}
 			else {
@@ -155,13 +189,19 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 	 * @param event the current event to propagate
 	 * @since 4.1
 	 */
+	// 使用给定的事件调用给定的监听器
+	// @param listener 要调用的 ApplicationListener
+	// @param event 要传播的当前事件
+	// 观察者模式：被观察者 ApplicationListener，通知对象 ApplicationEvent
 	protected void invokeListener(ApplicationListener<?> listener, ApplicationEvent event) {
+		// 先获取 ErrorHandler
 		ErrorHandler errorHandler = getErrorHandler();
 		if (errorHandler != null) {
 			try {
 				doInvokeListener(listener, event);
 			}
 			catch (Throwable err) {
+				// 异常时将异常处理掉，应用程序上下文将不会被阻塞，如果不处理，会导致整个应用程序上下文启动失败
 				errorHandler.handleError(err);
 			}
 		}

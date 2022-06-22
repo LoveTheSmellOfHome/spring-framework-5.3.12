@@ -16,11 +16,11 @@
 
 package org.springframework.aop.aspectj;
 
-import java.io.Serializable;
-
 import org.springframework.core.Ordered;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import java.io.Serializable;
 
 /**
  * Implementation of {@link AspectInstanceFactory} that is backed by a
@@ -32,9 +32,11 @@ import org.springframework.util.Assert;
  * @since 2.0
  * @see SimpleAspectInstanceFactory
  */
+// 由指定的单例对象支持的 AspectInstanceFactory 的实现，为每个 getAspectInstance() 调用返回相同的实例。
 @SuppressWarnings("serial")
 public class SingletonAspectInstanceFactory implements AspectInstanceFactory, Serializable {
 
+	// 指定的单例对象实例
 	private final Object aspectInstance;
 
 
@@ -42,6 +44,8 @@ public class SingletonAspectInstanceFactory implements AspectInstanceFactory, Se
 	 * Create a new SingletonAspectInstanceFactory for the given aspect instance.
 	 * @param aspectInstance the singleton aspect instance
 	 */
+	// 为给定的切面实例创建一个新的 SingletonAspectInstanceFactory。
+	// 参形：aspectInstance – 单例方面实例，工厂保存的对象
 	public SingletonAspectInstanceFactory(Object aspectInstance) {
 		Assert.notNull(aspectInstance, "Aspect instance must not be null");
 		this.aspectInstance = aspectInstance;
@@ -67,6 +71,7 @@ public class SingletonAspectInstanceFactory implements AspectInstanceFactory, Se
 	 * @see org.springframework.core.Ordered
 	 * @see #getOrderForAspectClass
 	 */
+	// 确定该工厂的切面实例的顺序，可以是通过实现 Ordered 接口表达的特定于实例的顺序，也可以是回退顺序
 	@Override
 	public int getOrder() {
 		if (this.aspectInstance instanceof Ordered) {
@@ -82,6 +87,10 @@ public class SingletonAspectInstanceFactory implements AspectInstanceFactory, Se
 	 * <p>The default implementation simply returns {@code Ordered.LOWEST_PRECEDENCE}.
 	 * @param aspectClass the aspect class
 	 */
+	// 通过实现 Ordered 接口，确定切面实例不表达特定于实例的顺序的情况下的回退顺序。
+	// 默认实现只返回Ordered.LOWEST_PRECEDENCE 。
+	// 参形：
+	//			aspectClass – 切面类
 	protected int getOrderForAspectClass(Class<?> aspectClass) {
 		return Ordered.LOWEST_PRECEDENCE;
 	}

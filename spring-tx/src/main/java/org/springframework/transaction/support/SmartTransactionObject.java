@@ -31,6 +31,10 @@ import java.io.Flushable;
  * @since 1.1
  * @see DefaultTransactionStatus#isRollbackOnly
  */
+// 由能够返回内部仅回滚标记的事务对象实现的接口，通常来自另一个已参与并将其标记为仅回滚的事务。
+//
+// 由 DefaultTransactionStatus 自动检测，即使不是由当前 TransactionStatus 产生的，
+// 也始终返回当前的 rollbackOnly 标志。
 public interface SmartTransactionObject extends Flushable {
 
 	/**
@@ -39,12 +43,14 @@ public interface SmartTransactionObject extends Flushable {
 	 * @see javax.transaction.UserTransaction#getStatus
 	 * @see javax.transaction.Status#STATUS_MARKED_ROLLBACK
 	 */
+	// 返回事务是否在内部标记为仅回滚。例如，可以检查 JTA UserTransaction
 	boolean isRollbackOnly();
 
 	/**
 	 * Flush the underlying sessions to the datastore, if applicable:
 	 * for example, all affected Hibernate/JPA sessions.
 	 */
+	// 将底层会话刷新到数据存储区（如果适用）：例如，所有受影响的 Hibernate/JPA 会话
 	@Override
 	void flush();
 

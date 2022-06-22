@@ -16,15 +16,15 @@
 
 package org.springframework.core.type.classreading;
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 import org.springframework.asm.Opcodes;
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.MethodMetadata;
 import org.springframework.lang.Nullable;
+
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * {@link AnnotationMetadata} created from a
@@ -34,6 +34,11 @@ import org.springframework.lang.Nullable;
  * @author Sam Brannen
  * @since 5.2
  */
+// 通过 ASM 字节码提升实现
+// java 反射 和 ASM 的区别：
+// 1.反射是读取持久堆上存储的类信息。而 ASM 是直接处理 .class 字节码的小工具（工具虽小，但是功能非常强大！）
+// 3.反射对性能的开销比较大，反射读取类信息时需要进行类加载处理，而 ASM 则不需要将类加载到内存中。
+// 4.反射相对于 ASM 来说使用方便，想直接操纵 ASM 的话需要有 JVM 指令基础
 final class SimpleAnnotationMetadata implements AnnotationMetadata {
 
 	private final String className;
@@ -127,6 +132,8 @@ final class SimpleAnnotationMetadata implements AnnotationMetadata {
 		return this.memberClassNames.clone();
 	}
 
+	// 通过 ASM 直接从字节码中获取 String 相关的信息来填充，不需要加载，速度很快。但是在 Spring 5 中这种方式被舍弃了，
+	// 通过 @Indexed 注解在编译时就确定了相关的信息。会更快
 	@Override
 	public Set<String> getAnnotationTypes() {
 		Set<String> annotationTypes = this.annotationTypes;

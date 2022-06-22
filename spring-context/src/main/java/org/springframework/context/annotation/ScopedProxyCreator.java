@@ -28,12 +28,14 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
  * @since 3.0
  * @see org.springframework.aop.scope.ScopedProxyUtils#createScopedProxy
  */
+// 用于在实际创建作用域代理时引入 AOP 框架依赖的委托工厂类
 final class ScopedProxyCreator {
 
 	private ScopedProxyCreator() {
 	}
 
 
+	// 创建代理
 	public static BeanDefinitionHolder createScopedProxy(
 			BeanDefinitionHolder definitionHolder, BeanDefinitionRegistry registry, boolean proxyTargetClass) {
 

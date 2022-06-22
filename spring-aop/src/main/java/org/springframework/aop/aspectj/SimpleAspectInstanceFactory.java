@@ -16,13 +16,13 @@
 
 package org.springframework.aop.aspectj;
 
-import java.lang.reflect.InvocationTargetException;
-
 import org.springframework.aop.framework.AopConfigException;
 import org.springframework.core.Ordered;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
+
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Implementation of {@link AspectInstanceFactory} that creates a new instance
@@ -31,6 +31,7 @@ import org.springframework.util.ReflectionUtils;
  * @author Juergen Hoeller
  * @since 2.0.4
  */
+// AspectInstanceFactory的实现，它为每个getAspectInstance()调用创建指定切面类的新实例
 public class SimpleAspectInstanceFactory implements AspectInstanceFactory {
 
 	private final Class<?> aspectClass;
@@ -40,6 +41,9 @@ public class SimpleAspectInstanceFactory implements AspectInstanceFactory {
 	 * Create a new SimpleAspectInstanceFactory for the given aspect class.
 	 * @param aspectClass the aspect class
 	 */
+	// 为给定的切面类创建一个新的 SimpleAspectInstanceFactory。
+	// 参形：
+	//			aspectClass – 切面类
 	public SimpleAspectInstanceFactory(Class<?> aspectClass) {
 		Assert.notNull(aspectClass, "Aspect class must not be null");
 		this.aspectClass = aspectClass;
@@ -49,6 +53,7 @@ public class SimpleAspectInstanceFactory implements AspectInstanceFactory {
 	/**
 	 * Return the specified aspect class (never {@code null}).
 	 */
+	// 返回指定的切面类（从不为null ）。
 	public final Class<?> getAspectClass() {
 		return this.aspectClass;
 	}
@@ -56,6 +61,7 @@ public class SimpleAspectInstanceFactory implements AspectInstanceFactory {
 	@Override
 	public final Object getAspectInstance() {
 		try {
+			// 利用 java 反射通过构造器创建对象
 			return ReflectionUtils.accessibleConstructor(this.aspectClass).newInstance();
 		}
 		catch (NoSuchMethodException ex) {

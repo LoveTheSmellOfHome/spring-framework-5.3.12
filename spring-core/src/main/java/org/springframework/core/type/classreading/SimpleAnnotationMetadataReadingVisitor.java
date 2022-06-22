@@ -40,6 +40,8 @@ import org.springframework.util.StringUtils;
  * @author Phillip Webb
  * @since 5.2
  */
+// 创建 {@link SimpleAnnotationMetadata} 的 ASM 类访问器
+// 类元信息和注解元信息：基于 ASM 的只读类
 final class SimpleAnnotationMetadataReadingVisitor extends ClassVisitor {
 
 	@Nullable

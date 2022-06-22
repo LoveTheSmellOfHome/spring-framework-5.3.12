@@ -35,6 +35,7 @@ import org.springframework.lang.Nullable;
  * @author Sam Brannen
  * @since 5.2
  */
+// 创建 SimpleMethodMetadata 的 ASM 方法访问者
 final class SimpleMethodMetadataReadingVisitor extends MethodVisitor {
 
 	@Nullable
@@ -100,6 +101,7 @@ final class SimpleMethodMetadataReadingVisitor extends MethodVisitor {
 	/**
 	 * {@link MergedAnnotation} source.
 	 */
+	// 合并注解源
 	static final class Source {
 
 		private final String declaringClassName;

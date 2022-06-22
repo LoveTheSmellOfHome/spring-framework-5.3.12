@@ -28,15 +28,18 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 2.5
  */
+// {@link AutowireCandidateResolver} 在没有注解支持时使用的实现。此实现仅检查 bean 定义。
 public class SimpleAutowireCandidateResolver implements AutowireCandidateResolver {
 
 	/**
 	 * Shared instance of {@code SimpleAutowireCandidateResolver}.
 	 * @since 5.2.7
 	 */
+	// 使用 SimpleAutowireCandidateResolver 单例
 	public static final SimpleAutowireCandidateResolver INSTANCE = new SimpleAutowireCandidateResolver();
 
 
+	// 当前 bean 是否是其他 bean 自动装配的候选者
 	@Override
 	public boolean isAutowireCandidate(BeanDefinitionHolder bdHolder, DependencyDescriptor descriptor) {
 		return bdHolder.getBeanDefinition().isAutowireCandidate();

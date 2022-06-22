@@ -16,12 +16,6 @@
 
 package org.springframework.beans.factory.xml;
 
-import java.util.Collection;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
@@ -30,6 +24,11 @@ import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.core.Conventions;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
+import java.util.Collection;
 
 /**
  * Simple {@code NamespaceHandler} implementation that maps custom
@@ -57,6 +56,10 @@ import org.springframework.util.StringUtils;
  * @since 3.1
  * @see SimplePropertyNamespaceHandler
  */
+// 简单的 {@code NamespaceHandler} 实现将自定义属性直接映射到 bean 属性。需要注意的重要一点是，
+// 这个 {@code NamespaceHandler} 没有相应的模式，因为无法提前知道所有可能的属性名称
+//
+// b>注意<b>：此实现仅支持命名参数 - 不支持索引或类型。此外，这些名称被容器用作提示，默认情况下，容器会进行类型自省。
 public class SimpleConstructorNamespaceHandler implements NamespaceHandler {
 
 	private static final String REF_SUFFIX = "-ref";

@@ -41,10 +41,14 @@ import org.springframework.core.annotation.AliasFor;
  * @see Component
  * @see Repository
  */
+// 表示带注释的类是“服务”，最初由领域驱动设计 (Evans, 2003) 定义为“作为独立于模型中的接口提供的操作，没有封装状态”。
+// 也可能表示一个类是“业务服务外观”（在核心 J2EE 模式意义上）或类似的东西。此注释是通用的范式注解，
+// 个别团队可能会缩小其语义范围并酌情使用。
+// 这个注解作为@Component 的派生，允许通过类路径扫描自动检测实现类
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Component
+@Component // 由 @Component 派生来的，与其功能在物理上一致，都会被扫描成 Spring Bean,会被识别成 BeanDefinition
 public @interface Service {
 
 	/**
@@ -52,6 +56,7 @@ public @interface Service {
 	 * to be turned into a Spring bean in case of an autodetected component.
 	 * @return the suggested component name, if any (or empty String otherwise)
 	 */
+	// 该值可能指示对逻辑组件名称的建议，在自动检测到的组件的情况下将其转换为 Spring bean
 	@AliasFor(annotation = Component.class)
 	String value() default "";
 
