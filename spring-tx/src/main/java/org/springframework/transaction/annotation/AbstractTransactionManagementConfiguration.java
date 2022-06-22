@@ -41,6 +41,7 @@ import org.springframework.util.CollectionUtils;
  * @since 3.1
  * @see EnableTransactionManagement
  */
+// 抽象基类 @Configuration 为启用 Spring 的注解驱动事务管理功能提供通用结构
 @Configuration
 public abstract class AbstractTransactionManagementConfiguration implements ImportAware {
 
@@ -50,6 +51,7 @@ public abstract class AbstractTransactionManagementConfiguration implements Impo
 	/**
 	 * Default transaction manager, as configured through a {@link TransactionManagementConfigurer}.
 	 */
+	// 默认事务管理器，通过 TransactionManagementConfigurer 配置
 	@Nullable
 	protected TransactionManager txManager;
 
@@ -57,6 +59,7 @@ public abstract class AbstractTransactionManagementConfiguration implements Impo
 	@Override
 	public void setImportMetadata(AnnotationMetadata importMetadata) {
 		this.enableTx = AnnotationAttributes.fromMap(
+				// 获取注解 @EnableTransactionManagement
 				importMetadata.getAnnotationAttributes(EnableTransactionManagement.class.getName(), false));
 		if (this.enableTx == null) {
 			throw new IllegalArgumentException(
@@ -72,7 +75,10 @@ public abstract class AbstractTransactionManagementConfiguration implements Impo
 		if (configurers.size() > 1) {
 			throw new IllegalStateException("Only one TransactionManagementConfigurer may exist");
 		}
+		// TransactionManagementConfigurer，可以允许有多个配置类，取其中的一个
+		// 获取其 annotationDrivenTransactionManager
 		TransactionManagementConfigurer configurer = configurers.iterator().next();
+		// 初始化 TransactionManager
 		this.txManager = configurer.annotationDrivenTransactionManager();
 	}
 

@@ -58,6 +58,11 @@ public abstract class AbstractSingleBeanDefinitionParser extends AbstractBeanDef
 	 * {@link #getBeanClass(org.w3c.dom.Element)} is {@code null}
 	 * @see #doParse
 	 */
+	// 为 {@link getBeanClass bean Class} 创建一个 {@link BeanDefinitionBuilder} 实例
+	// 并将其传递给 {@link doParse} 策略方法。
+	// @param element 要解析为单个 BeanDefinition 的元素
+	// @param parserContext 封装当前解析过程状态的对象
+	// @return 解析提供的 {@link Element} 产生的 BeanDefinition
 	@Override
 	protected final AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition();
@@ -65,6 +70,7 @@ public abstract class AbstractSingleBeanDefinitionParser extends AbstractBeanDef
 		if (parentName != null) {
 			builder.getRawBeanDefinition().setParentName(parentName);
 		}
+		// 调用子类的 getBeanClass(element); eg: UserBeanDefinitionParser
 		Class<?> beanClass = getBeanClass(element);
 		if (beanClass != null) {
 			builder.getRawBeanDefinition().setBeanClass(beanClass);
@@ -77,14 +83,18 @@ public abstract class AbstractSingleBeanDefinitionParser extends AbstractBeanDef
 		}
 		builder.getRawBeanDefinition().setSource(parserContext.extractSource(element));
 		BeanDefinition containingBd = parserContext.getContainingBeanDefinition();
+		// 如果当前 bean 是嵌套内部 bean,分析其 外部 bean
 		if (containingBd != null) {
 			// Inner bean definition must receive same scope as containing bean.
+			// 内部 bean 定义必须接收与包含 bean 相同的范围
 			builder.setScope(containingBd.getScope());
 		}
 		if (parserContext.isDefaultLazyInit()) {
 			// Default-lazy-init applies to custom bean definitions as well.
+			// Default-lazy-init 也适用于自定义 bean 定义
 			builder.setLazyInit(true);
 		}
+		// 调用子类 doParse(),eg: UserBeanDefinitionParser
 		doParse(element, parserContext, builder);
 		return builder.getBeanDefinition();
 	}
@@ -98,6 +108,10 @@ public abstract class AbstractSingleBeanDefinitionParser extends AbstractBeanDef
 	 * @return the name of the parent bean for the currently parsed bean,
 	 * or {@code null} if none
 	 */
+	// 在当前 bean 被定义为子 bean 的情况下，确定当前解析 bean 的父级的名称。
+	// <p>默认实现返回{@code null}，表示一个根bean定义。
+	// @param element 正在解析的 {@code Element}
+	// @return 当前解析的 bean 的父 bean 的名称，如果没有，则返回 {@code null}
 	@Nullable
 	protected String getParentName(Element element) {
 		return null;

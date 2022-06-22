@@ -26,16 +26,19 @@ package org.springframework.context.annotation;
  * @see org.springframework.scheduling.annotation.AsyncConfigurationSelector#selectImports
  * @see org.springframework.transaction.annotation.EnableTransactionManagement#mode()
  */
+// 用于确定是否应应用基于 JDK 代理或基于 AspectJ 编织的建议的枚举
 public enum AdviceMode {
 
 	/**
 	 * JDK proxy-based advice.
 	 */
+	// 基于 JDK 代理的建议
 	PROXY,
 
 	/**
 	 * AspectJ weaving-based advice.
 	 */
+	// AspectJ 基于编织的建议
 	ASPECTJ
 
 }

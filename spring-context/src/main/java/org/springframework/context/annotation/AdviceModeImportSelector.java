@@ -33,11 +33,13 @@ import org.springframework.util.Assert;
  * @since 3.1
  * @param <A> annotation containing {@linkplain #getAdviceModeAttributeName() AdviceMode attribute}
  */
+// ImportSelector 实现的方便基类，它根据注释（例如 @Enable* 注释）中的 AdviceMode 值选择导入
 public abstract class AdviceModeImportSelector<A extends Annotation> implements ImportSelector {
 
 	/**
 	 * The default advice mode attribute name.
 	 */
+	// 默认建议模式属性名称
 	public static final String DEFAULT_ADVICE_MODE_ATTRIBUTE_NAME = "mode";
 
 
@@ -46,6 +48,7 @@ public abstract class AdviceModeImportSelector<A extends Annotation> implements 
 	 * generic type {@code A}. The default is {@value #DEFAULT_ADVICE_MODE_ATTRIBUTE_NAME},
 	 * but subclasses may override in order to customize.
 	 */
+	// 泛型类型 A 指定的注解的 AdviceMode 属性的名称。默认值为 "mode" ，但子类可能会覆盖以进行自定义
 	protected String getAdviceModeAttributeName() {
 		return DEFAULT_ADVICE_MODE_ATTRIBUTE_NAME;
 	}
@@ -62,6 +65,13 @@ public abstract class AdviceModeImportSelector<A extends Annotation> implements 
 	 * on the importing {@code @Configuration} class or if {@link #selectImports(AdviceMode)}
 	 * returns {@code null}
 	 */
+	// 此实现从通用元数据中解析注释类型，并验证 (a) 注解实际上存在于导入的 @Configuration 类中，
+	// 以及 (b) 给定注解具有 AdviceMode 类型的建议模式属性。
+	//
+	// 然后调用 selectImports(AdviceMode) 方法，允许具体实现以安全方便的方式选择导入。
+	// 抛出：
+	//			IllegalArgumentException – 如果预期的注解A不存在于导入的 @Configuration 类中，
+	//			或者如果 selectImports(AdviceMode) 返回 null
 	@Override
 	public final String[] selectImports(AnnotationMetadata importingClassMetadata) {
 		Class<?> annType = GenericTypeResolver.resolveTypeArgument(getClass(), AdviceModeImportSelector.class);
@@ -92,6 +102,12 @@ public abstract class AdviceModeImportSelector<A extends Annotation> implements 
 	 * @return array containing classes to import (empty array if none;
 	 * {@code null} if the given {@code AdviceMode} is unknown)
 	 */
+	// 根据给定的AdviceMode确定应导入哪些类。
+	// 从该方法返回null表示AdviceMode无法处理或未知，并且应该抛出IllegalArgumentException 。
+	// 参形：
+	//			adviceMode——通过泛型指定的注释的建议模式属性的值。
+	// 返回值：
+	//			包含要导入的类的数组（如果没有，则为空数组；如果给定的AdviceMode未知，则为null ）
 	@Nullable
 	protected abstract String[] selectImports(AdviceMode adviceMode);
 

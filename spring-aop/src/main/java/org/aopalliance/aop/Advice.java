@@ -23,6 +23,8 @@ package org.aopalliance.aop;
  * @author Rod Johnson
  * @version $Id: Advice.java,v 1.1 2004/03/19 17:02:16 johnsonr Exp $
  */
+// Advice 建议(通知)动作的标签接口（提供了一种接口回调机制）。
+// 实现可以是任何类型的通知，例如拦截器，本身不是注解,来自 AOP 联盟的概念
 public interface Advice {
 
 }
