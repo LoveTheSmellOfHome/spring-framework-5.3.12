@@ -58,11 +58,22 @@ import org.springframework.core.annotation.AliasFor;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
+// 指示调用方法（或类中的所有方法）的结果可以被缓存的注解。
+//
+// 每次调用建议的方法时，都会应用缓存行为，检查是否已经为给定的参数调用了该方法。合理的默认值只是使用方法参数来计算密钥，
+// 但是可以通过 key 属性提供 SpEL 表达式，或者自定义 org.springframework.cache.interceptor.KeyGenerator
+// 实现可以替换默认值（参见keyGenerator ）。
+//
+// 如果在缓存中没有找到计算键的值，则将调用目标方法并将返回的值存储在关联的缓存中。请注意， java.util.Optional 返回类型会自动展开。
+// 如果存在 Optional 值，它将存储在关联的缓存中。如果不存在 Optional 值，则 null 将存储在关联的缓存中。
+//
+// 此注解可用作元注解以创建具有属性覆盖的自定义组合注解。
 public @interface Cacheable {
 
 	/**
 	 * Alias for {@link #cacheNames}.
 	 */
+	// cacheNames的别名。
 	@AliasFor("cacheNames")
 	String[] value() default {};
 
@@ -74,6 +85,8 @@ public @interface Cacheable {
 	 * @see #value
 	 * @see CacheConfig#cacheNames
 	 */
+	// 存储方法调用结果的缓存的名称。
+	// 名称可用于确定目标缓存（或多个缓存），匹配特定 bean 定义的限定符值或 bean 名称。
 	@AliasFor("value")
 	String[] cacheNames() default {};
 
@@ -94,6 +107,15 @@ public @interface Cacheable {
 	 * can also be accessed by name if that information is available.</li>
 	 * </ul>
 	 */
+	// 用于动态计算密钥的 Spring 表达式语言 (SpEL) 表达式。
+	//
+	// 默认为"" ，这意味着所有方法参数都被视为一个键，除非配置了自定义keyGenerator 。
+	//
+	// SpEL 表达式根据提供以下元数据的专用上下文进行评估：
+	//  > #root.method 、 #root.target 和 #root.caches 分别用于对 method 、目标对象和受影响缓存的引用。
+	//  > 方法名称 ( #root.methodName ) 和目标类 ( #root.targetClass ) 的快捷方式也可用。
+	//  > 方法参数可以通过索引访问。例如，可以通过#root.args[1] 、 #p1 或 #a1 访问第二个参数。如果该信息可用，
+	//    也可以按名称访问参数。
 	String key() default "";
 
 	/**
@@ -102,6 +124,10 @@ public @interface Cacheable {
 	 * <p>Mutually exclusive with the {@link #key} attribute.
 	 * @see CacheConfig#keyGenerator
 	 */
+	// 要使用的自定义 org.springframework.cache.interceptor.KeyGenerator 的 bean 名称。
+	// 与 key 属性互斥。
+	// 请参阅：
+	//			CacheConfig.keyGenerator
 	String keyGenerator() default "";
 
 	/**
@@ -112,6 +138,12 @@ public @interface Cacheable {
 	 * @see org.springframework.cache.interceptor.SimpleCacheResolver
 	 * @see CacheConfig#cacheManager
 	 */
+	// 自定义 org.springframework.cache.CacheManager 的 bean 名称，用于创建默认
+	// org.springframework.cache.interceptor.CacheResolver （如果尚未设置）。
+	//
+	// 与 cacheResolver 属性互斥。
+	// 请参阅：
+	//			org.springframework.cache.interceptor.SimpleCacheResolver , CacheConfig.cacheManager
 	String cacheManager() default "";
 
 	/**
@@ -119,6 +151,9 @@ public @interface Cacheable {
 	 * to use.
 	 * @see CacheConfig#cacheResolver
 	 */
+	// 要使用的自定义 org.springframework.cache.interceptor.CacheResolver 的 bean 名称。
+	// 请参阅：
+	//			CacheConfig.cacheResolver
 	String cacheResolver() default "";
 
 	/**
@@ -138,6 +173,15 @@ public @interface Cacheable {
 	 * can also be accessed by name if that information is available.</li>
 	 * </ul>
 	 */
+	// Spring 表达式语言 (SpEL) 表达式用于使方法缓存有条件。
+	//
+	// 默认为"" ，表示方法结果始终被缓存。
+	//
+	// SpEL 表达式根据提供以下元数据的专用上下文进行评估：
+	//	> #root.method 、 #root.target 和 #root.caches 分别用于对 method 、目标对象和受影响缓存的引用。
+	//	> 方法名称 ( #root.methodName ) 和目标类 ( #root.targetClass ) 的快捷方式也可用。
+	//	> 方法参数可以通过索引访问。例如，可以通过 #root.args[1] 、 #p1 或 #a1访问第二个参数。
+	//	  如果该信息可用，也可以按名称访问参数
 	String condition() default "";
 
 	/**
@@ -162,6 +206,17 @@ public @interface Cacheable {
 	 * </ul>
 	 * @since 3.2
 	 */
+	// 用于否决方法缓存的 Spring 表达式语言 (SpEL) 表达式。
+	//
+	// 与 condition 不同，此表达式在方法被调用后计算，因此可以引用result 。
+	//
+	// 默认为"" ，这意味着缓存永远不会被否决。
+	//
+	// SpEL 表达式根据提供以下元数据的专用上下文进行评估：
+	//	> #result用于引用方法调用的结果。对于支持的包装器，例如Optional ， #result 指的是实际对象，而不是包装器
+	//	> #root.method 、 #root.target和 #root.caches 分别用于对 method 、目标对象和受影响缓存的引用。
+	//	> 方法名称 ( #root.methodName ) 和目标类 ( #root.targetClass ) 的快捷方式也可用。
+	//	> 方法参数可以通过索引访问。例如，可以通过 #root.args[1] 、 #p1 或 #a1 访问第二个参数。如果该信息可用，也可以按名称访问参数。
 	String unless() default "";
 
 	/**
@@ -179,6 +234,12 @@ public @interface Cacheable {
 	 * @since 4.3
 	 * @see org.springframework.cache.Cache#get(Object, Callable)
 	 */
+	// 如果多个线程试图为同一个键加载一个值，则同步底层方法的调用。同步导致了一些限制：
+	//	1.不支持unless()
+	//	2.只能指定一个缓存
+	//	3.没有其他缓存相关的操作可以组合
+	// 这实际上是一个提示，您使用的实际缓存提供程序可能不以同步方式支持它。
+	// 检查您的提供者文档以获取有关实际语义的更多详细信息。
 	boolean sync() default false;
 
 }

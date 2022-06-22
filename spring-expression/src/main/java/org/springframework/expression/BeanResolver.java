@@ -24,6 +24,8 @@ package org.springframework.expression;
  * @author Andy Clement
  * @since 3.0.3
  */
+// bean 解析器可以在评估上下文中注册，并将用于 bean 引用： @myBeanName 和 &myBeanName 表达式。
+// &变体语法允许访问相关的工厂 bean
 public interface BeanResolver {
 
 	/**
@@ -34,6 +36,11 @@ public interface BeanResolver {
 	 * @return an object representing the bean
 	 * @throws AccessException if there is an unexpected problem resolving the bean
 	 */
+	// 通过给定的名称查找 bean 并为其返回相应的实例。 为了尝试访问工厂 bean，名称需要一个&前缀。
+	// 形参：上下文——当前的评估上下文
+	// beanName – 要查找的 bean 的名称
+	// 返回值：代表 bean 的对象
+	// AccessException - 如果在解决 bean 时出现意外问题
 	Object resolve(EvaluationContext context, String beanName) throws AccessException;
 
 }

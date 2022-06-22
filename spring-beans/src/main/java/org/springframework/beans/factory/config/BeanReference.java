@@ -30,11 +30,14 @@ import org.springframework.beans.BeanMetadataElement;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// 以抽象方式公开对 bean 名称的引用的接口。该接口不一定意味着对实际 bean 实例的引用；它只是表达了对 bean 名称的逻辑引用。
+// 充当由任何类型的 bean 引用持有者实现的公共接口，例如 RuntimeBeanReference 和 RuntimeBeanNameReference 。
 public interface BeanReference extends BeanMetadataElement {
 
 	/**
 	 * Return the target bean name that this reference points to (never {@code null}).
 	 */
+	// 返回此引用指向的目标 bean 名称（从不为null ）。
 	String getBeanName();
 
 }

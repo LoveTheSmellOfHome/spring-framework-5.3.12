@@ -28,6 +28,7 @@ import org.springframework.lang.Nullable;
  * @author Costin Leau
  * @since 3.1
  */
+// 由 CacheOperationSource 驱动的顾问，用于包含可缓存方法的缓存建议 bean。
 @SuppressWarnings("serial")
 public class BeanFactoryCacheOperationSourceAdvisor extends AbstractBeanFactoryPointcutAdvisor {
 
@@ -48,6 +49,7 @@ public class BeanFactoryCacheOperationSourceAdvisor extends AbstractBeanFactoryP
 	 * attributes. This should usually be identical to the source reference
 	 * set on the cache interceptor itself.
 	 */
+	// 设置用于查找缓存属性的缓存操作属性源。这通常应该与缓存拦截器本身上的源引用集相同。
 	public void setCacheOperationSource(CacheOperationSource cacheOperationSource) {
 		this.cacheOperationSource = cacheOperationSource;
 	}
@@ -56,10 +58,12 @@ public class BeanFactoryCacheOperationSourceAdvisor extends AbstractBeanFactoryP
 	 * Set the {@link ClassFilter} to use for this pointcut.
 	 * Default is {@link ClassFilter#TRUE}.
 	 */
+	// 设置用于此切入点的 ClassFilter 。 默认为ClassFilter.TRUE 。
 	public void setClassFilter(ClassFilter classFilter) {
 		this.pointcut.setClassFilter(classFilter);
 	}
 
+	// 返回判断点
 	@Override
 	public Pointcut getPointcut() {
 		return this.pointcut;

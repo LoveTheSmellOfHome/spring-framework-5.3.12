@@ -31,12 +31,16 @@ import org.springframework.lang.Nullable;
  * @see TransactionInterceptor
  * @see TransactionAttributeSourceAdvisor
  */
+// 由TransactionAttributeSource驱动的顾问，用于为事务性方法包含事务建议 bean
+// 有 IoC 能力的 PointcutAdvisor
 @SuppressWarnings("serial")
 public class BeanFactoryTransactionAttributeSourceAdvisor extends AbstractBeanFactoryPointcutAdvisor {
 
+	// 事务属性源
 	@Nullable
 	private TransactionAttributeSource transactionAttributeSource;
 
+	// 事务属性源判断点
 	private final TransactionAttributeSourcePointcut pointcut = new TransactionAttributeSourcePointcut() {
 		@Override
 		@Nullable
@@ -52,6 +56,7 @@ public class BeanFactoryTransactionAttributeSourceAdvisor extends AbstractBeanFa
 	 * set on the transaction interceptor itself.
 	 * @see TransactionInterceptor#setTransactionAttributeSource
 	 */
+	// 设置用于查找交易属性的交易属性源。这通常应该与事务拦截器本身上设置的源引用相同。
 	public void setTransactionAttributeSource(TransactionAttributeSource transactionAttributeSource) {
 		this.transactionAttributeSource = transactionAttributeSource;
 	}
@@ -60,6 +65,7 @@ public class BeanFactoryTransactionAttributeSourceAdvisor extends AbstractBeanFa
 	 * Set the {@link ClassFilter} to use for this pointcut.
 	 * Default is {@link ClassFilter#TRUE}.
 	 */
+	// 设置用于此切入点的ClassFilter 。 默认为ClassFilter.TRUE
 	public void setClassFilter(ClassFilter classFilter) {
 		this.pointcut.setClassFilter(classFilter);
 	}

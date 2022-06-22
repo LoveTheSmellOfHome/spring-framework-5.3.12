@@ -26,11 +26,13 @@ import org.springframework.lang.Nullable;
  * @author Marcin Kamionowski
  * @since 3.1
  */
+// 描述缓存“可缓存”操作的类
 public class CacheableOperation extends CacheOperation {
 
 	@Nullable
 	private final String unless;
 
+	// 是否同步
 	private final boolean sync;
 
 
@@ -38,6 +40,7 @@ public class CacheableOperation extends CacheOperation {
 	 * Create a new {@link CacheableOperation} instance from the given builder.
 	 * @since 4.3
 	 */
+	// 从给定的构建器创建一个新的 CacheableOperation 实例。
 	public CacheableOperation(CacheableOperation.Builder b) {
 		super(b);
 		this.unless = b.unless;
@@ -59,6 +62,7 @@ public class CacheableOperation extends CacheOperation {
 	 * A builder that can be used to create a {@link CacheableOperation}.
 	 * @since 4.3
 	 */
+	// 可用于创建 CacheableOperation 的构建器。
 	public static class Builder extends CacheOperation.Builder {
 
 		@Nullable

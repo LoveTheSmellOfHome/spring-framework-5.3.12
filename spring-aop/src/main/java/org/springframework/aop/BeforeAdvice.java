@@ -27,6 +27,8 @@ import org.aopalliance.aop.Advice;
  * @author Rod Johnson
  * @see AfterAdvice
  */
+// 建议动作发生前前通用接口，比如 MethodBeforeAdvice.
+// Spring 只支持方法级别的建议动作，尽管这不太可能改变，但此 API 旨在允许将来根据需要提供属性级别的建议前动作。
 public interface BeforeAdvice extends Advice {
 
 }

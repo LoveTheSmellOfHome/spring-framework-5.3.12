@@ -74,6 +74,20 @@ import org.springframework.util.StringUtils;
  * @see #clearClassLoader(ClassLoader)
  * @see #forClass(Class)
  */
+// 为 Java 类缓存 JavaBeans {@link java.beans.PropertyDescriptor} 信息的内部类。不适用于应用程序代码直接使用。
+//
+// <p>Spring 自己在应用程序中缓存 bean 描述符所必需的 {@link ClassLoader}，而不是依赖 JDK 的系统范围的
+// {@link BeanInfo} 缓存（以避免在共享 JVM 中单个应用程序关闭时泄漏）
+//
+// <p>信息是静态缓存的，所以我们不需要为我们操作的每个 JavaBean 创建这个类的新对象。因此，这个类实现了工厂设计模式，
+// 使用私有构造函数和静态 {@link forClass(Class)} 工厂方法来获取实例
+//
+// <p>请注意，要使缓存有效工作，需要满足一些先决条件：首选一种安排，其中 Spring jar 与应用程序类位于同一个 ClassLoader 中，
+// 这样在任何情况下都允许清理缓存以及应用程序的生命周期。对于 Web 应用程序，考虑在 {@code web.xml} 中声明一个本地
+// {@link org.springframework.web.util.IntrospectorCleanupListener} 以防止多类加载器布局，这也将允许有效缓存。
+//
+// <p>在没有设置清理侦听器的非清理类加载器安排的情况下，此类将回退到基于弱引用的缓存模型，每次垃圾收集器删除它们时都会重新
+// 创建大量请求的条目。在这种情况下，请考虑 {@link IGNORE_BEANINFO_PROPERTY_NAME} 系统属性。
 public final class CachedIntrospectionResults {
 
 	/**
@@ -93,6 +107,17 @@ public final class CachedIntrospectionResults {
 	 * in case of a multi-ClassLoader layout, which will allow for effective caching as well.
 	 * @see Introspector#getBeanInfo(Class, int)
 	 */
+	// 指示 Spring 在调用 JavaBeans {@link Introspector} 时使用 {@link Introspector#IGNORE_ALL_BEANINFO}
+	// 模式的系统属性：“spring.beaninfo.ignore”，值为“true”，跳过对 {@code BeanInfo} 类的搜索（通常用于最初没有
+	// 为应用程序中的 bean 定义此类类的场景）。
+	//
+	// <p>默认为“false”，考虑到所有 {@code BeanInfo} 元数据类，例如标准的 {@link Introspector#getBeanInfo(Class)}
+	// 调用。如果您遇到对不存在的 {@code BeanInfo} 类的重复 ClassLoader 访问，请考虑将此标志切换为“true”，
+	// 以防此类访问在启动或延迟加载时成本高昂。
+	//
+	// 	<p>请注意，这种效果也可能表示缓存无法有效工作的情况：首选一种安排，其中 Spring jar 与应用程序类位于同一个 ClassLoader 中，
+	// 	这样可以在任何情况下都允许干净的缓存以及应用程序的生命周期案件。对于 Web 应用程序，考虑在 {@code web.xml} 中声明一个本地
+	// 	{@link org.springframework.web.util.IntrospectorCleanupListener} 以防止多类加载器布局，这也将允许有效缓存。
 	public static final String IGNORE_BEANINFO_PROPERTY_NAME = "spring.beaninfo.ignore";
 
 	private static final PropertyDescriptor[] EMPTY_PROPERTY_DESCRIPTOR_ARRAY = {};
@@ -102,6 +127,7 @@ public final class CachedIntrospectionResults {
 			SpringProperties.getFlag(IGNORE_BEANINFO_PROPERTY_NAME);
 
 	/** Stores the BeanInfoFactory instances. */
+	// 存储 BeanInfoFactory 实例
 	private static final List<BeanInfoFactory> beanInfoFactories = SpringFactoriesLoader.loadFactories(
 			BeanInfoFactory.class, CachedIntrospectionResults.class.getClassLoader());
 
@@ -111,6 +137,7 @@ public final class CachedIntrospectionResults {
 	 * Set of ClassLoaders that this CachedIntrospectionResults class will always
 	 * accept classes from, even if the classes do not qualify as cache-safe.
 	 */
+	// 此 CachedIntrospectionResults 类将始终从其中接受类的一组类加载器，即使这些类不符合缓存安全的条件。
 	static final Set<ClassLoader> acceptedClassLoaders =
 			Collections.newSetFromMap(new ConcurrentHashMap<>(16));
 
@@ -118,6 +145,8 @@ public final class CachedIntrospectionResults {
 	 * Map keyed by Class containing CachedIntrospectionResults, strongly held.
 	 * This variant is being used for cache-safe bean classes.
 	 */
+	// 强引用：由包含 CachedIntrospectionResults 的 Class 键的映射，强烈保留。此变体用于缓存安全 bean 类
+	// 利用 ConcurrentHashMap 来做线程安全
 	static final ConcurrentMap<Class<?>, CachedIntrospectionResults> strongClassCache =
 			new ConcurrentHashMap<>(64);
 
@@ -125,6 +154,7 @@ public final class CachedIntrospectionResults {
 	 * Map keyed by Class containing CachedIntrospectionResults, softly held.
 	 * This variant is being used for non-cache-safe bean classes.
 	 */
+	// 软应用：由包含 CachedIntrospectionResults 的 Class 键的映射，轻轻地持有。此变体用于非缓存安全 bean 类
 	static final ConcurrentMap<Class<?>, CachedIntrospectionResults> softClassCache =
 			new ConcurrentReferenceHashMap<>(64);
 
@@ -141,6 +171,10 @@ public final class CachedIntrospectionResults {
 	 * be paired with a {@link #clearClassLoader} call at application shutdown.
 	 * @param classLoader the ClassLoader to accept
 	 */
+	// 接受给定的 ClassLoader 作为缓存安全，即使它的类在这个 CachedIntrospectionResults 类中不符合缓存安全。
+	// <p>此配置方法仅适用于 Spring 类驻留在“公共”类加载器（例如系统类加载器）中，其生命周期不与应用程序耦合的场景。
+	// 在这种情况下，CachedIntrospectionResults 默认不会缓存任何应用程序的类，因为它们会在公共 ClassLoader 中造成泄漏。
+	// <p>应用程序启动时的任何 {@code acceptClassLoader} 调用都应与应用程序关闭时的 {@link clearClassLoader} 调用配对。
 	public static void acceptClassLoader(@Nullable ClassLoader classLoader) {
 		if (classLoader != null) {
 			acceptedClassLoaders.add(classLoader);
@@ -153,6 +187,7 @@ public final class CachedIntrospectionResults {
 	 * removing the ClassLoader (and its children) from the acceptance list.
 	 * @param classLoader the ClassLoader to clear the cache for
 	 */
+	// 清除给定 ClassLoader 的内省缓存，删除该 ClassLoader 下所有类的内省结果，并从接受列表中删除 ClassLoader（及其子项）
 	public static void clearClassLoader(@Nullable ClassLoader classLoader) {
 		acceptedClassLoaders.removeIf(registeredLoader ->
 				isUnderneathClassLoader(registeredLoader, classLoader));
@@ -169,10 +204,12 @@ public final class CachedIntrospectionResults {
 	 * @throws BeansException in case of introspection failure
 	 */
 	static CachedIntrospectionResults forClass(Class<?> beanClass) throws BeansException {
+		// 从 强引用 获取对象
 		CachedIntrospectionResults results = strongClassCache.get(beanClass);
 		if (results != null) {
 			return results;
 		}
+		// 从 软引用获取对象
 		results = softClassCache.get(beanClass);
 		if (results != null) {
 			return results;
@@ -203,6 +240,7 @@ public final class CachedIntrospectionResults {
 	 * @return whether the given ClassLoader is accepted
 	 * @see #acceptClassLoader
 	 */
+	// 安全校验：检查此 CachedIntrospectionResults 类是否配置为接受给定的 ClassLoader。
 	private static boolean isClassLoaderAccepted(ClassLoader classLoader) {
 		for (ClassLoader acceptedLoader : acceptedClassLoaders) {
 			if (isUnderneathClassLoader(classLoader, acceptedLoader)) {
@@ -218,6 +256,9 @@ public final class CachedIntrospectionResults {
 	 * @param candidate the candidate ClassLoader to check
 	 * @param parent the parent ClassLoader to check for
 	 */
+	// 层次性检查：检查给定的 ClassLoader 是否在给定的父级之下，即父级是否在候选人的层次结构内
+	// @paramCandidate 要检查的候选类加载器
+	// @param parent 要检查的父类加载器
 	private static boolean isUnderneathClassLoader(@Nullable ClassLoader candidate, @Nullable ClassLoader parent) {
 		if (candidate == parent) {
 			return true;
@@ -241,6 +282,9 @@ public final class CachedIntrospectionResults {
 	 * @return the resulting {@code BeanInfo} descriptor (never {@code null})
 	 * @throws IntrospectionException from the underlying {@link Introspector}
 	 */
+	// 检索给定目标类的 {@link BeanInfo} 描述符
+	// @param beanClass 要内省(透视)的目标类
+	// @return 生成的 {@code BeanInfo} 描述符（从不{@code null}）
 	private static BeanInfo getBeanInfo(Class<?> beanClass) throws IntrospectionException {
 		for (BeanInfoFactory beanInfoFactory : beanInfoFactories) {
 			BeanInfo beanInfo = beanInfoFactory.getBeanInfo(beanClass);
@@ -255,12 +299,15 @@ public final class CachedIntrospectionResults {
 
 
 	/** The BeanInfo object for the introspected bean class. */
+	// 内省 bean 类的 BeanInfo 对象。
 	private final BeanInfo beanInfo;
 
 	/** PropertyDescriptor objects keyed by property name String. */
+	// 由属性名称字符串作为键的 PropertyDescriptor 对象
 	private final Map<String, PropertyDescriptor> propertyDescriptors;
 
 	/** TypeDescriptor objects keyed by PropertyDescriptor. */
+	// 由 PropertyDescriptor 作为键的 TypeDescriptor 对象
 	private final ConcurrentMap<PropertyDescriptor, TypeDescriptor> typeDescriptorCache;
 
 
@@ -269,6 +316,7 @@ public final class CachedIntrospectionResults {
 	 * @param beanClass the bean class to analyze
 	 * @throws BeansException in case of introspection failure
 	 */
+	// 为给定的类创建一个新的 CachedIntrospectionResults 实例。
 	private CachedIntrospectionResults(Class<?> beanClass) throws BeansException {
 		try {
 			if (logger.isTraceEnabled()) {
@@ -284,6 +332,7 @@ public final class CachedIntrospectionResults {
 			Set<String> readMethodNames = new HashSet<>();
 
 			// This call is slow so we do it once.
+			// 这个调用很慢，所以我们只做一次
 			PropertyDescriptor[] pds = this.beanInfo.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				if (Class.class == beanClass &&
@@ -306,7 +355,8 @@ public final class CachedIntrospectionResults {
 			}
 
 			// Explicitly check implemented interfaces for setter/getter methods as well,
-			// in particular for Java 8 default methods...
+			//			// in particular for Java 8 default methods...
+			// 显式检查 setter/getter 方法的已实现接口，尤其是 Java 8 默认方法......
 			Class<?> currClass = beanClass;
 			while (currClass != null && currClass != Object.class) {
 				introspectInterfaces(beanClass, currClass, readMethodNames);

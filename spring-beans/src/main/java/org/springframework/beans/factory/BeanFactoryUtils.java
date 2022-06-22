@@ -16,6 +16,12 @@
 
 package org.springframework.beans.factory;
 
+import org.springframework.beans.BeansException;
+import org.springframework.core.ResolvableType;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,12 +29,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.springframework.beans.BeansException;
-import org.springframework.core.ResolvableType;
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * Convenience methods operating on bean factories, in particular
@@ -44,12 +44,17 @@ import org.springframework.util.StringUtils;
  * @author Chris Beams
  * @since 04.07.2003
  */
+// 在 bean 工厂上操作的便捷方法，特别是在 {@link ListableBeanFactory} 接口上
+//
+// <p>返回 bean 计数、bean 名称或 bean 实例，考虑到 bean 工厂的嵌套层次结构（ListableBeanFactory 接口上定义的方法没有，
+// 与 BeanFactory 接口上定义的方法相反）
 public abstract class BeanFactoryUtils {
 
 	/**
 	 * Separator for generated bean names. If a class name or parent name is not
 	 * unique, "#1", "#2" etc will be appended, until the name becomes unique.
 	 */
+	// 生成的 bean 名称的分隔符。如果类名或父名不是唯一的，则将附加“1”、“2”等，直到名称变得唯一。
 	public static final String GENERATED_BEAN_NAME_SEPARATOR = "#";
 
 	/**
@@ -57,6 +62,7 @@ public abstract class BeanFactoryUtils {
 	 * @since 5.1
 	 * @see BeanFactory#FACTORY_BEAN_PREFIX
 	 */
+	// 从带有工厂 bean 前缀的名称缓存到剥离的名称而无需取消引用
 	private static final Map<String, String> transformedBeanNameCache = new ConcurrentHashMap<>();
 
 
@@ -67,6 +73,7 @@ public abstract class BeanFactoryUtils {
 	 * @return whether the given name is a factory dereference
 	 * @see BeanFactory#FACTORY_BEAN_PREFIX
 	 */
+	// 返回给定的名称是否是工厂取消引用（以工厂取消引用前缀开头）
 	public static boolean isFactoryDereference(@Nullable String name) {
 		return (name != null && name.startsWith(BeanFactory.FACTORY_BEAN_PREFIX));
 	}
@@ -78,6 +85,10 @@ public abstract class BeanFactoryUtils {
 	 * @return the transformed name
 	 * @see BeanFactory#FACTORY_BEAN_PREFIX
 	 */
+	// 返回实际的 bean 名称，去除工厂取消引用前缀（如果有的话，如果找到，也会去除重复的工厂前缀）。
+	// @param name bean 的名称
+	// @return 转换后的名称
+	// @see BeanFactoryFACTORY_BEAN_PREFIX
 	public static String transformedBeanName(String name) {
 		Assert.notNull(name, "'name' must not be null");
 		if (!name.startsWith(BeanFactory.FACTORY_BEAN_PREFIX)) {
@@ -101,6 +112,7 @@ public abstract class BeanFactoryUtils {
 	 * @see org.springframework.beans.factory.support.BeanDefinitionReaderUtils#generateBeanName
 	 * @see org.springframework.beans.factory.support.DefaultBeanNameGenerator
 	 */
+	// 返回给定的名称是否是由默认命名策略生成的 bean 名称（包含“#...”部分）。
 	public static boolean isGeneratedBeanName(@Nullable String name) {
 		return (name != null && name.contains(GENERATED_BEAN_NAME_SEPARATOR));
 	}
@@ -112,6 +124,7 @@ public abstract class BeanFactoryUtils {
 	 * @return the raw bean name
 	 * @see #GENERATED_BEAN_NAME_SEPARATOR
 	 */
+	// 从给定的（可能生成的）bean 名称中提取“原始”bean 名称，不包括可能为唯一性而添加的任何“...”后缀。
 	public static String originalBeanName(String name) {
 		Assert.notNull(name, "'name' must not be null");
 		int separatorIndex = name.indexOf(GENERATED_BEAN_NAME_SEPARATOR);
@@ -130,6 +143,8 @@ public abstract class BeanFactoryUtils {
 	 * @return count of beans including those defined in ancestor factories
 	 * @see #beanNamesIncludingAncestors
 	 */
+	// 计算此工厂参与的任何层次结构中的所有 bean。包括祖先 bean 工厂的计数。
+	// <p>被“覆盖”的Bean（在同名的后代工厂中指定）只计算一次。
 	public static int countBeansIncludingAncestors(ListableBeanFactory lbf) {
 		return beanNamesIncludingAncestors(lbf).length;
 	}
@@ -140,6 +155,7 @@ public abstract class BeanFactoryUtils {
 	 * @return the array of matching bean names, or an empty array if none
 	 * @see #beanNamesForTypeIncludingAncestors
 	 */
+	// 返回工厂中的所有 bean 名称，包括祖先工厂。
 	public static String[] beanNamesIncludingAncestors(ListableBeanFactory lbf) {
 		return beanNamesForTypeIncludingAncestors(lbf, Object.class);
 	}
@@ -158,6 +174,10 @@ public abstract class BeanFactoryUtils {
 	 * @since 4.2
 	 * @see ListableBeanFactory#getBeanNamesForType(ResolvableType)
 	 */
+	// 获取给定类型的所有 bean 名称，包括在祖先工厂中定义的名称。在覆盖 bean 定义的情况下将返回唯一名称。
+	// <p>是否考虑由 FactoryBeans 创建的对象，这意味着 FactoryBeans 将被初始化。如果 FactoryBean 创建的对象不匹配，
+	// 则原始 FactoryBean 本身将与类型匹配。
+	// <p>此版本的 {@code beanNamesForTypeInducingAncestors} 自动包含原型和 FactoryBeans。
 	public static String[] beanNamesForTypeIncludingAncestors(ListableBeanFactory lbf, ResolvableType type) {
 		Assert.notNull(lbf, "ListableBeanFactory must not be null");
 		String[] result = lbf.getBeanNamesForType(type);
@@ -194,6 +214,10 @@ public abstract class BeanFactoryUtils {
 	 * @since 5.2
 	 * @see ListableBeanFactory#getBeanNamesForType(ResolvableType, boolean, boolean)
 	 */
+	// 获取给定类型的所有 bean 名称，包括在祖先工厂中定义的名称。在覆盖 bean 定义的情况下将返回唯一名称。
+	// <p>如果设置了“allowEagerInit”标志，则是否考虑由 FactoryBeans 创建的对象，这意味着 FactoryBeans 将被初始化。
+	// 如果 FactoryBean 创建的对象不匹配，则原始 FactoryBean 本身将与类型匹配。
+	// 如果未设置“allowEagerInit”，则只会检查原始 FactoryBeans（不需要初始化每个 FactoryBean）。
 	public static String[] beanNamesForTypeIncludingAncestors(
 			ListableBeanFactory lbf, ResolvableType type, boolean includeNonSingletons, boolean allowEagerInit) {
 
@@ -223,6 +247,10 @@ public abstract class BeanFactoryUtils {
 	 * @return the array of matching bean names, or an empty array if none
 	 * @see ListableBeanFactory#getBeanNamesForType(Class)
 	 */
+	// 获取给定类型的所有 bean 名称，包括在祖先工厂中定义的名称。在覆盖 bean 定义的情况下将返回唯一名称。
+	// <p>是否考虑由 FactoryBeans 创建的对象，这意味着 FactoryBeans 将被初始化。如果 FactoryBean 创建的对象不匹配，
+	// 则原始 FactoryBean 本身将与类型匹配。
+	// <p>此版本的 {@code beanNamesForTypeInducingAncestors} 自动包含原型和 FactoryBeans。
 	public static String[] beanNamesForTypeIncludingAncestors(ListableBeanFactory lbf, Class<?> type) {
 		Assert.notNull(lbf, "ListableBeanFactory must not be null");
 		String[] result = lbf.getBeanNamesForType(type);
@@ -258,16 +286,23 @@ public abstract class BeanFactoryUtils {
 	 * @return the array of matching bean names, or an empty array if none
 	 * @see ListableBeanFactory#getBeanNamesForType(Class, boolean, boolean)
 	 */
+	// 获取给定类型的所有 bean 名称，包括在祖先工厂中定义的名称。在覆盖 bean 定义的情况下将返回唯一名称。
+	// <p>如果设置了“allowEagerInit”标志，则是否考虑由 FactoryBeans 创建的对象，这意味着 FactoryBeans 将被初始化。
+	// 如果 FactoryBean 创建的对象不匹配，则原始 FactoryBean 本身将与类型匹配。
+	// 如果未设置“allowEagerInit”，则只会检查原始 FactoryBeans（不需要初始化每个 FactoryBean）
 	public static String[] beanNamesForTypeIncludingAncestors(
 			ListableBeanFactory lbf, Class<?> type, boolean includeNonSingletons, boolean allowEagerInit) {
 
 		Assert.notNull(lbf, "ListableBeanFactory must not be null");
 		String[] result = lbf.getBeanNamesForType(type, includeNonSingletons, allowEagerInit);
+		// 如果是层次性应用上下文工厂
 		if (lbf instanceof HierarchicalBeanFactory) {
 			HierarchicalBeanFactory hbf = (HierarchicalBeanFactory) lbf;
 			if (hbf.getParentBeanFactory() instanceof ListableBeanFactory) {
+				// 递归查找
 				String[] parentResult = beanNamesForTypeIncludingAncestors(
 						(ListableBeanFactory) hbf.getParentBeanFactory(), type, includeNonSingletons, allowEagerInit);
+				// 找到所有 bean 名称，相同名称的 bean,以祖先为准
 				result = mergeNamesWithParent(result, parentResult, hbf);
 			}
 		}
@@ -284,6 +319,8 @@ public abstract class BeanFactoryUtils {
 	 * @since 5.0
 	 * @see ListableBeanFactory#getBeanNamesForAnnotation(Class)
 	 */
+	// 获取 {@code Class} 具有提供的 {@link Annotation} 类型的所有 bean 名称，包括在祖先工厂中定义的那些，
+	// 但尚未创建任何 bean 实例。在覆盖 bean 定义的情况下将返回唯一名称
 	public static String[] beanNamesForAnnotationIncludingAncestors(
 			ListableBeanFactory lbf, Class<? extends Annotation> annotationType) {
 
@@ -321,6 +358,12 @@ public abstract class BeanFactoryUtils {
 	 * @throws BeansException if a bean could not be created
 	 * @see ListableBeanFactory#getBeansOfType(Class)
 	 */
+	// 返回给定类型或子类型的所有 bean，如果当前 bean 工厂是 HierarchicalBeanFactory，则还选取祖先 bean 工厂中定义的 bean。
+	// 返回的 Map 将只包含这种类型的 bean。
+	// <p>是否考虑由 FactoryBeans 创建的对象，这意味着 FactoryBeans 将被初始化。如果 FactoryBean 创建的对象不匹配，
+	// 则原始 FactoryBean 本身将与类型匹配。
+	// <p><b>注意：同名的 Bean 将在“最低”工厂级别优先，即此类 Bean 将从它们所在的最低工厂返回，并将相应的 Bean 隐藏在祖先工厂中。<b >
+	// 此功能允许通过在子工厂中显式选择相同的 bean 名称来“替换”bean；那时祖先工厂中的 bean 将不可见，甚至对于按类型查找也不可见。
 	public static <T> Map<String, T> beansOfTypeIncludingAncestors(ListableBeanFactory lbf, Class<T> type)
 			throws BeansException {
 
@@ -369,6 +412,13 @@ public abstract class BeanFactoryUtils {
 	 * @throws BeansException if a bean could not be created
 	 * @see ListableBeanFactory#getBeansOfType(Class, boolean, boolean)
 	 */
+	// 返回给定类型或子类型的所有 bean，如果当前 bean 工厂是 HierarchicalBeanFactory，则还选取祖先 bean 工厂中定义的 bean。
+	// 返回的 Map 将只包含这种类型的 bean。
+	// <p>如果设置了“allowEagerInit”标志，则是否考虑由 FactoryBeans 创建的对象，这意味着 FactoryBeans 将被初始化。
+	// 如果 FactoryBean 创建的对象不匹配，则原始 FactoryBean 本身将与类型匹配。如果未设置“allowEagerInit”，
+	// 则只会检查原始 FactoryBeans（不需要初始化每个 FactoryBean）。
+	// <p><b>注意：同名的 Bean 将在“最低”工厂级别优先，即此类 Bean 将从它们所在的最低工厂返回，并将相应的 Bean 隐藏在祖先工厂中。<b >
+	// 此功能允许通过在子工厂中显式选择相同的 bean 名称来“替换”bean；那时祖先工厂中的 bean 将不可见，甚至对于按类型查找也不可见。
 	public static <T> Map<String, T> beansOfTypeIncludingAncestors(
 			ListableBeanFactory lbf, Class<T> type, boolean includeNonSingletons, boolean allowEagerInit)
 			throws BeansException {
@@ -547,6 +597,7 @@ public abstract class BeanFactoryUtils {
 	 * @throws NoSuchBeanDefinitionException if no bean of the given type was found
 	 * @throws NoUniqueBeanDefinitionException if more than one bean of the given type was found
 	 */
+
 	private static <T> T uniqueBean(Class<T> type, Map<String, T> matchingBeans) {
 		int count = matchingBeans.size();
 		if (count == 1) {

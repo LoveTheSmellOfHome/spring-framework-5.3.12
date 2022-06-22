@@ -33,6 +33,8 @@ import org.springframework.lang.Nullable;
  * @see ConfigurationClassParser
  * @see ConfigurationClassBeanDefinitionReader
  */
+// 表示用 @Bean 注解的 @Configuration类中的方法。。
+// 两个条件：1.@Configuration 标注了的类 且 2.@Bean 标注的方法
 final class BeanMethod extends ConfigurationMethod {
 
 	BeanMethod(MethodMetadata metadata, ConfigurationClass configurationClass) {
@@ -43,12 +45,14 @@ final class BeanMethod extends ConfigurationMethod {
 	public void validate(ProblemReporter problemReporter) {
 		if (getMetadata().isStatic()) {
 			// static @Bean methods have no constraints to validate -> return immediately
+			// 静态 @Bean 方法没有要验证的约束 -> 立即返回
 			return;
 		}
 
 		if (this.configurationClass.getMetadata().isAnnotated(Configuration.class.getName())) {
 			if (!getMetadata().isOverridable()) {
 				// instance @Bean methods within @Configuration classes must be overridable to accommodate CGLIB
+				// @Configuration 类中的实例 @Bean 方法必须可覆盖以适应 CGLIB
 				problemReporter.error(new NonOverridableMethodError());
 			}
 		}

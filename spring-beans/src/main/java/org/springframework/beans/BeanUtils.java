@@ -16,6 +16,16 @@
 
 package org.springframework.beans;
 
+import kotlin.jvm.JvmClassMappingKt;
+import kotlin.reflect.KFunction;
+import kotlin.reflect.KParameter;
+import kotlin.reflect.full.KClasses;
+import kotlin.reflect.jvm.KCallablesJvm;
+import kotlin.reflect.jvm.ReflectJvmMapping;
+import org.springframework.core.*;
+import org.springframework.lang.Nullable;
+import org.springframework.util.*;
+
 import java.beans.ConstructorProperties;
 import java.beans.PropertyDescriptor;
 import java.beans.PropertyEditor;
@@ -26,34 +36,7 @@ import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.net.URL;
 import java.time.temporal.Temporal;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import kotlin.jvm.JvmClassMappingKt;
-import kotlin.reflect.KFunction;
-import kotlin.reflect.KParameter;
-import kotlin.reflect.full.KClasses;
-import kotlin.reflect.jvm.KCallablesJvm;
-import kotlin.reflect.jvm.ReflectJvmMapping;
-
-import org.springframework.core.DefaultParameterNameDiscoverer;
-import org.springframework.core.KotlinDetector;
-import org.springframework.core.MethodParameter;
-import org.springframework.core.ParameterNameDiscoverer;
-import org.springframework.core.ResolvableType;
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
+import java.util.*;
 
 /**
  * Static convenience methods for JavaBeans: for instantiating beans,
@@ -137,6 +120,17 @@ public abstract class BeanUtils {
 	 * from the constructor invocation itself.
 	 * @see Constructor#newInstance
 	 */
+	// 使用其“主”构造函数（对于 Kotlin 类，可能声明了默认参数）或其默认构造函数（对于常规 Java 类，需要标准的无参数设置）实例化一个类。
+	//
+	// 请注意，如果给定一个不可访问（即非公共）构造函数，此方法会尝试将构造函数设置为可访问。
+	// 参形：
+	//				clazz – 实例化的类
+	// 返回：
+	//				新实例
+	// 抛出：
+	//				BeanInstantiationException – 如果无法实例化 bean。如果没有找到主要/默认构造函数，
+	//				则该原因可能会显着指示 NoSuchMethodException ，在无法解析的类定义（例如，由于在运行时缺少依赖项）
+	//				或构造函数调用本身引发的异常的情况下指示 NoClassDefFoundError 或其他 LinkageError 。
 	public static <T> T instantiateClass(Class<T> clazz) throws BeanInstantiationException {
 		Assert.notNull(clazz, "Class must not be null");
 		if (clazz.isInterface()) {
@@ -188,26 +182,44 @@ public abstract class BeanUtils {
 	 * @throws BeanInstantiationException if the bean cannot be instantiated
 	 * @see Constructor#newInstance
 	 */
+	// 使用给定构造函数实例化类的便捷方法。
+	//
+	// 请注意，如果给定一个不可访问（即非公共）构造函数，此方法会尝试将构造函数设置为可访问，并支持带有可选参数
+	// 和默认值的 Kotlin 类。
+	//
+	// 参形：
+	//			ctor – 实例化的构造函数
+	//			args – 要应用的构造函数参数（对未指定的参数使用null ，支持 Kotlin 可选参数和 Java 原始类型）
+	// 返回值：
+	//			新实例
+	// 抛出：
+	//			BeanInstantiationException – 如果 bean 不能被实例化
 	public static <T> T instantiateClass(Constructor<T> ctor, Object... args) throws BeanInstantiationException {
 		Assert.notNull(ctor, "Constructor must not be null");
 		try {
+			// 强吻
 			ReflectionUtils.makeAccessible(ctor);
 			if (KotlinDetector.isKotlinReflectPresent() && KotlinDetector.isKotlinType(ctor.getDeclaringClass())) {
 				return KotlinDelegate.instantiateClass(ctor, args);
 			}
 			else {
+				// 构造器获取参数类型
 				Class<?>[] parameterTypes = ctor.getParameterTypes();
 				Assert.isTrue(args.length <= parameterTypes.length, "Can't specify more arguments than constructor parameters");
 				Object[] argsWithDefaultValues = new Object[args.length];
 				for (int i = 0 ; i < args.length; i++) {
 					if (args[i] == null) {
 						Class<?> parameterType = parameterTypes[i];
+						// 检查参数类型是否是原始类型：{@code boolean}, {@code byte},
+						//     * {@code char}, {@code short}, {@code int},
+						//     * {@code long}, {@code float}, and {@code double}.
 						argsWithDefaultValues[i] = (parameterType.isPrimitive() ? DEFAULT_TYPE_VALUES.get(parameterType) : null);
 					}
 					else {
 						argsWithDefaultValues[i] = args[i];
 					}
 				}
+				// 反射调用 构造器创建 java 对象
 				return ctor.newInstance(argsWithDefaultValues);
 			}
 		}
@@ -613,6 +625,9 @@ public abstract class BeanUtils {
 	 * @param pd the PropertyDescriptor for the property
 	 * @return a corresponding MethodParameter object
 	 */
+	// 为指定属性的写入方法(setter)获取一个新的 MethodParameter 对象
+	// @param pd 属性的 PropertyDescriptor
+	// @return 对应的 MethodParameter 对象
 	public static MethodParameter getWriteMethodParameter(PropertyDescriptor pd) {
 		if (pd instanceof GenericTypeAwarePropertyDescriptor) {
 			return new MethodParameter(((GenericTypeAwarePropertyDescriptor) pd).getWriteMethodParameter());

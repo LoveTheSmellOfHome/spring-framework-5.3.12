@@ -40,6 +40,13 @@ import org.springframework.util.Assert;
  * @see InputStreamResource
  * @see org.springframework.mail.javamail.MimeMessageHelper#addAttachment(String, InputStreamSource)
  */
+// {@link Resource} 给定字节数组的实现。
+// <p>为给定的字节数组创建一个 {@link ByteArrayInputStream} 二进制流。
+//
+// <p>用于从任何给定的字节数组加载内容，而不必求助于一次性 {@link InputStreamResource}。
+// 对于从本地内容创建邮件附件特别有用，其中 JavaMail 需要能够多次读取流。
+//
+// ByteArrayInputStream 本身是不需要关闭的，它是内存型的流,可用于反复读取
 public class ByteArrayResource extends AbstractResource {
 
 	private final byte[] byteArray;
@@ -62,6 +69,7 @@ public class ByteArrayResource extends AbstractResource {
 	 */
 	public ByteArrayResource(byte[] byteArray, @Nullable String description) {
 		Assert.notNull(byteArray, "Byte array must not be null");
+		// 内存中存储读入的流数组
 		this.byteArray = byteArray;
 		this.description = (description != null ? description : "");
 	}
@@ -97,6 +105,7 @@ public class ByteArrayResource extends AbstractResource {
 	 */
 	@Override
 	public InputStream getInputStream() throws IOException {
+		// 返回 InputStream ，这个 ByteArrayInputStream 本身是不需要关闭的，它是内存型的流
 		return new ByteArrayInputStream(this.byteArray);
 	}
 

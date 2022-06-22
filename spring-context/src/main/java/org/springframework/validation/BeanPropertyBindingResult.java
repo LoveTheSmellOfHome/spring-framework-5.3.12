@@ -40,6 +40,9 @@ import org.springframework.lang.Nullable;
  * @see DataBinder#initBeanPropertyAccess()
  * @see DirectFieldBindingResult
  */
+// Errors 和 BindingResult 接口的默认实现，用于注册和评估 JavaBean 对象上的绑定错误
+// 执行标准 JavaBean 属性访问，还支持嵌套属性。通常，应用程序代码将使用 Errors 接口或 BindingResult 接口。
+// DataBinder 通过 DataBinder.getBindingResult() 返回其 BindingResult。
 @SuppressWarnings("serial")
 public class BeanPropertyBindingResult extends AbstractPropertyBindingResult implements Serializable {
 
@@ -59,6 +62,9 @@ public class BeanPropertyBindingResult extends AbstractPropertyBindingResult imp
 	 * @param target the target bean to bind onto
 	 * @param objectName the name of the target object
 	 */
+	// 创建 {@link BeanPropertyBindingResult} 类的新实例
+	// @param target 要绑定的目标 bean
+	// @param objectName 目标对象的名称
 	public BeanPropertyBindingResult(@Nullable Object target, String objectName) {
 		this(target, objectName, true, Integer.MAX_VALUE);
 	}
@@ -70,6 +76,9 @@ public class BeanPropertyBindingResult extends AbstractPropertyBindingResult imp
 	 * @param autoGrowNestedPaths whether to "auto-grow" a nested path that contains a null value
 	 * @param autoGrowCollectionLimit the limit for array and collection auto-growing
 	 */
+	// 创建 {@link BeanPropertyBindingResult} 类的新实例
+	// @param autoGrowNestedPaths 是否“自动增长”包含空值的嵌套路径
+	// @param autoGrowCollectionLimit 数组和集合自动增长的限制
 	public BeanPropertyBindingResult(@Nullable Object target, String objectName,
 			boolean autoGrowNestedPaths, int autoGrowCollectionLimit) {
 
@@ -110,6 +119,7 @@ public class BeanPropertyBindingResult extends AbstractPropertyBindingResult imp
 		if (this.target == null) {
 			throw new IllegalStateException("Cannot access properties on null bean instance '" + getObjectName() + "'");
 		}
+		// 调用工厂方法返回 BeanWrapper
 		return PropertyAccessorFactory.forBeanPropertyAccess(this.target);
 	}
 

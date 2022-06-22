@@ -35,6 +35,8 @@ import org.springframework.lang.Nullable;
  * @see AnnotationCacheOperationSource
  * @see SpringCacheAnnotationParser
  */
+// 用于解析已知缓存注解类型的策略接口。 AnnotationCacheOperationSource 委托给此类解析器以支持特定的注解类型，
+// 例如 Spring 自己的 Cacheable 、 CachePut 和 CacheEvict 。
 public interface CacheAnnotationParser {
 
 	/**
@@ -51,6 +53,15 @@ public interface CacheAnnotationParser {
 	 * implementation returns {@code true}, leading to regular introspection.
 	 * @since 5.2
 	 */
+	// 确定给定类是否是此 CacheAnnotationParser 的注解格式的缓存操作的候选者。
+	//
+	// 如果此方法返回 false ，则不会遍历给定类上的方法以进行 #parseCacheAnnotations 内省。
+	// 因此，返回 false是对不受影响的类的优化，而 true 仅表示该类需要针对给定类上的每个方法单独进行完全自省。
+	//
+	// 参形：
+	//			targetClass – 要自省的类
+	// 返回值：
+	//			如果已知该类在类或方法级别没有缓存操作注解，则为false ；否则为true 。默认实现返回true ，导致定期自省。
 	default boolean isCandidateClass(Class<?> targetClass) {
 		return true;
 	}
@@ -64,6 +75,12 @@ public interface CacheAnnotationParser {
 	 * @return the configured caching operation, or {@code null} if none found
 	 * @see AnnotationCacheOperationSource#findCacheOperations(Class)
 	 */
+	// 根据此解析器理解的注解类型解析给定类的缓存定义。
+	// 这实质上将一个已知的缓存注解解析为 Spring 的元数据属性类。如果类不可缓存，则返回null 。
+	// 参形：
+	//			type - 带注解的类
+	// 返回值：
+	//			配置的缓存操作，如果没有找到，则返回null
 	@Nullable
 	Collection<CacheOperation> parseCacheAnnotations(Class<?> type);
 
@@ -76,6 +93,14 @@ public interface CacheAnnotationParser {
 	 * @return the configured caching operation, or {@code null} if none found
 	 * @see AnnotationCacheOperationSource#findCacheOperations(Method)
 	 */
+	// 根据此解析器理解的注解类型，解析给定方法的缓存定义。
+	// 这实质上将一个已知的缓存注解解析为 Spring 的元数据属性类。如果方法不可缓存，则返回null 。
+	// 参形：
+	//			方法- 带注解的方法
+	// 返回值：
+	//			配置的缓存操作，如果没有找到，则返回null
+	// 请参阅：
+	//			AnnotationCacheOperationSource.findCacheOperations(Method)
 	@Nullable
 	Collection<CacheOperation> parseCacheAnnotations(Method method);
 
