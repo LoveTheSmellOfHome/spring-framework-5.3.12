@@ -67,6 +67,12 @@ import org.springframework.util.concurrent.ListenableFuture;
  * @author Sam Brannen
  * @since 4.2
  */
+// {@link org.springframework.context.event.GenericApplicationListener} 适配器，它将事件的处理
+// 委托给一个带 {@link org.springframework.context.event.EventListener} 注解的方法
+//
+// 委托 processEvent(ApplicationEvent) 给子类一个偏离默认值的机会.
+// 如有必要，解开 {@link #processEvent(ApplicationEvent)} 的内容，以允许方法声明定义任意事件类型。如果定义了条件，
+// 则会在调用基础方法之前对其进行评估
 public class ApplicationListenerMethodAdapter implements GenericApplicationListener {
 
 	private static final boolean reactiveStreamsPresent = ClassUtils.isPresent(
@@ -106,6 +112,11 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	 * @param targetClass the target class that the method is declared on
 	 * @param method the listener method to invoke
 	 */
+	// 构造一个新的 ApplicationListenerMethodAdapter。
+	// 参形：
+	//			beanName – 调用监听器方法的 bean 的名称
+	//			targetClass – 声明方法的目标类
+	//			method -- 要调用的监听器方法
 	public ApplicationListenerMethodAdapter(String beanName, Class<?> targetClass, Method method) {
 		this.beanName = beanName;
 		this.method = BridgeMethodResolver.findBridgedMethod(method);
@@ -209,6 +220,7 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	 * @since 5.3.5
 	 * @see #getListenerId()
 	 */
+	// 确定目标监听器的默认 id，在没有 {@link EventListener#id() annotation-specified id value} 的情况下应用
 	protected String getDefaultListenerId() {
 		Method method = getTargetMethod();
 		StringJoiner sj = new StringJoiner(",", "(", ")");
@@ -223,6 +235,7 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	 * Process the specified {@link ApplicationEvent}, checking if the condition
 	 * matches and handling a non-null result, if any.
 	 */
+	// 处理指定的 {@link ApplicationEvent}，检查条件是否匹配并处理非空结果（如果有）
 	public void processEvent(ApplicationEvent event) {
 		Object[] args = resolveArguments(event);
 		if (shouldHandle(event, args)) {
@@ -242,6 +255,9 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	 * Can return {@code null} to indicate that no suitable arguments could be resolved
 	 * and therefore the method should not be invoked at all for the specified event.
 	 */
+	// 使用指定 {@link ApplicationEvent} 解析方法参数
+	// <p>这些参数将用于调用此实例处理的方法。可以返回 {@code null} 以指示无法解析合适的参数，
+	// 因此根本不应为指定的事件调用该方法
 	@Nullable
 	protected Object[] resolveArguments(ApplicationEvent event) {
 		ResolvableType declaredEventType = getResolvableType(event);
@@ -286,6 +302,7 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 		}
 	}
 
+	// 发布事件
 	private void publishEvents(Object result) {
 		if (result.getClass().isArray()) {
 			Object[] events = ObjectUtils.toObjectArray(result);
@@ -311,6 +328,7 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 		}
 	}
 
+	// 处理异步错误
 	protected void handleAsyncError(Throwable t) {
 		logger.error("Unexpected error occurred in asynchronous listener", t);
 	}
@@ -331,6 +349,7 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	/**
 	 * Invoke the event listener method with the given argument values.
 	 */
+	// 使用给定的参数值调用事件监听器方法
 	@Nullable
 	protected Object doInvoke(Object... args) {
 		Object bean = getTargetBean();
@@ -366,6 +385,7 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	/**
 	 * Return the target bean instance to use.
 	 */
+	// 返回要使用的目标 bean 实例
 	protected Object getTargetBean() {
 		Assert.notNull(this.applicationContext, "ApplicationContext must no be null");
 		return this.applicationContext.getBean(this.beanName);
@@ -375,6 +395,7 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	 * Return the target listener method.
 	 * @since 5.3
 	 */
+	// 返回目标监听器方法
 	protected Method getTargetMethod() {
 		return this.targetMethod;
 	}
@@ -385,6 +406,8 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	 * annotation or any matching attribute on a composed annotation that
 	 * is meta-annotated with {@code @EventListener}.
 	 */
+	// 返回要使用的条件。
+	// 匹配 EventListener 注解的 condition 属性或使用 @EventListener 元注解的组合注解上的任何匹配属性
 	@Nullable
 	protected String getCondition() {
 		return this.condition;
@@ -395,6 +418,9 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	 * the given error message.
 	 * @param message error message to append the HandlerMethod details to
 	 */
+	// 向给定的错误消息添加额外的细节，例如 bean 类型和方法签名。
+	// 参形：
+	//			message – 将 HandlerMethod 详细信息附加到的错误消息
 	protected String getDetailedErrorMessage(Object bean, String message) {
 		StringBuilder sb = new StringBuilder(message).append('\n');
 		sb.append("HandlerMethod details: \n");
@@ -410,6 +436,8 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	 * beans, and others). Event listener beans that require proxying should prefer
 	 * class-based proxy mechanisms.
 	 */
+	// 断言目标 bean 类是声明给定方法的类的实例。在某些情况下，事件处理时的实际 bean 实例可能是 JDK 动态
+	// 代理（延迟初始化、原型 bean 等）。需要代理的事件侦听器 bean 应该更喜欢基于类的代理机制
 	private void assertTargetBean(Method method, Object targetBean, Object[] args) {
 		Class<?> methodDeclaringClass = method.getDeclaringClass();
 		Class<?> targetBeanClass = targetBean.getClass();
@@ -422,6 +450,7 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 		}
 	}
 
+	// 获取调用错误信息
 	private String getInvocationErrorMessage(Object bean, String message, Object[] resolvedArgs) {
 		StringBuilder sb = new StringBuilder(getDetailedErrorMessage(bean, message));
 		sb.append("Resolved arguments: \n");
@@ -480,7 +509,7 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 		}
 	}
 
-
+	// 事件发布订阅
 	private class EventPublicationSubscriber implements Subscriber<Object> {
 
 		@Override

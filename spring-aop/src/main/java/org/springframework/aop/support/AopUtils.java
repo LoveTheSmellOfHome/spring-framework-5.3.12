@@ -55,6 +55,12 @@ import org.springframework.util.ReflectionUtils;
  * @author Rob Harrop
  * @see org.springframework.aop.framework.AopProxyUtils
  */
+// AOP 支持代码的实用方法。
+//
+// 主要用于 Spring 的 AOP 支持内部使用。
+//
+// 请参阅org.springframework.aop.framework.AopProxyUtils以获取特定于框架的 AOP 实用方法的集合，
+// 这些方法依赖于 Spring 的 AOP 框架实现的内部。
 public abstract class AopUtils {
 
 	/**
@@ -65,6 +71,8 @@ public abstract class AopUtils {
 	 * @see #isJdkDynamicProxy
 	 * @see #isCglibProxy
 	 */
+	// 检查给定对象是不是 JDK 动态代理或者 CGLIB 代理。
+	// 此方法还检查给定对象是否是SpringProxy的实例。
 	public static boolean isAopProxy(@Nullable Object object) {
 		return (object instanceof SpringProxy && (Proxy.isProxyClass(object.getClass()) ||
 				object.getClass().getName().contains(ClassUtils.CGLIB_CLASS_SEPARATOR)));
@@ -78,6 +86,10 @@ public abstract class AopUtils {
 	 * @param object the object to check
 	 * @see java.lang.reflect.Proxy#isProxyClass
 	 */
+	// 检查给定对象是否为 JDK 动态代理。
+	// 该方法超越了Proxy.isProxyClass(Class)的实现，额外检查给定对象是否是SpringProxy的实例。
+	// 参形：
+	//				object – 要检查的对象
 	public static boolean isJdkDynamicProxy(@Nullable Object object) {
 		return (object instanceof SpringProxy && Proxy.isProxyClass(object.getClass()));
 	}
@@ -90,6 +102,10 @@ public abstract class AopUtils {
 	 * @param object the object to check
 	 * @see ClassUtils#isCglibProxy(Object)
 	 */
+	// 检查给定对象是否是 CGLIB 代理。
+	// 该方法超越了ClassUtils.isCglibProxy(Object)的实现，额外检查给定对象是否是SpringProxy的实例。
+	// 参形：
+	//				object – 要检查的对象
 	public static boolean isCglibProxy(@Nullable Object object) {
 		return (object instanceof SpringProxy &&
 				object.getClass().getName().contains(ClassUtils.CGLIB_CLASS_SEPARATOR));
@@ -104,6 +120,12 @@ public abstract class AopUtils {
 	 * @see org.springframework.aop.TargetClassAware#getTargetClass()
 	 * @see org.springframework.aop.framework.AopProxyUtils#ultimateTargetClass(Object)
 	 */
+	// 确定给定 bean 实例的目标类，它可能是 AOP 代理。
+	// 返回 AOP 代理的目标类或普通类。
+	// 参形：
+	//			candidate - 要检查的实例（可能是 AOP 代理）
+	// 返回值：
+	//			目标类（或给定对象的普通类作为后备；从不为null ）
 	public static Class<?> getTargetClass(Object candidate) {
 		Assert.notNull(candidate, "Candidate object must not be null");
 		Class<?> result = null;
@@ -111,6 +133,7 @@ public abstract class AopUtils {
 			result = ((TargetClassAware) candidate).getTargetClass();
 		}
 		if (result == null) {
+			// 返回目标对象
 			result = (isCglibProxy(candidate) ? candidate.getClass().getSuperclass() : candidate.getClass());
 		}
 		return result;
@@ -128,6 +151,14 @@ public abstract class AopUtils {
 	 * @since 4.3
 	 * @see MethodIntrospector#selectInvocableMethod(Method, Class)
 	 */
+	// 选择目标类型上的可调用方法：给定方法本身（如果实际暴露在目标类型上），或者目标类型的接口之一或目标类型本身上的相应方法。
+	// 参形：
+	//			method - 检查的方法
+	//			targetType – 搜索方法的目标类型（通常是 AOP 代理）
+	// 返回值：
+	//			目标类型上对应的可调用方法
+	// 抛出：
+	//			IllegalStateException – 如果给定的方法在给定的目标类型上不可调用（通常是由于代理不匹配）
 	public static Method selectInvocableMethod(Method method, @Nullable Class<?> targetType) {
 		if (targetType == null) {
 			return method;
@@ -334,11 +365,23 @@ public abstract class AopUtils {
 	 * @throws Throwable if thrown by the target method
 	 * @throws org.springframework.aop.AopInvocationException in case of a reflection error
 	 */
+	// 作为 AOP 方法调用的一部分，通过反射调用给定的目标。
+	// 形参：
+	//			target – 目标对象
+	//			method - 调用的方法
+	//			args – 方法的参数
+	// 返回值：
+	//			调用结果，如果有的话
+	// 异常：
+	//			Throwable – 如果被目标方法抛出
+	//			AopInvocationException – 在反射错误的情况下
+	// 使用 Java 反射调用 Joinpoint（目标方法）
 	@Nullable
 	public static Object invokeJoinpointUsingReflection(@Nullable Object target, Method method, Object[] args)
 			throws Throwable {
 
 		// Use reflection to invoke the method.
+		// 使用反射来调用方法
 		try {
 			ReflectionUtils.makeAccessible(method);
 			return method.invoke(target, args);
@@ -346,6 +389,7 @@ public abstract class AopUtils {
 		catch (InvocationTargetException ex) {
 			// Invoked method threw a checked exception.
 			// We must rethrow it. The client won't see the interceptor.
+			// 调用的方法引发了检查异常。我们必须重新抛出它。客户端不会看到拦截器
 			throw ex.getTargetException();
 		}
 		catch (IllegalArgumentException ex) {

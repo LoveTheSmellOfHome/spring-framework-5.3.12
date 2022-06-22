@@ -43,6 +43,12 @@ import org.springframework.util.ObjectUtils;
  * @author Juergen Hoeller
  * @since 4.3.4
  */
+// {@code BeanPostProcessor} 检测实现 {@code ApplicationListener} 接口的 bean。
+// 这会捕获无法被 {@code getBeanNamesForType} 和仅针对顶级 bean 的相关操作可靠检测到的 bean。
+//
+// <p>使用标准 Java 序列化，此后处理器不会作为 {@code DisposableBeanAdapter} 的一部分开始序列化。
+// 但是，通过替代序列化机制，{@code DisposableBeanAdapter.writeReplace} 可能根本不会被使用，
+// 因此我们防御性地将此后处理器的字段状态标记为 {@code Transient}。
 class ApplicationListenerDetector implements DestructionAwareBeanPostProcessor, MergedBeanDefinitionPostProcessor {
 
 	private static final Log logger = LogFactory.getLog(ApplicationListenerDetector.class);
@@ -59,7 +65,10 @@ class ApplicationListenerDetector implements DestructionAwareBeanPostProcessor, 
 
 	@Override
 	public void postProcessMergedBeanDefinition(RootBeanDefinition beanDefinition, Class<?> beanType, String beanName) {
+		// 在 Bean 的生命周期 merge 阶段，凡是我应用上下文里面所注册的 BeanDefinition 一旦是 ApplicationListener
+		// 就把名称关联起来
 		if (ApplicationListener.class.isAssignableFrom(beanType)) {
+			// 将 ApplicationListener 是不是单例通过名称和状态做了区分
 			this.singletonNames.put(beanName, beanDefinition.isSingleton());
 		}
 	}
@@ -69,6 +78,7 @@ class ApplicationListenerDetector implements DestructionAwareBeanPostProcessor, 
 		return bean;
 	}
 
+	// Bean 生命周期中初始化后
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) {
 		if (bean instanceof ApplicationListener) {
@@ -76,6 +86,7 @@ class ApplicationListenerDetector implements DestructionAwareBeanPostProcessor, 
 			Boolean flag = this.singletonNames.get(beanName);
 			if (Boolean.TRUE.equals(flag)) {
 				// singleton bean (top-level or inner): register on the fly
+				// 将应用上下文中的单例 ApplicationListener bean 自动添加到 应用上下文中
 				this.applicationContext.addApplicationListener((ApplicationListener<?>) bean);
 			}
 			else if (Boolean.FALSE.equals(flag)) {
@@ -86,12 +97,14 @@ class ApplicationListenerDetector implements DestructionAwareBeanPostProcessor, 
 							"because it does not have singleton scope. Only top-level listener beans are allowed " +
 							"to be of non-singleton scope.");
 				}
+				// 将所有不是单例的都移除
 				this.singletonNames.remove(beanName);
 			}
 		}
 		return bean;
 	}
 
+	// Bean 生命周期中 Bean 销毁前调用
 	@Override
 	public void postProcessBeforeDestruction(Object bean, String beanName) {
 		if (bean instanceof ApplicationListener) {

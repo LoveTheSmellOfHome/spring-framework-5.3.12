@@ -31,6 +31,7 @@ import org.springframework.lang.Nullable;
  * @author Rod Johnson
  * @since 2.0
  */
+// 处理 Spring AOP @After 注解标注的方法，类似于 finally，利用 java 反射实现
 @SuppressWarnings("serial")
 public class AspectJAfterAdvice extends AbstractAspectJAdvice
 		implements MethodInterceptor, AfterAdvice, Serializable {
@@ -46,9 +47,11 @@ public class AspectJAfterAdvice extends AbstractAspectJAdvice
 	@Nullable
 	public Object invoke(MethodInvocation mi) throws Throwable {
 		try {
+			// 拦截方法正常调用
 			return mi.proceed();
 		}
 		finally {
+			// 调用拦截后 Advice 方法，基于 finally 的实现，在方法调用完成后，在 finally 种调用,不管上述方法是否执行成功都会调用
 			invokeAdviceMethod(getJoinPointMatch(), null, null);
 		}
 	}

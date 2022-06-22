@@ -25,6 +25,7 @@ import org.springframework.context.ApplicationEvent;
  * @author Juergen Hoeller
  * @since 2.5
  */
+// 为 {@code ApplicationContext} 引发的事件的基础类
 @SuppressWarnings("serial")
 public abstract class ApplicationContextEvent extends ApplicationEvent {
 
@@ -33,6 +34,7 @@ public abstract class ApplicationContextEvent extends ApplicationEvent {
 	 * @param source the {@code ApplicationContext} that the event is raised for
 	 * (must not be {@code null})
 	 */
+	// 将 ApplicationContext 对象作为事件源传递到 ApplicationEvent 中去
 	public ApplicationContextEvent(ApplicationContext source) {
 		super(source);
 	}
@@ -40,6 +42,7 @@ public abstract class ApplicationContextEvent extends ApplicationEvent {
 	/**
 	 * Get the {@code ApplicationContext} that the event was raised for.
 	 */
+	// 获取引发事件的 {@code ApplicationContext},是个只读方法
 	public final ApplicationContext getApplicationContext() {
 		return (ApplicationContext) getSource();
 	}

@@ -26,6 +26,7 @@ import org.springframework.util.StringUtils;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// 表示切面的 ParseState 条目。
 public class AspectEntry implements ParseState.Entry {
 
 	private final String id;
@@ -38,6 +39,10 @@ public class AspectEntry implements ParseState.Entry {
 	 * @param id the id of the aspect element
 	 * @param ref the bean name referenced by this aspect element
 	 */
+	// 创建一个新的AspectEntry实例。
+	// 参形：
+	//			id – 切面元素的 id
+	//			ref – 此切面元素引用的 bean 名称
 	public AspectEntry(String id, String ref) {
 		this.id = id;
 		this.ref = ref;

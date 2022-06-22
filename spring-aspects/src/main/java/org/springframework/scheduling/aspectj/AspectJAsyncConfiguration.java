@@ -36,6 +36,7 @@ import org.springframework.scheduling.config.TaskManagementConfigUtils;
  * @see org.springframework.scheduling.annotation.AsyncConfigurationSelector
  * @see org.springframework.scheduling.annotation.ProxyAsyncConfiguration
  */
+// @Configuration 类，它注册启用基于 AspectJ 的异步方法执行所需的 Spring 基础设施 bean
 @Configuration(proxyBeanMethods = false)
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class AspectJAsyncConfiguration extends AbstractAsyncConfiguration {

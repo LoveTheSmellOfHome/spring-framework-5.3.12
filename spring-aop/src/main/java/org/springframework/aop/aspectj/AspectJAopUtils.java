@@ -59,8 +59,10 @@ public abstract class AspectJAopUtils {
 	 * If neither the advisor nor the advice have precedence information, this method
 	 * will return {@code null}.
 	 */
+	// 返回此顾问或其建议提供的 AspectJPrecedenceInformation。如果顾问和建议都没有优先信息，则此方法将返回null 。
 	@Nullable
 	public static AspectJPrecedenceInformation getAspectJPrecedenceInformationFor(Advisor anAdvisor) {
+		// 判断 Advisor 或 Advice 是否实现了这个接口
 		if (anAdvisor instanceof AspectJPrecedenceInformation) {
 			return (AspectJPrecedenceInformation) anAdvisor;
 		}

@@ -35,9 +35,12 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// 包装 AspectJ 通知方法的通知 (MethodInterceptor) 周围的 Spring AOP。 暴露 ProceedingJoinPoint
+// 处理 Spring AOP @Aroud 注解标注的方法
 @SuppressWarnings("serial")
 public class AspectJAroundAdvice extends AbstractAspectJAdvice implements MethodInterceptor, Serializable {
 
+	// xml 中第一个参数需要显式注入
 	public AspectJAroundAdvice(
 			Method aspectJAroundAdviceMethod, AspectJExpressionPointcut pointcut, AspectInstanceFactory aif) {
 
@@ -66,7 +69,12 @@ public class AspectJAroundAdvice extends AbstractAspectJAdvice implements Method
 		if (!(mi instanceof ProxyMethodInvocation)) {
 			throw new IllegalStateException("MethodInvocation is not a Spring ProxyMethodInvocation: " + mi);
 		}
+		// 包装成 ProxyMethodInvocation
 		ProxyMethodInvocation pmi = (ProxyMethodInvocation) mi;
+
+		// ProceedingJoinPoint 就是与 MethodInterceptor 的invoke 方法参数 MethodInvocation 类似，
+		// Object proceed = pjp.proceed(); 调用拦截的方法，只不过这是 AOP 中的实现，不属于 Spring.
+		// 它只负责拦截具体掉不掉用由用户自己控制是否调用 pjp.proceed();
 		ProceedingJoinPoint pjp = lazyGetProceedingJoinPoint(pmi);
 		JoinPointMatch jpm = getJoinPointMatch(pmi);
 		return invokeAdviceMethod(pjp, jpm, null, null);
@@ -79,7 +87,13 @@ public class AspectJAroundAdvice extends AbstractAspectJAdvice implements Method
 	 * which we'll use for attribute binding
 	 * @return the ProceedingJoinPoint to make available to advice methods
 	 */
+	// 返回当前调用的 ProceedingJoinPoint，如果它还没有绑定到线程，则延迟实例化它。
+	// 形参：
+	// 			rmi – 当前的 Spring AOP ReflectiveMethodInvocation，我们将用于属性绑定
+	// 返回值：
+	//			ProceedingJoinPoint 可用于通知方法
 	protected ProceedingJoinPoint lazyGetProceedingJoinPoint(ProxyMethodInvocation rmi) {
+		// 封装成 Spring 自己的基于方法级别的 MethodInvocationProceedingJoinPoint
 		return new MethodInvocationProceedingJoinPoint(rmi);
 	}
 

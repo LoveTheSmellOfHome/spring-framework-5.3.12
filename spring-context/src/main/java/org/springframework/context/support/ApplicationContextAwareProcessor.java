@@ -60,6 +60,17 @@ import org.springframework.util.StringValueResolver;
  * @see org.springframework.context.ApplicationContextAware
  * @see org.springframework.context.support.AbstractApplicationContext#refresh()
  */
+// {@link BeanPostProcessor} 实现，为实现
+// {@code ApplicationContext} 的 bean 提供
+// {@code ApplicationContext}、
+// {@link org.springframework.core.env.Environment Environment} 或
+// {@link StringValueResolver} link EnvironmentAware}、
+// {@link EmbeddedValueResolverAware}、
+// {@link ResourceLoaderAware}、
+// {@link ApplicationEventPublisherAware}、
+// {@link MessageSourceAware} 和/或
+// {@link ApplicationContextAware} 接口。
+// 指定各种 Aware 接口回调顺序
 class ApplicationContextAwareProcessor implements BeanPostProcessor {
 
 	private final ConfigurableApplicationContext applicationContext;
@@ -70,6 +81,7 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 	/**
 	 * Create a new ApplicationContextAwareProcessor for the given context.
 	 */
+	// 为给定的上下文创建一个新的 ApplicationContextAwareProcessor
 	public ApplicationContextAwareProcessor(ConfigurableApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
 		this.embeddedValueResolver = new EmbeddedValueResolver(applicationContext.getBeanFactory());
@@ -79,6 +91,7 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 	@Override
 	@Nullable
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+		// 基本上所有的 Aware 接口都在这里罗列，通过枚举性实现
 		if (!(bean instanceof EnvironmentAware || bean instanceof EmbeddedValueResolverAware ||
 				bean instanceof ResourceLoaderAware || bean instanceof ApplicationEventPublisherAware ||
 				bean instanceof MessageSourceAware || bean instanceof ApplicationContextAware ||
@@ -99,22 +112,28 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 			}, acc);
 		}
 		else {
+			// 调用 Spring 应用上下文 Aware 接口组 回调
 			invokeAwareInterfaces(bean);
 		}
 
 		return bean;
 	}
 
+	// 通过 if 来控制调用顺序
 	private void invokeAwareInterfaces(Object bean) {
 		if (bean instanceof EnvironmentAware) {
+			// 将当前应用上下文中的 Environment 对象传递给 EnvironmentAware，这就是为什么 配置类 LookupEnvironmentDemo
+			// 中声明的属性 Environment 对象和 ApplicationContext#getEnvironment() 对象是同一个的原因
 			((EnvironmentAware) bean).setEnvironment(this.applicationContext.getEnvironment());
 		}
 		if (bean instanceof EmbeddedValueResolverAware) {
 			((EmbeddedValueResolverAware) bean).setEmbeddedValueResolver(this.embeddedValueResolver);
 		}
 		if (bean instanceof ResourceLoaderAware) {
+			// 将当前 ConfigurableApplicationContext(它的实现类仍然是 AbstractApplicationContext) 作为 ResourceLoader
 			((ResourceLoaderAware) bean).setResourceLoader(this.applicationContext);
 		}
+		// 事件发布器接口回调
 		if (bean instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware) bean).setApplicationEventPublisher(this.applicationContext);
 		}
@@ -124,7 +143,7 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 		if (bean instanceof ApplicationStartupAware) {
 			((ApplicationStartupAware) bean).setApplicationStartup(this.applicationContext.getApplicationStartup());
 		}
-		if (bean instanceof ApplicationContextAware) {
+		if (bean instanceof ApplicationContextAware) { // 最后设置应用程序上下文
 			((ApplicationContextAware) bean).setApplicationContext(this.applicationContext);
 		}
 	}

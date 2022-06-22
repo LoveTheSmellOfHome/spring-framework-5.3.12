@@ -56,6 +56,20 @@ import org.springframework.beans.factory.Aware;
  * @see org.springframework.context.support.ApplicationObjectSupport
  * @see org.springframework.beans.factory.BeanFactoryAware
  */
+// 任何希望被 {@link ApplicationContext} 运行时通知的对象要实现的接口
+//
+// <p>实现这个接口是有意义的，例如当一个对象需要访问一组协作 bean 时。
+// 请注意，通过 bean 引用进行配置比仅出于 bean 查找目的实现此接口更可取。
+//
+// <p>如果一个对象需要访问文件资源，即想要调用{@code getResource}，想要发布一个应用程序事件，或者需要访问MessageSource，
+// 也可以实现这个接口。但是，在这种特定场景中，最好实现更具体的 {@link ResourceLoaderAware}、
+// {@link ApplicationEventPublisherAware}或 {@link MessageSourceAware} 接口。
+//
+// <p>请注意，文件资源依赖项也可以作为 {@link org.springframework.core.io.Resource} 类型的 bean 属性公开，
+// 通过由 bean 工厂自动类型转换的字符串填充。这消除了为了访问特定文件资源而实现任何回调接口的需要。
+//
+// <p>{@link org.springframework.context.support.ApplicationObjectSupport} 是应用程序对象的一个方便的基类，实现了这个接口。
+// <p>有关所有 bean 生命周期方法的列表，请参阅 {@link org.springframework.beans.factory.BeanFactory BeanFactory javadocs}。
 public interface ApplicationContextAware extends Aware {
 
 	/**
@@ -71,6 +85,10 @@ public interface ApplicationContextAware extends Aware {
 	 * @throws BeansException if thrown by application context methods
 	 * @see org.springframework.beans.factory.BeanInitializationException
 	 */
+	// 设置此对象运行所在的 ApplicationContext。通常此调用将用于初始化对象。
+	// <p>在填充普通 bean 属性之后但在初始化回调之前调用，例如 {@link org.springframework.beans.factory.
+	// InitializingBeanafterPropertiesSet()} 或自定义初始化方法。在 {@link ResourceLoaderAwaresetResourceLoader}、
+	// {@link ApplicationEventPublisherAwaresetApplicationEventPublisher} 和 {@link MessageSourceAware}（如果适用）之后调用。
 	void setApplicationContext(ApplicationContext applicationContext) throws BeansException;
 
 }

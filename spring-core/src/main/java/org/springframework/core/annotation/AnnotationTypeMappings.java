@@ -43,6 +43,10 @@ import org.springframework.util.ConcurrentReferenceHashMap;
  * @since 5.2
  * @see AnnotationTypeMapping
  */
+// 为单个源注释类型提供AnnotationTypeMapping信息。 对所有元注释执行递归广度优先爬取，最终提供一种映射
+// 根Annotation属性的快速方法。
+//支持基于约定的元注释合并以及隐式和显式@AliasFor别名。 还提供有关镜像属性的信息。
+//此类旨在缓存，以便元注释只需要搜索一次，而不管它们实际使用多少次。
 final class AnnotationTypeMappings {
 
 	private static final IntrospectionFailureLogger failureLogger = IntrospectionFailureLogger.DEBUG;

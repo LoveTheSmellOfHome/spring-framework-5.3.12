@@ -28,6 +28,7 @@ import org.springframework.beans.factory.Aware;
  * @since 1.1.1
  * @see ApplicationContextAware
  */
+// 任何希望被通知它运行的 ApplicationEventPublisher（通常是 ApplicationContext）的对象要实现的回调接口。
 public interface ApplicationEventPublisherAware extends Aware {
 
 	/**
@@ -37,6 +38,11 @@ public interface ApplicationEventPublisherAware extends Aware {
 	 * Invoked before ApplicationContextAware's setApplicationContext.
 	 * @param applicationEventPublisher event publisher to be used by this object
 	 */
+	// 设置运行此对象的 ApplicationEventPublisher。
+	// 在填充普通 bean 属性之后但在初始化回调（如 InitializingBean 的 afterPropertiesSet
+	// 或自定义初始化方法）之前调用。在 ApplicationContextAware 的 setApplicationContext 之前调用。
+	// @param applicationEventPublisher 事件发布者
+	// 生命周期回调
 	void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher);
 
 }

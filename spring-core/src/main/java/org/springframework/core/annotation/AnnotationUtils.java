@@ -16,6 +16,16 @@
 
 package org.springframework.core.annotation;
 
+import org.springframework.core.BridgeMethodResolver;
+import org.springframework.core.annotation.AnnotationTypeMapping.MirrorSets.MirrorSet;
+import org.springframework.core.annotation.MergedAnnotation.Adapt;
+import org.springframework.core.annotation.MergedAnnotations.SearchStrategy;
+import org.springframework.lang.Nullable;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ConcurrentReferenceHashMap;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
@@ -28,16 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
-import org.springframework.core.BridgeMethodResolver;
-import org.springframework.core.annotation.AnnotationTypeMapping.MirrorSets.MirrorSet;
-import org.springframework.core.annotation.MergedAnnotation.Adapt;
-import org.springframework.core.annotation.MergedAnnotations.SearchStrategy;
-import org.springframework.lang.Nullable;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * General utility methods for working with annotations, handling meta-annotations,
@@ -102,11 +102,29 @@ import org.springframework.util.StringUtils;
  * @see java.lang.reflect.AnnotatedElement#getAnnotation(Class)
  * @see java.lang.reflect.AnnotatedElement#getDeclaredAnnotations()
  */
+// 用于处理注解、处理元注解、桥接方法（编译器为泛型声明生成）以及超级方法（用于可选注解继承）的通用实用方法。
+//请注意，该类的大多数功能不是由 JDK 的自省工具本身提供的。
+//作为运行时保留的应用程序注释（例如用于事务控制、授权或服务findAnnotation(Method, Class) ）的一般规则，
+// 始终使用此类上的查找方法（例如findAnnotation(Method, Class)或getAnnotation(Method, Class) ）而不是JDK 中的普通注解查找方法。
+// 您仍然可以明确地在给定的类级别（一个get查找之间进行选择getAnnotation(Method, Class) ），并在给定的方法（整个继承层次了查找查找
+// findAnnotation(Method, Class) ）。
+//术语
+//术语：直接呈现、间接呈现和呈现，具有与 AnnotatedElement （在 Java 8 中）的类级 javadoc 中定义的相同含义。
+//如果注解被声明为一些其他的注解的元解，如A直接存在于另一个注释上，则注解A是另一个注解上元注解。
+//元注释支持
+//此类中的大多数find*()方法和一些get*()方法都支持查找用作元注解的注解。 有关详细信息，请查阅此类中每个方法的 javadoc。
+// 对于在组合注释中具有属性覆盖的元注释的细粒度支持，请考虑使用AnnotatedElementUtils的更具体的方法。
+//属性别名
+//此类中所有返回注释、注释数组或AnnotationAttributes公共方法都透明地支持通过@AliasFor配置的属性别名。
+// 有关详细信息，请参阅各种synthesizeAnnotation*(..)方法。
+//搜索范围
+//一旦找到指定类型的第一个注释，此类中的方法使用的搜索算法将停止搜索注释。 因此，指定类型的附加注释将被静默忽略。
 public abstract class AnnotationUtils {
 
 	/**
 	 * The attribute name for annotations with a single element.
 	 */
+	// 具有单个元素的注解的属性名称
 	public static final String VALUE = MergedAnnotation.VALUE;
 
 	private static final AnnotationFilter JAVA_LANG_ANNOTATION_FILTER =
@@ -128,6 +146,7 @@ public abstract class AnnotationUtils {
 	 * @see #isCandidateClass(Class, Class)
 	 * @see #isCandidateClass(Class, String)
 	 */
+	// 确定给定的类是否是携带指定注释之一的候选者（在类型、方法或字段级别）
 	public static boolean isCandidateClass(Class<?> clazz, Collection<Class<? extends Annotation>> annotationTypes) {
 		for (Class<? extends Annotation> annotationType : annotationTypes) {
 			if (isCandidateClass(clazz, annotationType)) {
@@ -148,6 +167,12 @@ public abstract class AnnotationUtils {
 	 * @since 5.2
 	 * @see #isCandidateClass(Class, String)
 	 */
+	// 确定给定的类是否是携带指定注解的候选者（在类型、方法或字段级别）。
+	// @param clazz 类以自省
+	// @param annotationType 可搜索的注解类型
+	// @return {@code false} 如果已知该类在任何级别都没有这样的注解；
+	// {@code true} 否则。如果在此处返回 {@code true}，调用者通常会执行完整的方法字段自省。
+	// @since 5.2 @see isCandidateClass(Class, String)
 	public static boolean isCandidateClass(Class<?> clazz, Class<? extends Annotation> annotationType) {
 		return isCandidateClass(clazz, annotationType.getName());
 	}
@@ -163,6 +188,12 @@ public abstract class AnnotationUtils {
 	 * @since 5.2
 	 * @see #isCandidateClass(Class, Class)
 	 */
+	// 确定给定的类是否是携带指定注解的候选者（在类型、方法或字段级别）。
+	// @param clazz 类进行自省
+	// @param annotationName 可搜索注解类型的完全限定名称
+	// @return {@code false} 如果已知该类在任何级别都没有此类注解；
+	// {@code true} 否则。如果在此处返回 {@code true}，调用者通常会执行完整的方法字段自省。
+	// @since 5.2 @see isCandidateClass(Class, Class)
 	public static boolean isCandidateClass(Class<?> clazz, String annotationName) {
 		if (annotationName.startsWith("java.")) {
 			return true;
@@ -185,18 +216,27 @@ public abstract class AnnotationUtils {
 	 * @return the first matching annotation, or {@code null} if not found
 	 * @since 4.0
 	 */
+	// 从提供的注释中获取 {@code annotationType} 的单个 {@link Annotation}：给定的注释本身或其直接元注释。
+	// <p>请注意，此方法仅支持单级元注释。为了支持任意级别的元注释，请改用 {@code find()} 方法之一。
+	// @param annotation 用于检查的 Annotation
+	// @param annotationType 要查找的注释类型，包括本地和元注释
+	// @return 第一个匹配的注释，或者 {@code null} 如果未找到
+	// @since 4.0
 	@SuppressWarnings("unchecked")
 	@Nullable
 	public static <A extends Annotation> A getAnnotation(Annotation annotation, Class<A> annotationType) {
 		// Shortcut: directly present on the element, with no merging needed?
+		// 快捷方式：直接出现在元素上，不需要合并？
 		if (annotationType.isInstance(annotation)) {
 			return synthesizeAnnotation((A) annotation, annotationType);
 		}
 		// Shortcut: no searchable annotations to be found on plain Java classes and core Spring types...
+		// 捷径：在普通 Java 类和核心 Spring 类型上找不到可搜索的注释...
 		if (AnnotationsScanner.hasPlainJavaAnnotationsOnly(annotation)) {
 			return null;
 		}
 		// Exhaustive retrieval of merged annotations...
+		// 对合并注释的详尽检索...
 		return MergedAnnotations.from(annotation, new Annotation[] {annotation}, RepeatableContainers.none())
 				.get(annotationType).withNonMergedAttributes()
 				.synthesize(AnnotationUtils::isSingleLevelPresent).orElse(null);
@@ -246,6 +286,8 @@ public abstract class AnnotationUtils {
 	 * @see org.springframework.core.BridgeMethodResolver#findBridgedMethod(Method)
 	 * @see #getAnnotation(AnnotatedElement, Class)
 	 */
+	// 从提供的 {@link Method} 中获取 {@code annotationType} 的单个 {@link Annotation}注解，
+	// 其中注解是方法上的 <em>present<em>呈现的注解 或 <em>meta-present<em>元注解。
 	@Nullable
 	public static <A extends Annotation> A getAnnotation(Method method, Class<A> annotationType) {
 		Method resolvedMethod = BridgeMethodResolver.findBridgedMethod(method);
@@ -264,6 +306,8 @@ public abstract class AnnotationUtils {
 	 * @see AnnotatedElement#getAnnotations()
 	 * @deprecated as of 5.2 since it is superseded by the {@link MergedAnnotations} API
 	 */
+	// 获取所提供的 {@link AnnotatedElement} 上 <em>present<em> 标注的所有 {@link Annotation Annotations}。
+	// @param annotatedElement 方法，构造器，或者属性上标注的注解元素
 	@Deprecated
 	@Nullable
 	public static Annotation[] getAnnotations(AnnotatedElement annotatedElement) {

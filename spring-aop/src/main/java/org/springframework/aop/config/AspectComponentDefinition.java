@@ -31,6 +31,7 @@ import org.springframework.lang.Nullable;
  * @see #getNestedComponents()
  * @see PointcutComponentDefinition
  */
+// org.springframework.beans.factory.parsing.ComponentDefinition包含一个切面定义，包括它的嵌套切入点
 public class AspectComponentDefinition extends CompositeComponentDefinition {
 
 	private final BeanDefinition[] beanDefinitions;

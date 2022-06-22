@@ -27,6 +27,7 @@ import org.springframework.core.metrics.ApplicationStartup;
  * @since 5.3
  * @see ApplicationContextAware
  */
+// 由任何希望收到通知它运行的ApplicationStartup对象实现的接口。
 public interface ApplicationStartupAware extends Aware {
 
 	/**
@@ -36,6 +37,9 @@ public interface ApplicationStartupAware extends Aware {
 	 * Invoked before ApplicationContextAware's setApplicationContext.
 	 * @param applicationStartup application startup to be used by this object
 	 */
+	// 设置运行此对象的 ApplicationStartup。
+	// 在填充普通 bean 属性之后但在初始化回调（如 InitializingBean 的 afterPropertiesSet 或自定义初始化方法）之前调用。
+	// 在 ApplicationContextAware 的 setApplicationContext 之前调用。
 	void setApplicationStartup(ApplicationStartup applicationStartup);
 
 }

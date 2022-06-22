@@ -53,6 +53,13 @@ import org.springframework.util.MultiValueMap;
  * framework, but there is no public replacement for
  * {@code AnnotationMetadataReadingVisitor}.
  */
+// ASM 类型访问者，它查找类名和实现的类型以及在类上定义的注释，
+// 通过 {@link org.springframework.core.type.AnnotationMetadata} 接口公开它们。
+// @deprecated 从 Spring Framework 5.2 开始，该类已被 {@link SimpleAnnotationMetadataReadingVisitor} 替换，
+// 供框架内部使用，但没有公开替换 {@code AnnotationMetadataReadingVisitor}。
+// 通过字节码的 visit 相关操作，asm 字节码操作比 java 反射性能要好，因为它不需要将整个类加载进来(加载、安全校验...)，
+// 在 Class 资源被读取的时候，进行相关字节码操作
+// 注解元信息：基于 ASM 实现
 @Deprecated
 public class AnnotationMetadataReadingVisitor extends ClassMetadataReadingVisitor implements AnnotationMetadata {
 

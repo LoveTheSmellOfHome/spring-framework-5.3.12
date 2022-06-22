@@ -24,6 +24,7 @@ import org.springframework.core.NestedRuntimeException;
  * @author Rod Johnson
  * @since 13.03.2003
  */
+// 非法 AOP 配置参数引发的异常
 @SuppressWarnings("serial")
 public class AopConfigException extends NestedRuntimeException {
 
@@ -31,6 +32,8 @@ public class AopConfigException extends NestedRuntimeException {
 	 * Constructor for AopConfigException.
 	 * @param msg the detail message
 	 */
+	// AopConfigException 的构造函数。
+	// 参形：msg – 详细信息
 	public AopConfigException(String msg) {
 		super(msg);
 	}
@@ -40,6 +43,10 @@ public class AopConfigException extends NestedRuntimeException {
 	 * @param msg the detail message
 	 * @param cause the root cause
 	 */
+	// AopConfigException 的构造函数。
+	// 参形：
+	//			msg – 详细信息
+	//			cause - 根本原因
 	public AopConfigException(String msg, Throwable cause) {
 		super(msg, cause);
 	}

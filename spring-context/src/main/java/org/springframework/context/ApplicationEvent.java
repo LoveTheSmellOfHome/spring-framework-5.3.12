@@ -28,12 +28,15 @@ import java.util.EventObject;
  * @see org.springframework.context.ApplicationListener
  * @see org.springframework.context.event.EventListener
  */
+// 由所有应用程序事件扩展的类(自定义 Spring 事件的公共父类)。抽象，因为直接发布通用事件没有意义。
+// ApplicationEvent 抽象类继承了 EventObject 普通类
 public abstract class ApplicationEvent extends EventObject {
 
 	/** use serialVersionUID from Spring 1.2 for interoperability. */
 	private static final long serialVersionUID = 7099057708183571937L;
 
 	/** System time when the event happened. */
+	// 事件构造的时候发生的事件
 	private final long timestamp;
 
 
@@ -44,6 +47,11 @@ public abstract class ApplicationEvent extends EventObject {
 	 * which the event is associated (never {@code null})
 	 * @see #ApplicationEvent(Object, Clock)
 	 */
+	// 创建一个新的ApplicationEvent并将其timestamp设置为System.currentTimeMillis() 。
+	// 参形：
+	//			source – 事件最初发生的对象或与事件相关联的对象（从不为null ）
+	// 请参阅：
+	//			ApplicationEvent(Object, Clock)
 	public ApplicationEvent(Object source) {
 		super(source);
 		this.timestamp = System.currentTimeMillis();
@@ -59,6 +67,11 @@ public abstract class ApplicationEvent extends EventObject {
 	 * @since 5.3.8
 	 * @see #ApplicationEvent(Object)
 	 */
+	// 创建一个新的 {@code ApplicationEvent}，其 {@link getTimestamp() 时间戳} 设置为
+	// {@link Clockmillis()} 在提供的 {@link Clock} 中返回的值。
+	// <p>此构造函数通常用于测试场景
+	// @param source 事件最初发生的对象或与事件关联的对象（永远不会{@code null}）
+	// @param clock 提供时间戳的时钟
 	public ApplicationEvent(Object source, Clock clock) {
 		super(source);
 		this.timestamp = clock.millis();
@@ -70,6 +83,7 @@ public abstract class ApplicationEvent extends EventObject {
 	 * @see #ApplicationEvent(Object)
 	 * @see #ApplicationEvent(Object, Clock)
 	 */
+	// 返回事件发生的时间（以毫秒为单位）
 	public final long getTimestamp() {
 		return this.timestamp;
 	}

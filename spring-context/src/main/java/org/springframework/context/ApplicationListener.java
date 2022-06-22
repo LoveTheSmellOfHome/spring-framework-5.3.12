@@ -39,6 +39,14 @@ import java.util.function.Consumer;
  * @see org.springframework.context.event.GenericApplicationListener
  * @see org.springframework.context.event.EventListener
  */
+// 由应用程序事件监听器实现的接口。
+//
+// 基于 Observer 设计模式的标准 java.util.EventListener 接口。
+//
+// 从 Spring 3.0 开始， ApplicationListener 可以一般性地声明它感兴趣的事件类型。
+// 当向 Spring ApplicationContext注册时，事件将被相应地过滤，只有匹配事件对象才会调用侦听器
+//
+// 类型形参： <E> – 要监听的特定 ApplicationEvent 子类
 @FunctionalInterface
 public interface ApplicationListener<E extends ApplicationEvent> extends EventListener {
 
@@ -46,6 +54,8 @@ public interface ApplicationListener<E extends ApplicationEvent> extends EventLi
 	 * Handle an application event.
 	 * @param event the event to respond to
 	 */
+	// 处理应用程序事件。
+	// 参形：event – 要响应的事件
 	void onApplicationEvent(E event);
 
 
@@ -57,6 +67,11 @@ public interface ApplicationListener<E extends ApplicationEvent> extends EventLi
 	 * @since 5.3
 	 * @see PayloadApplicationEvent
 	 */
+	// 为给定的有效负载消耗创建一个新的 ApplicationListener.
+	// 形参:
+	//			consumer – 事件有效负载消费者
+	// 返回值:
+	//			对应的 ApplicationListener 实例
 	static <T> ApplicationListener<PayloadApplicationEvent<T>> forPayload(Consumer<T> consumer) {
 		return event -> consumer.accept(event.getPayload());
 	}

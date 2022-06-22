@@ -39,6 +39,16 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 13.03.2003
  */
+// 包含用于获取有关当前 AOP 调用信息的静态方法的类。
+//
+// 如果 AOP 框架配置为公开当前代理（不是默认代理）EnableAspectJAutoProxy#exposeProxy()，
+// 则currentProxy()方法可用。它返回正在使用的 AOP 代理。
+// 目标对象或建议可以使用它来进行建议调用，就像在 EJB 中使用getEJBObject()一样。他们还可以使用它来查找建议配置。
+//
+// Spring 的 AOP 框架默认不公开代理，因为这样做会降低性能。
+//
+// 此类中的功能可能由需要在调用时访问资源的目标对象使用。但是，如果有合理的替代方案，则不应使用此方法，
+// 因为它使应用程序代码依赖于 AOP 下的使用，尤其是 Spring AOP 框架。
 public final class AopContext {
 
 	/**
@@ -47,6 +57,7 @@ public final class AopContext {
 	 * the controlling proxy configuration has been set to "true".
 	 * @see ProxyConfig#setExposeProxy
 	 */
+	// 与此线程关联的 AOP 代理的 ThreadLocal 持有者。除非控制代理配置上的“exposeProxy”属性设置为“true”，否则将包含null
 	private static final ThreadLocal<Object> currentProxy = new NamedThreadLocal<>("Current AOP proxy");
 
 
@@ -63,6 +74,12 @@ public final class AopContext {
 	 * method was invoked outside an AOP invocation context, or because the
 	 * AOP framework has not been configured to expose the proxy
 	 */
+	// 尝试返回当前的 AOP 代理。仅当调用方法已通过 AOP 调用，并且 AOP 框架已设置为公开代理时，此方法才可用。否则，此方法将抛出 IllegalStateException。
+	// 返回值：
+	//			当前的 AOP 代理（从不返回null ）
+	// 抛出：
+	//			IllegalStateException – 如果找不到代理，因为该方法是在 AOP 调用上下文之外调用的，
+	//			或者因为 AOP 框架尚未配置为公开代理
 	public static Object currentProxy() throws IllegalStateException {
 		Object proxy = currentProxy.get();
 		if (proxy == null) {
@@ -80,13 +97,22 @@ public final class AopContext {
 	 * @return the old proxy, which may be {@code null} if none was bound
 	 * @see #currentProxy()
 	 */
+	// 通过currentProxy()方法使给定的代理可用。
+	// 请注意，调用者应注意适当地保留旧值。
+	// 参形：
+	//			proxy – 要公开的代理（或null以重置它）
+	// 返回值：
+	//			旧代理，如果没有绑定，则可能为null
+	// 有两重语义
 	@Nullable
 	static Object setCurrentProxy(@Nullable Object proxy) {
 		Object old = currentProxy.get();
 		if (proxy != null) {
+			// 替换老的
 			currentProxy.set(proxy);
 		}
 		else {
+			// 移除老的
 			currentProxy.remove();
 		}
 		return old;

@@ -34,6 +34,7 @@ import org.springframework.util.TypeUtils;
  * @author Ramnivas Laddad
  * @since 2.0
  */
+// 处理 Spring AOP 中 @AfterReturning 注解标注的方法，AfterReturningAdvice 使用户的 API 接口
 @SuppressWarnings("serial")
 public class AspectJAfterReturningAdvice extends AbstractAspectJAdvice
 		implements AfterReturningAdvice, AfterAdvice, Serializable {
@@ -60,6 +61,7 @@ public class AspectJAfterReturningAdvice extends AbstractAspectJAdvice
 		setReturningNameNoCheck(name);
 	}
 
+	// 返回值，来拦截方法，方法参数，拦截目标对象
 	@Override
 	public void afterReturning(@Nullable Object returnValue, Method method, Object[] args, @Nullable Object target) throws Throwable {
 		if (shouldInvokeOnReturnValueOf(method, returnValue)) {
@@ -76,10 +78,18 @@ public class AspectJAfterReturningAdvice extends AbstractAspectJAdvice
 	 * @param returnValue the return value of the target method
 	 * @return whether to invoke the advice method for the given return value
 	 */
+	// 遵循 AspectJ 语义，如果指定了返回子句，则仅当返回值是给定返回类型的实例且泛型类型参数（如果有）
+	// 与分配规则匹配时才调用通知。如果返回类型是 Object，则始终调用通知。
+	// 形参:
+	//			returnValue – 目标方法的返回值
+	// 返回值:
+	//			是否为给定的返回值调用通知方法
+	// 判断内容是不是需要被返回
 	private boolean shouldInvokeOnReturnValueOf(Method method, @Nullable Object returnValue) {
 		Class<?> type = getDiscoveredReturningType();
 		Type genericType = getDiscoveredReturningGenericType();
 		// If we aren't dealing with a raw type, check if generic parameters are assignable.
+		// 如果我们不处理原始类型，请检查泛型参数是否可分配
 		return (matchesReturnValue(type, method, returnValue) &&
 				(genericType == null || genericType == type ||
 						TypeUtils.isAssignable(genericType, method.getGenericReturnType())));
@@ -95,6 +105,14 @@ public class AspectJAfterReturningAdvice extends AbstractAspectJAdvice
 	 * @param returnValue the return value of the target method
 	 * @return whether to invoke the advice method for the given return value and type
 	 */
+	// 遵循 AspectJ 语义，如果返回值为 null（或返回类型为 void），则应使用目标方法的返回类型来确定是否调用通知。此外，
+	// 即使返回类型为 void，如果在通知方法中声明的参数类型是 Object，那么通知仍必须被调用。
+	// 参形：
+	//			type – 在通知方法中声明的参数类型
+	// 方法- 建议方法
+	//			returnValue – 目标方法的返回值
+	// 返回值：
+	//			是否为给定的返回值和类型调用通知方法
 	private boolean matchesReturnValue(Class<?> type, Method method, @Nullable Object returnValue) {
 		if (returnValue != null) {
 			return ClassUtils.isAssignableValue(type, returnValue);

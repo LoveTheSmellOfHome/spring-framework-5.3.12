@@ -25,12 +25,16 @@ package org.springframework.core.metrics;
  * @author Brian Clozel
  * @since 5.3
  */
+// 使用 {@link StartupStep steps} 检测应用程序启动阶段。
+// <p>核心容器及其基础设施组件可以使用 {@code ApplicationStartup} 来
+// 标记应用程序启动期间的步骤并收集有关执行上下文或其处理时间的数据
 public interface ApplicationStartup {
 
 	/**
 	 * Default "no op" {@code ApplicationStartup} implementation.
 	 * <p>This variant is designed for minimal overhead and does not record data.
 	 */
+	// 默认“无操作”{@code ApplicationStartup} 实现。 <p>此变体旨在最小化开销并且不记录数据
 	ApplicationStartup DEFAULT = new DefaultApplicationStartup();
 
 	/**
@@ -40,6 +44,8 @@ public interface ApplicationStartup {
 	 * the same step during application startup.
 	 * @param name the step name
 	 */
+	// 创建一个新步骤并标记它的开始。 <p>步骤名称描述当前操作或阶段。此技术名称应为“.”。命名空间，并且可以在应用程序启动期间
+	// 重复用于描述同一步骤的其他实例。
 	StartupStep start(String name);
 
 }

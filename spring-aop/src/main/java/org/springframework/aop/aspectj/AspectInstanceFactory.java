@@ -31,12 +31,17 @@ import org.springframework.lang.Nullable;
  * @since 2.0
  * @see org.springframework.beans.factory.BeanFactory#getBean
  */
+// 实现接口以提供 AspectJ 切面的实例。 与 Spring 的 bean factory 解耦。
+// 扩展 Ordered 接口以表示链中底层方面的顺序值
 public interface AspectInstanceFactory extends Ordered {
 
 	/**
 	 * Create an instance of this factory's aspect.
 	 * @return the aspect instance (never {@code null})
 	 */
+	// 创建此工厂方面的实例。
+	// 返回值：
+	//			切面实例（从不为null）
 	Object getAspectInstance();
 
 	/**
@@ -44,6 +49,9 @@ public interface AspectInstanceFactory extends Ordered {
 	 * @return the aspect class loader (or {@code null} for the bootstrap loader)
 	 * @see org.springframework.util.ClassUtils#getDefaultClassLoader()
 	 */
+	// 公开该工厂使用的切面类加载器。
+	// 返回值：
+	//			切面类加载器（或引导加载器为null ）
 	@Nullable
 	ClassLoader getAspectClassLoader();
 
