@@ -35,6 +35,8 @@ import org.springframework.util.ObjectUtils;
  * @since 1.1.2
  * @see AbstractGenericPointcutAdvisor
  */
+// PointcutAdvisor 实现的抽象基类。 可以子类化以返回特定的切入点/建议或可自由配置的切入点/建议
+// 实现了 Ordered，说明所有的 PointcutAdvisor 是有序的
 @SuppressWarnings("serial")
 public abstract class AbstractPointcutAdvisor implements PointcutAdvisor, Ordered, Serializable {
 
@@ -73,6 +75,7 @@ public abstract class AbstractPointcutAdvisor implements PointcutAdvisor, Ordere
 			return false;
 		}
 		PointcutAdvisor otherAdvisor = (PointcutAdvisor) other;
+		// Advisor 包含两个方面，pointcut 是判断，Advice 是拦截后的动作
 		return (ObjectUtils.nullSafeEquals(getAdvice(), otherAdvisor.getAdvice()) &&
 				ObjectUtils.nullSafeEquals(getPointcut(), otherAdvisor.getPointcut()));
 	}

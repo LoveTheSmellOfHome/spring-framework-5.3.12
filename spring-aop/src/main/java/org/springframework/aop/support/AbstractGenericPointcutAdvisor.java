@@ -27,6 +27,8 @@ import org.aopalliance.aop.Advice;
  * @see #setAdvice
  * @see DefaultPointcutAdvisor
  */
+// 允许配置任何 Advice 抽象通用 org.springframework.aop.PointcutAdvisor,提供了 set 方法，用户可以
+// 修改 Advice.
 @SuppressWarnings("serial")
 public abstract class AbstractGenericPointcutAdvisor extends AbstractPointcutAdvisor {
 
@@ -36,6 +38,7 @@ public abstract class AbstractGenericPointcutAdvisor extends AbstractPointcutAdv
 	/**
 	 * Specify the advice that this advisor should apply.
 	 */
+	// 指定该顾问应该应用的建议
 	public void setAdvice(Advice advice) {
 		this.advice = advice;
 	}
