@@ -27,18 +27,24 @@ import org.springframework.util.StringUtils;
  * @since 2.5
  * @see AbstractBeanDefinition#applyDefaults
  */
+// {@code BeanDefinition} 属性默认值的简单持有者
 public class BeanDefinitionDefaults {
 
+	// 是否懒加载
 	@Nullable
 	private Boolean lazyInit;
 
+	// 没有外部自动装配
 	private int autowireMode = AbstractBeanDefinition.AUTOWIRE_NO;
 
+	// 没有依赖性检查
 	private int dependencyCheck = AbstractBeanDefinition.DEPENDENCY_CHECK_NONE;
 
+	// bean 初始化方法名称
 	@Nullable
 	private String initMethodName;
 
+	// bean 销毁时方法名称
 	@Nullable
 	private String destroyMethodName;
 

@@ -46,11 +46,17 @@ import org.springframework.util.concurrent.SuccessCallback;
  * @see #forValue(Object)
  * @see #forExecutionException(Throwable)
  */
+// 一个传递Future句柄，可用于方法签名，这些方法签名声明为Future返回类型以用于异步执行。
+//从 Spring 4.1 开始，此类实现 ListenableFuture ，而不仅仅是普通的 Future ，以及 @Async 处理中的相应支持。
+//从 Spring 4.2 开始，此类还支持将执行异常传递回调用者。
+// 类型形参： < V > - 值类型
 public class AsyncResult<V> implements ListenableFuture<V> {
 
+	// 返回值
 	@Nullable
 	private final V value;
 
+	// 异常
 	@Nullable
 	private final Throwable executionException;
 
@@ -59,6 +65,8 @@ public class AsyncResult<V> implements ListenableFuture<V> {
 	 * Create a new AsyncResult holder.
 	 * @param value the value to pass through
 	 */
+	// 创建一个新的 AsyncResult 持有者。
+	// 参形：value - 要传递的值
 	public AsyncResult(@Nullable V value) {
 		this(value, null);
 	}
@@ -67,27 +75,33 @@ public class AsyncResult<V> implements ListenableFuture<V> {
 	 * Create a new AsyncResult holder.
 	 * @param value the value to pass through
 	 */
+	// 创建一个新的 AsyncResult 持有者。
+	// 参形：value - 要传递的值
 	private AsyncResult(@Nullable V value, @Nullable Throwable ex) {
 		this.value = value;
 		this.executionException = ex;
 	}
 
 
+	// 是否取消正在运行的程序
 	@Override
 	public boolean cancel(boolean mayInterruptIfRunning) {
 		return false;
 	}
 
+	// 是否已经取消了
 	@Override
 	public boolean isCancelled() {
 		return false;
 	}
 
+	// 是否正在运行
 	@Override
 	public boolean isDone() {
 		return true;
 	}
 
+	// 获取返回结果
 	@Override
 	@Nullable
 	public V get() throws ExecutionException {
@@ -99,12 +113,14 @@ public class AsyncResult<V> implements ListenableFuture<V> {
 		return this.value;
 	}
 
+	// 获取指定时间内的执行结果
 	@Override
 	@Nullable
 	public V get(long timeout, TimeUnit unit) throws ExecutionException {
 		return get();
 	}
 
+	// 添加回调
 	@Override
 	public void addCallback(ListenableFutureCallback<? super V> callback) {
 		addCallback(callback, callback);
@@ -114,9 +130,11 @@ public class AsyncResult<V> implements ListenableFuture<V> {
 	public void addCallback(SuccessCallback<? super V> successCallback, FailureCallback failureCallback) {
 		try {
 			if (this.executionException != null) {
+				// 失败回调
 				failureCallback.onFailure(exposedException(this.executionException));
 			}
 			else {
+				// 成功回调
 				successCallback.onSuccess(this.value);
 			}
 		}
@@ -125,6 +143,7 @@ public class AsyncResult<V> implements ListenableFuture<V> {
 		}
 	}
 
+	// 完成调用
 	@Override
 	public CompletableFuture<V> completable() {
 		if (this.executionException != null) {
@@ -144,6 +163,9 @@ public class AsyncResult<V> implements ListenableFuture<V> {
 	 * @since 4.2
 	 * @see Future#get()
 	 */
+	// 创建一个新的异步结果，它公开来自 Future.get() 的给定值。
+	// 参形：
+	//			value – 要公开的值
 	public static <V> ListenableFuture<V> forValue(V value) {
 		return new AsyncResult<>(value, null);
 	}
@@ -156,6 +178,9 @@ public class AsyncResult<V> implements ListenableFuture<V> {
 	 * @since 4.2
 	 * @see ExecutionException
 	 */
+	// 创建一个新的异步结果，它将给定的异常公开为来自 Future.get() 的 ExecutionException 。
+	// 参形：
+	//			ex – 要公开的异常（预构建的 ExecutionException 或包含在 ExecutionException 中的原因）
 	public static <V> ListenableFuture<V> forExecutionException(Throwable ex) {
 		return new AsyncResult<>(null, ex);
 	}
@@ -166,6 +191,11 @@ public class AsyncResult<V> implements ListenableFuture<V> {
 	 * @param original the original as given to {@link #forExecutionException}
 	 * @return the exposed exception
 	 */
+	// 确定暴露的异常：给定的 ExecutionException 的原因，或原样的原始异常。
+	// 参形：
+	//			original – 给forExecutionException的原始文件
+	// 返回值：
+	//			暴露的异常
 	private static Throwable exposedException(Throwable original) {
 		if (original instanceof ExecutionException) {
 			Throwable cause = original.getCause();

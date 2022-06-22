@@ -34,6 +34,7 @@ import org.springframework.context.annotation.Role;
  * @see org.springframework.cache.annotation.EnableCaching
  * @see org.springframework.cache.annotation.CachingConfigurationSelector
  */
+// @Configuration类注册 Spring 基础设施 bean，为标准 JSR-107 注解启用基于 AspectJ 的注解驱动的缓存管理
 @Configuration(proxyBeanMethods = false)
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class AspectJJCacheConfiguration extends AbstractJCacheConfiguration {

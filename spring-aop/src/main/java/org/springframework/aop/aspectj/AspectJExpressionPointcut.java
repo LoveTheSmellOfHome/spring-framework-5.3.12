@@ -16,33 +16,13 @@
 
 package org.springframework.aop.aspectj;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.aspectj.weaver.patterns.NamePattern;
 import org.aspectj.weaver.reflect.ReflectionWorld.ReflectionWorldException;
 import org.aspectj.weaver.reflect.ShadowMatchImpl;
-import org.aspectj.weaver.tools.ContextBasedMatcher;
-import org.aspectj.weaver.tools.FuzzyBoolean;
-import org.aspectj.weaver.tools.JoinPointMatch;
-import org.aspectj.weaver.tools.MatchingContext;
-import org.aspectj.weaver.tools.PointcutDesignatorHandler;
-import org.aspectj.weaver.tools.PointcutExpression;
-import org.aspectj.weaver.tools.PointcutParameter;
-import org.aspectj.weaver.tools.PointcutParser;
-import org.aspectj.weaver.tools.PointcutPrimitive;
-import org.aspectj.weaver.tools.ShadowMatch;
-
+import org.aspectj.weaver.tools.*;
 import org.springframework.aop.ClassFilter;
 import org.springframework.aop.IntroductionAwareMethodMatcher;
 import org.springframework.aop.MethodMatcher;
@@ -63,6 +43,16 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Spring {@link org.springframework.aop.Pointcut} implementation
  * that uses the AspectJ weaver to evaluate a pointcut expression.
@@ -81,12 +71,16 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  * @since 2.0
  */
+// Spring org.springframework.aop.Pointcut 实现，它使用 AspectJ weaver 来评估切入点表达式。
+// 切入点表达式值是一个 AspectJ 表达式。 这可以引用其他切入点并使用组合和其他操作。
+// 自然，由于这是由 Spring AOP 的基于代理的模型处理的，因此仅支持方法执行切入点。
 @SuppressWarnings("serial")
 public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 		implements ClassFilter, IntroductionAwareMethodMatcher, BeanFactoryAware {
 
 	private static final Set<PointcutPrimitive> SUPPORTED_PRIMITIVES = new HashSet<>();
 
+	// 支持表达式的类型(原语)，Spring 支持的 10 种原语比 AspectJ 提供的 24 种原语要少的多。
 	static {
 		SUPPORTED_PRIMITIVES.add(PointcutPrimitive.EXECUTION);
 		SUPPORTED_PRIMITIVES.add(PointcutPrimitive.ARGS);
@@ -110,21 +104,27 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 
 	private Class<?>[] pointcutParameterTypes = new Class<?>[0];
 
+	// 将 Spring AOP 和 Spring IoC 容器进行整合
 	@Nullable
 	private BeanFactory beanFactory;
 
 	@Nullable
 	private transient ClassLoader pointcutClassLoader;
 
+	// 表示 AspectJ 切入点表达式并提供方便的方法来确定切入点是否与根据 java.lang.reflect 接口指定的
+	// 连接点(方法)匹配,包含了匹配上下文，提供了方法匹配和构造器匹配两种方式，
+	// 整合 AspectJ
 	@Nullable
 	private transient PointcutExpression pointcutExpression;
 
+	// 在这里将方法，和 方法是否匹配做了一个缓存，下次进来就不需要判断了。
 	private transient Map<Method, ShadowMatch> shadowMatchCache = new ConcurrentHashMap<>(32);
 
 
 	/**
 	 * Create a new default AspectJExpressionPointcut.
 	 */
+	// 创建一个新的默认 AspectJExpressionPointcut。
 	public AspectJExpressionPointcut() {
 	}
 
@@ -134,6 +134,11 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	 * @param paramNames the parameter names for the pointcut
 	 * @param paramTypes the parameter types for the pointcut
 	 */
+	// 使用给定的设置创建一个新的 AspectJExpressionPointcut。
+	// 形参：
+	//			declarationScope - 切入点的声明范围
+	// 			paramNames – 切入点的参数名称
+	//			paramTypes – 切入点的参数类型
 	public AspectJExpressionPointcut(Class<?> declarationScope, String[] paramNames, Class<?>[] paramTypes) {
 		this.pointcutDeclarationScope = declarationScope;
 		if (paramNames.length != paramTypes.length) {
@@ -148,6 +153,7 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	/**
 	 * Set the declaration scope for the pointcut.
 	 */
+	// 设置切入点的声明范围
 	public void setPointcutDeclarationScope(Class<?> pointcutDeclarationScope) {
 		this.pointcutDeclarationScope = pointcutDeclarationScope;
 	}
@@ -155,6 +161,7 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	/**
 	 * Set the parameter names for the pointcut.
 	 */
+	// 设置切入点的参数名称
 	public void setParameterNames(String... names) {
 		this.pointcutParameterNames = names;
 	}
@@ -162,6 +169,7 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	/**
 	 * Set the parameter types for the pointcut.
 	 */
+	// 设置切入点的参数类型
 	public void setParameterTypes(Class<?>... types) {
 		this.pointcutParameterTypes = types;
 	}
@@ -189,7 +197,9 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	 * Check whether this pointcut is ready to match,
 	 * lazily building the underlying AspectJ pointcut expression.
 	 */
+	// 检查这个切入点是否准备好匹配，懒惰地构建底层的 AspectJ 切入点表达式
 	private PointcutExpression obtainPointcutExpression() {
+		// 获取表达式
 		if (getExpression() == null) {
 			throw new IllegalStateException("Must set property 'expression' before attempting to match");
 		}
@@ -203,6 +213,7 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	/**
 	 * Determine the ClassLoader to use for pointcut evaluation.
 	 */
+	// 确定用于切入点评估的 ClassLoader
 	@Nullable
 	private ClassLoader determinePointcutClassLoader() {
 		if (this.beanFactory instanceof ConfigurableBeanFactory) {
@@ -217,6 +228,7 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	/**
 	 * Build the underlying AspectJ pointcut expression.
 	 */
+	// 构建底层的 AspectJ 切入点表达式
 	private PointcutExpression buildPointcutExpression(@Nullable ClassLoader classLoader) {
 		PointcutParser parser = initializePointcutParser(classLoader);
 		PointcutParameter[] pointcutParameters = new PointcutParameter[this.pointcutParameterNames.length];
@@ -224,6 +236,7 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 			pointcutParameters[i] = parser.createPointcutParameter(
 					this.pointcutParameterNames[i], this.pointcutParameterTypes[i]);
 		}
+		// Spring 桥接了 AspectJ 的实现语法
 		return parser.parsePointcutExpression(replaceBooleanOperators(resolveExpression()),
 				this.pointcutDeclarationScope, pointcutParameters);
 	}
@@ -237,6 +250,7 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	/**
 	 * Initialize the underlying AspectJ pointcut parser.
 	 */
+	// 初始化底层 AspectJ 切入点解析器
 	private PointcutParser initializePointcutParser(@Nullable ClassLoader classLoader) {
 		PointcutParser parser = PointcutParser
 				.getPointcutParserSupportingSpecifiedPrimitivesAndUsingSpecifiedClassLoaderForResolution(
@@ -252,6 +266,9 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	 * We also allow {@code and} between two pointcut sub-expressions.
 	 * <p>This method converts back to {@code &&} for the AspectJ pointcut parser.
 	 */
+	// 如果在 XML 中指定了切入点表达式，则用户不能将and写为“&&”（尽管 && 会起作用）。
+	// 我们还允许and两个切入点子表达式之间。
+	// 对于 AspectJ 切入点解析器，此方法会转换回&&
 	private String replaceBooleanOperators(String pcExpr) {
 		String result = StringUtils.replace(pcExpr, " and ", " && ");
 		result = StringUtils.replace(result, " or ", " || ");
@@ -263,6 +280,7 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	/**
 	 * Return the underlying AspectJ pointcut expression.
 	 */
+	// 返回底层的 AspectJ 切入点表达式。
 	public PointcutExpression getPointcutExpression() {
 		return obtainPointcutExpression();
 	}
@@ -272,11 +290,13 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 		PointcutExpression pointcutExpression = obtainPointcutExpression();
 		try {
 			try {
+				// 判断切入点表达式是否能够匹配目标类型
 				return pointcutExpression.couldMatchJoinPointsInType(targetClass);
 			}
 			catch (ReflectionWorldException ex) {
 				logger.debug("PointcutExpression matching rejected target class - trying fallback expression", ex);
 				// Actually this is still a "maybe" - treat the pointcut as dynamic if we don't know enough yet
+				// 实际上这仍然是一个“可能” - 如果我们还不够了解，则将切入点视为动态
 				PointcutExpression fallbackExpression = getFallbackPointcutExpression(targetClass);
 				if (fallbackExpression != null) {
 					return fallbackExpression.couldMatchJoinPointsInType(targetClass);
@@ -291,27 +311,36 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 
 	@Override
 	public boolean matches(Method method, Class<?> targetClass, boolean hasIntroductions) {
+		// 获取表达式
 		obtainPointcutExpression();
+		// 判断目标类型的方法是否匹配，
 		ShadowMatch shadowMatch = getTargetShadowMatch(method, targetClass);
 
 		// Special handling for this, target, @this, @target, @annotation
 		// in Spring - we can optimize since we know we have exactly this class,
 		// and there will never be matching subclass at runtime.
-		if (shadowMatch.alwaysMatches()) {
+		//
+		// Spring 中对 this、target、@this、@target、@annotation 的特殊处理——我们可以优化，
+		// 因为我们知道我们有这个类，并且在运行时永远不会有匹配的子类。
+		if (shadowMatch.alwaysMatches()) { // 给定方法永远匹配
 			return true;
 		}
-		else if (shadowMatch.neverMatches()) {
+		else if (shadowMatch.neverMatches()) { // 给定方法永不匹配
 			return false;
 		}
 		else {
 			// the maybe case
-			if (hasIntroductions) {
+			if (hasIntroductions) { // 如果包含 Introductions，返回 true
 				return true;
 			}
 			// A match test returned maybe - if there are any subtype sensitive variables
 			// involved in the test (this, target, at_this, at_target, at_annotation) then
 			// we say this is not a match as in Spring there will never be a different
 			// runtime subtype.
+			//
+			// 可能返回匹配测试 - 如果测试中涉及任何子类型敏感变量
+			// （this、target、at_this、at_target、at_annotation），那么我们说这不是匹配，
+			// 因为在 Spring 中永远不会有不同的运行时子类型
 			RuntimeTestWalker walker = getRuntimeTestWalker(shadowMatch);
 			return (!walker.testsSubtypeSensitiveVars() || walker.testTargetInstanceOfResidue(targetClass));
 		}
@@ -334,6 +363,9 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 
 		// Bind Spring AOP proxy to AspectJ "this" and Spring AOP target to AspectJ target,
 		// consistent with return of MethodInvocationProceedingJoinPoint
+		//
+		// 将 Spring AOP 代理绑定到 AspectJ “this”，将 Spring AOP target 绑定到 AspectJ target，
+		// 与 MethodInvocationProceedingJoinPoint 的返回一致
 		ProxyMethodInvocation pmi = null;
 		Object targetObject = null;
 		Object thisObject = null;
@@ -364,6 +396,9 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 			 * type but not 'this' (as would be the case of JDK dynamic proxies).
 			 * <p>See SPR-2979 for the original bug.
 			 */
+			// 做最后的检查，看看是否有任何 this(TYPE) 类型的残留匹配。为此，我们使用原始方法（代理方法）的影子
+			// 来确保正确检查“this”。如果没有这个检查，我们会在 this(TYPE) 上得到不正确的匹配，其中 TYPE 匹配
+			// 目标类型但不匹配 'this'（就像 JDK 动态代理的情况一样）。 <p>有关原始错误，请参阅 SPR-2979。
 			if (pmi != null && thisObject != null) {  // there is a current invocation
 				RuntimeTestWalker originalMethodResidueTest = getRuntimeTestWalker(getShadowMatch(method, method));
 				if (!originalMethodResidueTest.testThisInstanceOfResidue(thisObject.getClass())) {
@@ -394,6 +429,7 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	/**
 	 * Get a new pointcut expression based on a target class's loader rather than the default.
 	 */
+	// 根据目标类的加载器而不是默认值获取新的切入点表达式
 	@Nullable
 	private PointcutExpression getFallbackPointcutExpression(Class<?> targetClass) {
 		try {
@@ -422,6 +458,10 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 		// 'last man wins' which is not what we want at all.
 		// Using the expression is guaranteed to be safe, since 2 identical expressions
 		// are guaranteed to bind in exactly the same way.
+		//
+		// 注意：不能使用JoinPointMatch.getClass().getName()作为key，因为Spring AOP在一个join点做所有的匹配，
+		// 然后这个场景下的所有调用，如果我们只使用JoinPointMatch作为key，那么“最后一个人获胜”，这根本不是我们想要的。
+		// 使用表达式保证是安全的，因为 2 个相同的表达式保证以完全相同的方式绑定。
 		invocation.setUserAttribute(resolveExpression(), jpm);
 	}
 
@@ -431,6 +471,9 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 			// Try to build the most specific interface possible for inherited methods to be
 			// considered for sub-interface matches as well, in particular for proxy classes.
 			// Note: AspectJ is only going to take Method.getDeclaringClass() into account.
+			//
+			// 尝试为要考虑的子接口匹配的继承方法构建最具体的接口，特别是对于代理类。
+			// 注意：AspectJ 只会考虑 Method.getDeclaringClass()。
 			Set<Class<?>> ifcs = ClassUtils.getAllInterfacesForClassAsSet(targetClass);
 			if (ifcs.size() > 1) {
 				try {
@@ -441,6 +484,7 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 				catch (IllegalArgumentException ex) {
 					// Implemented interfaces probably expose conflicting method signatures...
 					// Proceed with original target method.
+					// 实现的接口可能会暴露冲突的方法签名...继续使用原始目标方法
 				}
 			}
 		}
@@ -449,10 +493,12 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 
 	private ShadowMatch getShadowMatch(Method targetMethod, Method originalMethod) {
 		// Avoid lock contention for known Methods through concurrent access...
+		// 通过并发访问避免已知方法的锁争用...
 		ShadowMatch shadowMatch = this.shadowMatchCache.get(targetMethod);
 		if (shadowMatch == null) {
 			synchronized (this.shadowMatchCache) {
 				// Not found - now check again with full lock...
+				// 未找到 - 现在再次使用全锁检查...
 				PointcutExpression fallbackExpression = null;
 				shadowMatch = this.shadowMatchCache.get(targetMethod);
 				if (shadowMatch == null) {
@@ -464,6 +510,7 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 						catch (ReflectionWorldException ex) {
 							// Failed to introspect target method, probably because it has been loaded
 							// in a special ClassLoader. Let's try the declaring ClassLoader instead...
+							// 无法内省目标方法，可能是因为它已在特殊的 ClassLoader 中加载。让我们尝试使用声明的 ClassLoader 代替...
 							try {
 								fallbackExpression = getFallbackPointcutExpression(methodToMatch.getDeclaringClass());
 								if (fallbackExpression != null) {
@@ -479,6 +526,7 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 							// Fall back to the plain original method in case of no resolvable match or a
 							// negative match on a proxy class (which doesn't carry any annotations on its
 							// redeclared methods).
+							// 如果代理类上没有可解析的匹配或否定匹配（在其重新声明的方法上不带有任何注释），则回退到原始方法
 							methodToMatch = originalMethod;
 							try {
 								shadowMatch = obtainPointcutExpression().matchesMethodExecution(methodToMatch);
@@ -486,6 +534,7 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 							catch (ReflectionWorldException ex) {
 								// Could neither introspect the target class nor the proxy class ->
 								// let's try the original method's declaring class before we give up...
+								// 既不能内省目标类也不能内省代理类->让我们在放弃之前尝试原始方法的声明类......
 								try {
 									fallbackExpression = getFallbackPointcutExpression(methodToMatch.getDeclaringClass());
 									if (fallbackExpression != null) {
@@ -500,6 +549,7 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 					}
 					catch (Throwable ex) {
 						// Possibly AspectJ 1.8.10 encountering an invalid signature
+						// 可能是 AspectJ 1.8.10 遇到无效签名
 						logger.debug("PointcutExpression matching rejected target method", ex);
 						fallbackExpression = null;
 					}
@@ -569,10 +619,12 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
 		// Rely on default serialization, just initialize state after deserialization.
+		// 依赖默认序列化，反序列化后初始化状态即可。
 		ois.defaultReadObject();
 
 		// Initialize transient fields.
 		// pointcutExpression will be initialized lazily by checkReadyToMatch()
+		// 初始化瞬态字段。 pointcutExpression 将被 checkReadyToMatch() 延迟初始化
 		this.shadowMatchCache = new ConcurrentHashMap<>(32);
 	}
 
@@ -585,6 +637,10 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	 * automatically by examining a thread local variable and therefore a matching
 	 * context need not be set on the pointcut.
 	 */
+	// 特定于 Spring 的bean()切入点指示符扩展到 AspectJ 的处理程序。
+	//
+	//必须将此处理程序添加到需要处理bean() PCD 的每个切入点对象。
+	// 匹配上下文是通过检查线程局部变量自动获得的，因此不需要在切入点上设置匹配上下文
 	private class BeanPointcutDesignatorHandler implements PointcutDesignatorHandler {
 
 		private static final String BEAN_DESIGNATOR_NAME = "bean";
@@ -608,6 +664,9 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	 * For static match tests, this matcher abstains to allow the overall
 	 * pointcut to match even when negation is used with the bean() pointcut.
 	 */
+	// BeanNamePointcutDesignatorHandler 的匹配器类。
+	// 这个匹配器的动态匹配测试总是返回 true，因为匹配决定是在代理创建时做出的。
+	// 对于静态匹配测试，即使在 bean() 切入点使用否定时，该匹配器也会弃权以允许整个切入点匹配。
 	private class BeanContextMatcher implements ContextBasedMatcher {
 
 		private final NamePattern expressionPattern;

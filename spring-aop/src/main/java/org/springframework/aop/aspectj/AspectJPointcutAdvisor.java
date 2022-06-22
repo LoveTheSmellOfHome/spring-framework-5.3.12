@@ -32,10 +32,13 @@ import org.springframework.util.Assert;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// AspectJPointcutAdvisor 适配一个  AbstractAspectJAdvice 到  PointcutAdvisor的接口
 public class AspectJPointcutAdvisor implements PointcutAdvisor, Ordered {
 
+	// 动作：支持 AspectJ 5 种不同语义的 Advice，符合 Advisor 支持不同 Advice 的定义
 	private final AbstractAspectJAdvice advice;
 
+	// 判断条件
 	private final Pointcut pointcut;
 
 	@Nullable
@@ -46,6 +49,7 @@ public class AspectJPointcutAdvisor implements PointcutAdvisor, Ordered {
 	 * Create a new AspectJPointcutAdvisor for the given advice.
 	 * @param advice the AbstractAspectJAdvice to wrap
 	 */
+	// 在构造的时候就需要传递确定的 Advice，并且不允许修改
 	public AspectJPointcutAdvisor(AbstractAspectJAdvice advice) {
 		Assert.notNull(advice, "Advice must not be null");
 		this.advice = advice;

@@ -68,6 +68,12 @@ public abstract class ClassFilters {
 	 * @return a distinct ClassFilter that matches all classes that both
 	 * of the given ClassFilter match
 	 */
+	// 匹配两个给定 ClassFilter 匹配的所有类。
+	// 参形：
+	//			cf1 – 第一个 ClassFilter
+	//			cf2 – 第二个 ClassFilter
+	// 返回值：
+	//			一个独特的 ClassFilter 匹配给定 ClassFilter 匹配的所有类
 	public static ClassFilter intersection(ClassFilter cf1, ClassFilter cf2) {
 		Assert.notNull(cf1, "First ClassFilter must not be null");
 		Assert.notNull(cf2, "Second ClassFilter must not be null");
@@ -101,6 +107,7 @@ public abstract class ClassFilters {
 		@Override
 		public boolean matches(Class<?> clazz) {
 			for (ClassFilter filter : this.filters) {
+				// 一个匹配就可以
 				if (filter.matches(clazz)) {
 					return true;
 				}
@@ -110,6 +117,7 @@ public abstract class ClassFilters {
 
 		@Override
 		public boolean equals(@Nullable Object other) {
+			// 集合 A 或 集合 B 的关系
 			return (this == other || (other instanceof UnionClassFilter &&
 					ObjectUtils.nullSafeEquals(this.filters, ((UnionClassFilter) other).filters)));
 		}
@@ -142,6 +150,7 @@ public abstract class ClassFilters {
 		@Override
 		public boolean matches(Class<?> clazz) {
 			for (ClassFilter filter : this.filters) {
+				// 一个不匹配都不匹配
 				if (!filter.matches(clazz)) {
 					return false;
 				}
@@ -151,6 +160,7 @@ public abstract class ClassFilters {
 
 		@Override
 		public boolean equals(@Nullable Object other) {
+			// 集合 A 且 集合 B的关系
 			return (this == other || (other instanceof IntersectionClassFilter &&
 					ObjectUtils.nullSafeEquals(this.filters, ((IntersectionClassFilter) other).filters)));
 		}

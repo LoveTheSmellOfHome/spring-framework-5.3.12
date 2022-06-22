@@ -63,6 +63,17 @@ import org.springframework.util.Assert;
  * @see #setTimeBetweenEvictionRunsMillis
  * @see #setMinEvictableIdleTimeMillis
  */
+// org.springframework.aop.TargetSource实现将对象保存在可配置的 Apache Commons2 池中。
+//
+// 默认情况下，会创建一个 GenericObjectPool 实例。子类可以通过覆盖 createObjectPool()方法来更改使用的 ObjectPool的类型。
+//
+// 提供许多镜像 Commons Pool GenericObjectPool类的配置属性；这些属性在构造期间传递给 GenericObjectPool 。
+// 如果创建此类的子类以更改ObjectPool实现类型，请传入与您选择的实现相关的配置属性的值。
+//
+// testOnBorrow、testOnReturn 和 testWhileIdle 属性没有显式镜像，因为此类使用的 PoolableObjectFactory
+// 的实现没有实现有意义的验证。所有公开的 Commons Pool 属性都使用相应的 Commons Pool 默认值。
+//
+// 从 Spring 4.2 开始，与 Apache Commons Pool 2.4 兼容。
 @SuppressWarnings({"rawtypes", "unchecked", "serial"})
 public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implements PooledObjectFactory<Object> {
 
@@ -81,6 +92,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	/**
 	 * The Apache Commons {@code ObjectPool} used to pool target objects.
 	 */
+	// Apache Commons ObjectPool 用于汇集目标对象
 	@Nullable
 	private ObjectPool pool;
 
@@ -91,6 +103,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	 * @see #setMaxSize
 	 * @see GenericObjectPoolConfig#setMaxTotal
 	 */
+	// 使用默认设置创建 CommonsPoolTargetSource。池的默认最大大小为 8。
 	public CommonsPool2TargetSource() {
 		setMaxSize(GenericObjectPoolConfig.DEFAULT_MAX_TOTAL);
 	}
@@ -101,6 +114,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	 * Default is 8.
 	 * @see GenericObjectPool#setMaxIdle
 	 */
+	// 设置池中空闲对象的最大数量。默认值为 8
 	public void setMaxIdle(int maxIdle) {
 		this.maxIdle = maxIdle;
 	}
@@ -108,6 +122,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	/**
 	 * Return the maximum number of idle objects in the pool.
 	 */
+	// 返回池中空闲对象的最大数量。
 	public int getMaxIdle() {
 		return this.maxIdle;
 	}
@@ -117,6 +132,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	 * Default is 0.
 	 * @see GenericObjectPool#setMinIdle
 	 */
+	// 设置池中空闲对象的最小数量。默认值为 0。
 	public void setMinIdle(int minIdle) {
 		this.minIdle = minIdle;
 	}
@@ -124,6 +140,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	/**
 	 * Return the minimum number of idle objects in the pool.
 	 */
+	// 返回池中空闲对象的最小数量
 	public int getMinIdle() {
 		return this.minIdle;
 	}
@@ -133,6 +150,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	 * Default is -1, waiting forever.
 	 * @see GenericObjectPool#setMaxWaitMillis
 	 */
+	// 设置从池中获取对象的最大等待时间。默认为-1，永远等待。
 	public void setMaxWait(long maxWait) {
 		this.maxWait = maxWait;
 	}
@@ -140,6 +158,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	/**
 	 * Return the maximum waiting time for fetching an object from the pool.
 	 */
+	// 返回从池中获取对象的最大等待时间。
 	public long getMaxWait() {
 		return this.maxWait;
 	}
@@ -150,6 +169,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	 * Default is -1, not performing any eviction.
 	 * @see GenericObjectPool#setTimeBetweenEvictionRunsMillis
 	 */
+	// 设置检查空闲对象是否空闲时间过长或变得无效的逐出运行之间的时间。默认值为 -1，不执行任何驱逐。
 	public void setTimeBetweenEvictionRunsMillis(long timeBetweenEvictionRunsMillis) {
 		this.timeBetweenEvictionRunsMillis = timeBetweenEvictionRunsMillis;
 	}
@@ -157,6 +177,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	/**
 	 * Return the time between eviction runs that check idle objects.
 	 */
+	// 返回检查空闲对象的驱逐运行之间的时间。
 	public long getTimeBetweenEvictionRunsMillis() {
 		return this.timeBetweenEvictionRunsMillis;
 	}
@@ -169,6 +190,8 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	 * @see #setTimeBetweenEvictionRunsMillis
 	 * @see GenericObjectPool#setMinEvictableIdleTimeMillis
 	 */
+	// 设置空闲对象在被驱逐之前可以位于池中的最短时间。默认值为 1800000（30 分钟）。
+	// 请注意，需要执行驱逐运行才能使此设置生效。
 	public void setMinEvictableIdleTimeMillis(long minEvictableIdleTimeMillis) {
 		this.minEvictableIdleTimeMillis = minEvictableIdleTimeMillis;
 	}
@@ -176,6 +199,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	/**
 	 * Return the minimum time that an idle object can sit in the pool.
 	 */
+	// 返回空闲对象可以在池中的最短时间。
 	public long getMinEvictableIdleTimeMillis() {
 		return this.minEvictableIdleTimeMillis;
 	}
@@ -183,6 +207,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	/**
 	 * Set whether the call should bock when the pool is exhausted.
 	 */
+	// 设置当池耗尽时调用是否阻塞。
 	public void setBlockWhenExhausted(boolean blockWhenExhausted) {
 		this.blockWhenExhausted = blockWhenExhausted;
 	}
@@ -190,6 +215,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	/**
 	 * Specify if the call should block when the pool is exhausted.
 	 */
+	// 指定当池耗尽时调用是否应该阻塞。
 	public boolean isBlockWhenExhausted() {
 		return this.blockWhenExhausted;
 	}
@@ -199,6 +225,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	 * Creates and holds an ObjectPool instance.
 	 * @see #createObjectPool()
 	 */
+	// 创建并保存一个 ObjectPool 实例
 	@Override
 	protected final void createPool() {
 		logger.debug("Creating Commons object pool");
@@ -213,6 +240,10 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	 * @see GenericObjectPool
 	 * @see #setMaxSize
 	 */
+	// 如果子类想要返回特定的 Commons 池，则可以覆盖它。他们应该在此处将任何配置属性应用于池。
+	// 默认是具有给定池大小的 GenericObjectPool 实例。
+	// 返回值：
+	//			一个空的 Commons ObjectPool 。
 	protected ObjectPool createObjectPool() {
 		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
 		config.setMaxTotal(getMaxSize());
@@ -222,6 +253,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 		config.setTimeBetweenEvictionRunsMillis(getTimeBetweenEvictionRunsMillis());
 		config.setMinEvictableIdleTimeMillis(getMinEvictableIdleTimeMillis());
 		config.setBlockWhenExhausted(isBlockWhenExhausted());
+		// 创建池
 		return new GenericObjectPool(this, config);
 	}
 
@@ -229,6 +261,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	/**
 	 * Borrows an object from the {@code ObjectPool}.
 	 */
+	// 从 ObjectPool 借用一个对象。
 	@Override
 	public Object getTarget() throws Exception {
 		Assert.state(this.pool != null, "No Commons ObjectPool available");
@@ -238,9 +271,11 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	/**
 	 * Returns the specified object to the underlying {@code ObjectPool}.
 	 */
+	// 将指定对象返回到底层 ObjectPool 。
 	@Override
 	public void releaseTarget(Object target) throws Exception {
 		if (this.pool != null) {
+			// 将对象返还池内，有借有还
 			this.pool.returnObject(target);
 		}
 	}
@@ -259,6 +294,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 	/**
 	 * Closes the underlying {@code ObjectPool} when destroying this object.
 	 */
+	// 销毁此对象时关闭基础 ObjectPool。
 	@Override
 	public void destroy() throws Exception {
 		if (this.pool != null) {
@@ -270,6 +306,7 @@ public class CommonsPool2TargetSource extends AbstractPoolingTargetSource implem
 
 	//----------------------------------------------------------------------------
 	// Implementation of org.apache.commons.pool2.PooledObjectFactory interface
+	// org.apache.commons.pool2.PooledObjectFactory 接口的实现
 	//----------------------------------------------------------------------------
 
 	@Override

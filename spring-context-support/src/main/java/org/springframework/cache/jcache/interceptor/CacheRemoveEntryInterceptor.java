@@ -29,6 +29,7 @@ import org.springframework.cache.interceptor.CacheOperationInvoker;
  * @author Stephane Nicoll
  * @since 4.1
  */
+// 使用 @CacheRemove 注解的拦截方法。
 @SuppressWarnings("serial")
 class CacheRemoveEntryInterceptor extends AbstractKeyCacheInterceptor<CacheRemoveOperation, CacheRemove> {
 

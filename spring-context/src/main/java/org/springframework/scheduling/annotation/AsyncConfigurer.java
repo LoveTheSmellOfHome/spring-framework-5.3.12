@@ -42,12 +42,22 @@ import org.springframework.lang.Nullable;
  * @see EnableAsync
  * @see AsyncConfigurerSupport
  */
+// 由带有 @Configuration 注解的 EnableAsync 类实现的接口，这些类希望自定义处理异步方法调用时
+// 使用的 Executor 实例或用于处理从具有 void 返回类型的异步方法抛出的异常的 AsyncUncaughtExceptionHandler 实例。
+//
+// 如果只需要自定义一个元素，请考虑使用 AsyncConfigurerSupport 为这两种方法提供默认实现。
+// 此外，如果将来引入新的自定义选项，该接口的向后兼容性将得到保证。
+//
+// 使用示例见 @EnableAsync
+//
+// Spring 异步配置器
 public interface AsyncConfigurer {
 
 	/**
 	 * The {@link Executor} instance to be used when processing async
 	 * method invocations.
 	 */
+	// 处理异步方法调用时要使用的 Executor 实例。
 	@Nullable
 	default Executor getAsyncExecutor() {
 		return null;
@@ -58,6 +68,7 @@ public interface AsyncConfigurer {
 	 * when an exception is thrown during an asynchronous method execution
 	 * with {@code void} return type.
 	 */
+	// 在返回类型为 void 的异步方法执行期间引发异常时使用的 AsyncUncaughtExceptionHandler 实例。
 	@Nullable
 	default AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
 		return null;

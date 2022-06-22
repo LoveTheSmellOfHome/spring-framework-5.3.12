@@ -34,6 +34,8 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// 基于标准 BeanDefinition 的 ComponentDefinition，
+// 公开给定的 bean 定义以及给定 bean 的内部 bean 定义和 bean 引用。
 public class BeanComponentDefinition extends BeanDefinitionHolder implements ComponentDefinition {
 
 	private BeanDefinition[] innerBeanDefinitions;

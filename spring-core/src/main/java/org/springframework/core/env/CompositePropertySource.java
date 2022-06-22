@@ -40,6 +40,11 @@ import org.springframework.util.StringUtils;
  * @author Phillip Webb
  * @since 3.1.1
  */
+// 复合 {@link PropertySource} 实现，它迭代一组 {@link PropertySource} 实例。在多个属性源共享相同名称的情况下是必需的，
+// 例如当多个值提供给 {@code @PropertySource} 时。
+//
+// <p>从 Spring 4.1.2 开始，这个类扩展了 {@link EnumerablePropertySource} 而不是普通的 {@link PropertySource}，
+// 根据来自所有包含源的累积属性名称（尽可能）公开 {@link getPropertyNames()}。
 public class CompositePropertySource extends EnumerablePropertySource<Object> {
 
 	private final Set<PropertySource<?>> propertySources = new LinkedHashSet<>();
@@ -49,6 +54,7 @@ public class CompositePropertySource extends EnumerablePropertySource<Object> {
 	 * Create a new {@code CompositePropertySource}.
 	 * @param name the name of the property source
 	 */
+	// 创建一个新的 {@code CompositePropertySource}
 	public CompositePropertySource(String name) {
 		super(name);
 	}
@@ -94,6 +100,7 @@ public class CompositePropertySource extends EnumerablePropertySource<Object> {
 	 * Add the given {@link PropertySource} to the end of the chain.
 	 * @param propertySource the PropertySource to add
 	 */
+	// 将给定的 {@link PropertySource} 添加到链的末尾
 	public void addPropertySource(PropertySource<?> propertySource) {
 		this.propertySources.add(propertySource);
 	}
@@ -103,6 +110,7 @@ public class CompositePropertySource extends EnumerablePropertySource<Object> {
 	 * @param propertySource the PropertySource to add
 	 * @since 4.1
 	 */
+	// 将给定的 {@link PropertySource} 添加到链的开头。
 	public void addFirstPropertySource(PropertySource<?> propertySource) {
 		List<PropertySource<?>> existing = new ArrayList<>(this.propertySources);
 		this.propertySources.clear();
@@ -114,6 +122,7 @@ public class CompositePropertySource extends EnumerablePropertySource<Object> {
 	 * Return all property sources that this composite source holds.
 	 * @since 4.1.1
 	 */
+	// 返回此复合源拥有的所有属性源
 	public Collection<PropertySource<?>> getPropertySources() {
 		return this.propertySources;
 	}

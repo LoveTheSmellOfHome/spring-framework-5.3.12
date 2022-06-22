@@ -23,6 +23,7 @@ package org.springframework.cache.interceptor;
  * @author Marcin Kamionowski
  * @since 3.1
  */
+// 描述缓存“驱逐”操作的类。
 public class CacheEvictOperation extends CacheOperation {
 
 	private final boolean cacheWide;
@@ -34,6 +35,7 @@ public class CacheEvictOperation extends CacheOperation {
 	 * Create a new {@link CacheEvictOperation} instance from the given builder.
 	 * @since 4.3
 	 */
+	// 从给定的构建器创建一个新的 CacheEvictOperation 实例。
 	public CacheEvictOperation(CacheEvictOperation.Builder b) {
 		super(b);
 		this.cacheWide = b.cacheWide;
@@ -54,6 +56,7 @@ public class CacheEvictOperation extends CacheOperation {
 	 * A builder that can be used to create a {@link CacheEvictOperation}.
 	 * @since 4.3
 	 */
+	// 可用于创建CacheEvictOperation的构建器。
 	public static class Builder extends CacheOperation.Builder {
 
 		private boolean cacheWide = false;

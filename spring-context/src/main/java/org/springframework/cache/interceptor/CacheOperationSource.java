@@ -30,6 +30,7 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 3.1
  */
+// CacheInterceptor 使用的接口。实现知道如何获取缓存操作属性，无论是从配置、源级别的元数据属性还是其他地方
 public interface CacheOperationSource {
 
 	/**
@@ -46,6 +47,14 @@ public interface CacheOperationSource {
 	 * implementation returns {@code true}, leading to regular introspection.
 	 * @since 5.2
 	 */
+	// 确定给定类是否是此 CacheOperationSource 元数据格式的缓存操作的候选对象。
+	//
+	// 如果此方法返回 false ，则不会遍历给定类上的方法以进行 getCacheOperations 内省。因此，
+	// 返回 false 是对不受影响的类的优化，而 true 仅表示该类需要针对给定类上的每个方法单独进行完全自省。
+	// 参形：
+	//				targetClass – 要自省的类
+	// 返回值：
+	//				如果已知该类在类或方法级别没有缓存操作元数据，则返回false ；否则为true 。默认实现返回true ，导致定期自省。
 	default boolean isCandidateClass(Class<?> targetClass) {
 		return true;
 	}
@@ -58,6 +67,12 @@ public interface CacheOperationSource {
 	 * the declaring class of the method must be used)
 	 * @return all cache operations for this method, or {@code null} if none found
 	 */
+	// 返回此方法的缓存操作集合，如果该方法不包含可缓存的注释，则返回 null 。
+	// 参形：
+	//			method - 自省的方法
+	//			targetClass – 目标类（可能是null ，在这种情况下必须使用方法的声明类）
+	// 返回值：
+	//			此方法的所有缓存操作，如果没有找到，则返回null
 	@Nullable
 	Collection<CacheOperation> getCacheOperations(Method method, @Nullable Class<?> targetClass);
 

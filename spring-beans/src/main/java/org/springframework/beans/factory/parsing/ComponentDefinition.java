@@ -74,6 +74,30 @@ import org.springframework.beans.factory.config.BeanReference;
  * @see BeanComponentDefinition
  * @see ReaderEventListener#componentRegistered(ComponentDefinition)
  */
+// 描述一组 BeanDefinitions 和 BeanReferences 的逻辑视图的接口，如某些配置上下文中所示。
+//
+// 随着 pluggable custom XML tags 的引入，现在可以为单个逻辑配置实体（在本例中为 XML 标记）创建多个
+// BeanDefinitions 和 RuntimeBeanReferences ，以便为最终用户提供更简洁的配置和更大的便利。因此，不能
+// 再假设每个配置实体（例如 XML 标签）都映射到一个 BeanDefinition 。对于希望提供可视化或支持配置 Spring 应用
+// 程序的工具供应商和其他用户，重要的是有一些机制可以将 org.springframework.beans.factory.BeanFactory
+// 中的 BeanDefinitions 以某种方式与配置数据联系起来这对最终用户具有具体意义。
+// 因此 org.springframework.beans.factory.xml.NamespaceHandler 实现能够为每个正在配置的逻辑实体以
+// ComponentDefinition 的形式发布事件。然后第三方可以 subscribe to these events ，允许以用户为中心查看 bean 元数据。
+//
+// 每个 ComponentDefinition 都有一个特定于配置的 source object。在基于 XML 的配置的情况下，这通常是包含用户提供的
+// 配置信息的 org.w3c.dom.Node。除此之外，包含在 ComponentDefinition 中的每个 BeanDefinition 都有自己
+// 的 source object ，它可能指向不同的、更具体的配置数据集。除此之外，诸如 PropertyValues 之类的单个 bean 元数据
+// 也可能有一个源对象，提供了更高级别的详细信息。源对象提取是通过 SourceExtractor 处理的，可以根据需要进行自定义。
+//
+// 虽然通过 getBeanReferences 提供了对重要 BeanReferences 的直接访问，但工具可能希望检查所有 BeanDefinitions
+// 以收集完整的 BeanReferences 集。实现需要提供验证整个逻辑实体的配置所需的所有 BeanReferences，以及提供配置的完整
+// 用户可视化所需的所有 BeanReference。预计某些 BeanReferences 对验证或配置的用户视图并不重要，因此可以省略这些。
+// 工具可能希望显示通过提供的 BeanDefinitions 获取的任何其他 BeanReferences ，但这不被认为是典型情况。
+//
+// 工具可以通过检查 role identifier 来确定包含的 BeanDefinitions 的重要性。该角色本质上是对工具的提示，说明
+// 配置提供者认为 BeanDefinition 对最终用户有多重要。预计工具不会显示给定 ComponentDefinition 的所有 BeanDefinitions ，
+// 而是选择基于角色进行过滤。工具可以选择使此过滤用户可配置。应特别注意 INFRASTRUCTURE role identifier 。使用此角色
+// 分类的 BeanDefinitions 对最终用户完全不重要，仅出于内部实现原因才需要。
 public interface ComponentDefinition extends BeanMetadataElement {
 
 	/**
@@ -81,6 +105,8 @@ public interface ComponentDefinition extends BeanMetadataElement {
 	 * <p>This should link back directly to the corresponding configuration data
 	 * for this component in a given context.
 	 */
+	// 获取此 ComponentDefinition 的用户可见名称。
+	// 这应该直接链接回给定上下文中该组件的相应配置数据。
 	String getName();
 
 	/**
@@ -88,6 +114,8 @@ public interface ComponentDefinition extends BeanMetadataElement {
 	 * <p>Implementations are encouraged to return the same value from
 	 * {@code toString()}.
 	 */
+	// 返回所描述组件的友好描述。
+	// 鼓励实现从 toString() 返回相同的值。
 	String getDescription();
 
 	/**
@@ -99,6 +127,12 @@ public interface ComponentDefinition extends BeanMetadataElement {
 	 * Important {@link BeanReference BeanReferences} are available from {@link #getBeanReferences()}.
 	 * @return the array of BeanDefinitions, or an empty array if none
 	 */
+	// 返回注册形成此ComponentDefinition的BeanDefinitions 。
+	//
+	// 应该注意的是，一个 ComponentDefinition 很可能通过 references 与其他 BeanDefinitions 相关联，但是这些
+	// 不包括在内，因为它们可能不会立即可用。重要的 BeanReferences 可从 getBeanReferences() 获得。
+	// 返回值：
+	//			BeanDefinitions 数组，如果没有则为空数组
 	BeanDefinition[] getBeanDefinitions();
 
 	/**
@@ -108,6 +142,10 @@ public interface ComponentDefinition extends BeanMetadataElement {
 	 * however these are not considered to be needed for validation or for user visualization.
 	 * @return the array of BeanDefinitions, or an empty array if none
 	 */
+	// 返回代表此组件中所有相关内部 bean 的BeanDefinitions
+	// 其他内部 bean 可能存在于关联的 BeanDefinitions 中，但是这些不被认为是验证或用户可视化所必需的。
+	// 返回值：
+	//				BeanDefinitions 数组，如果没有则为空数组
 	BeanDefinition[] getInnerBeanDefinitions();
 
 	/**
@@ -118,6 +156,10 @@ public interface ComponentDefinition extends BeanMetadataElement {
 	 * to be needed for validation or for user visualization.
 	 * @return the array of BeanReferences, or an empty array if none
 	 */
+	// 返回被认为对此 ComponentDefinition 很重要的 BeanReferences 集。
+	// 其他 BeanReferences 可能存在于关联的 BeanDefinitions 中，但是这些不被认为是验证或用户可视化所必需的。
+	// 返回值：
+	//				BeanReferences 数组，如果没有则为空数组
 	BeanReference[] getBeanReferences();
 
 }

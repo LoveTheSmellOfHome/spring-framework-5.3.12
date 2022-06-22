@@ -35,6 +35,11 @@ package org.springframework.beans.factory;
  * @see BeanFactoryAware
  * @see InitializingBean
  */
+// 允许 bean 知道 bean {@link ClassLoader class loader} 的回调；
+// 即当前 bean 工厂用来加载 bean 类的类加载器
+// <p>这主要是由框架类实现的，尽管它们可能是从共享类加载器加载的，但它们必须按名称获取应用程序类
+// <p>有关所有 bean 生命周期方法的列表，请参阅 {@link BeanFactory BeanFactory javadocs}。
+// 是个 临时类加载器
 public interface BeanClassLoaderAware extends Aware {
 
 	/**
@@ -47,6 +52,10 @@ public interface BeanClassLoaderAware extends Aware {
 	 * method or a custom init-method.
 	 * @param classLoader the owning class loader
 	 */
+	// 将 bean {@link ClassLoader class loader} 提供给 bean 实例的回调
+	// <p>调用 <i>after<i> 普通 bean 属性的填充，但 <i>before<i> 初始化回调，
+	// 例如 {@link InitializingBean InitializingBean's} {@link InitializingBeanafterPropertiesSet()}
+	// 方法或自定义初始化方法.
+	// @param classLoader 拥有的类加载器
 	void setBeanClassLoader(ClassLoader classLoader);
-
 }

@@ -50,6 +50,12 @@ import java.lang.annotation.Target;
  * @see AnnotationAsyncExecutionInterceptor
  * @see AsyncAnnotationAdvisor
  */
+// 将方法标记为 异步 执行候选的注解。
+// 也可以在类型级别使用，在这种情况下，所有类型的方法都被视为异步。但是请注意，
+// 在 {@link org.springframework.context.annotation.Configuration @Configuration}
+// 类中声明的方法不支持 {@code @Async}，也就是说类上同时标注 @Async 和 @Configuration 会使@Async失效
+//
+// Spring 异步注解
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -67,6 +73,13 @@ public @interface Async {
 	 * of {@code Async#value} always overrides any value set at the class level.
 	 * @since 3.1.2
 	 */
+	// 指定异步操作的限定符值。
+	//
+	// 可用于确定执行异步操作时要使用的目标执行器，匹配特定 Executor 或 TaskExecutor bean 定义的
+	// 限定符值（或 bean 名称）。
+	//
+	// 当在类级别的 @Async 注释上指定时，表示给定的执行器应该用于类中的所有方法。 Async#value 的方法级别使用
+	// 始终覆盖在类级别设置的任何值。
 	String value() default "";
 
 }

@@ -33,6 +33,8 @@ import org.springframework.util.Assert;
  * @since 2.5.2
  * @see org.springframework.core.io.DescriptiveResource
  */
+// {@link org.springframework.beans.factory.config.BeanDefinition} 的描述性
+// {@link org.springframework.core.io.Resource} 包装器
 class BeanDefinitionResource extends AbstractResource {
 
 	private final BeanDefinition beanDefinition;
@@ -55,22 +57,26 @@ class BeanDefinitionResource extends AbstractResource {
 	}
 
 
+	// 资源不存在
 	@Override
 	public boolean exists() {
 		return false;
 	}
 
+	// 资源不可读
 	@Override
 	public boolean isReadable() {
 		return false;
 	}
 
+	// 无法转化成流
 	@Override
 	public InputStream getInputStream() throws IOException {
 		throw new FileNotFoundException(
 				"Resource cannot be opened because it points to " + getDescription());
 	}
 
+	// 主要作用：用来描述 BeanDefinition 资源的
 	@Override
 	public String getDescription() {
 		return "BeanDefinition defined in " + this.beanDefinition.getResourceDescription();
@@ -80,6 +86,7 @@ class BeanDefinitionResource extends AbstractResource {
 	/**
 	 * This implementation compares the underlying BeanDefinition.
 	 */
+	// 这个实现比较了底层的 BeanDefinition
 	@Override
 	public boolean equals(@Nullable Object other) {
 		return (this == other || (other instanceof BeanDefinitionResource &&
@@ -89,6 +96,7 @@ class BeanDefinitionResource extends AbstractResource {
 	/**
 	 * This implementation returns the hash code of the underlying BeanDefinition.
 	 */
+	// 此实现返回底层 BeanDefinition 的哈希码
 	@Override
 	public int hashCode() {
 		return this.beanDefinition.hashCode();

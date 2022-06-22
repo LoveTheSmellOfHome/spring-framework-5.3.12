@@ -30,6 +30,10 @@ import org.springframework.core.convert.TypeDescriptor;
  * @see GenericConverter
  * @see ConditionalConverter
  */
+// 可以根据 {@code source} 和 {@code target} {@link TypeDescriptor} 的属性有条件地执行的 {@link GenericConverter}。
+// <p>有关详细信息，请参阅 {@link ConditionalConverter}。
+// 在 GenericConverter 基础上增加了前置判断，判断 source类型和 target 类型是否能被当前转换器转换
+// 综合(条件，复合)类型转换器
 public interface ConditionalGenericConverter extends GenericConverter, ConditionalConverter {
 
 }

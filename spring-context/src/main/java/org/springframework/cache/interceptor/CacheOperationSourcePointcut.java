@@ -34,10 +34,12 @@ import org.springframework.util.ObjectUtils;
  * @author Juergen Hoeller
  * @since 3.1
  */
+// 如果基础 CacheOperationSource 具有给定方法的属性，则匹配的切入点。
 @SuppressWarnings("serial")
 abstract class CacheOperationSourcePointcut extends StaticMethodMatcherPointcut implements Serializable {
 
 	protected CacheOperationSourcePointcut() {
+		// 设置缓存草走源类过滤器
 		setClassFilter(new CacheOperationSourceClassFilter());
 	}
 
@@ -45,6 +47,7 @@ abstract class CacheOperationSourcePointcut extends StaticMethodMatcherPointcut 
 	@Override
 	public boolean matches(Method method, Class<?> targetClass) {
 		CacheOperationSource cas = getCacheOperationSource();
+		// cas 不为空 && 获取 Collection<CacheOperation> 集合不为空
 		return (cas != null && !CollectionUtils.isEmpty(cas.getCacheOperations(method, targetClass)));
 	}
 
@@ -75,6 +78,7 @@ abstract class CacheOperationSourcePointcut extends StaticMethodMatcherPointcut 
 	 * Obtain the underlying {@link CacheOperationSource} (may be {@code null}).
 	 * To be implemented by subclasses.
 	 */
+	// 获取底层 CacheOperationSource （可能为null ）。由子类实现。
 	@Nullable
 	protected abstract CacheOperationSource getCacheOperationSource();
 
@@ -83,6 +87,7 @@ abstract class CacheOperationSourcePointcut extends StaticMethodMatcherPointcut 
 	 * {@link ClassFilter} that delegates to {@link CacheOperationSource#isCandidateClass}
 	 * for filtering classes whose methods are not worth searching to begin with.
 	 */
+	// ClassFilter 委托给 CacheOperationSource.isCandidateClass 用于过滤其方法不值得一开始搜索的类。
 	private class CacheOperationSourceClassFilter implements ClassFilter {
 
 		@Override

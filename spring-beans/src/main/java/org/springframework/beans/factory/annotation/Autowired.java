@@ -98,6 +98,50 @@ import java.lang.annotation.Target;
  * @see Qualifier
  * @see Value
  */
+// 将构造函数、字段、setter 方法或配置方法标记为由 Spring 的依赖注入工具自动装配。
+// 这是 JSR-330 {@link javax.inject.Inject} 注解的替代方法，添加了 required-vs-optional 语义。
+//
+// <h3>Autowired Constructors<h3> @Autowired 标注构造函数,自动装配构造函数
+// <p>任何给定 bean 类的只有一个构造函数可以声明此注解，并将 {@link required} 属性设置为 {@code true}，指示
+// <i><i> 构造函数自动装配当用作 Spring bean 时。此外，如果 {@code required} 属性设置为 {@code true}，
+// 则只能使用 {@code @Autowired} 标注单个构造函数。
+// 如果多个 <i>non-required<i> 构造函数声明了 @Autowired 注解，它们将被视为自动装配的候选者。
+// 将选择通过匹配 Spring 容器中的 bean 可以满足的依赖项数量最多的构造函数。如果没有一个候选者能被满足，
+// 那么将使用一个主默认构造函数（如果存在）。类似地，如果一个类声明了多个构造函数，但没有一个用 {@code @Autowired} 注解，
+// 则将使用主默认构造函数（如果存在）。如果一个类只声明一个构造函数开始，它将始终被使用，即使没有注解。
+// 带注释的构造函数不必是公共的。
+//
+// <h3>Autowired Fields<h3> @Autowired 标注属性，自动装配属性
+// <p>在构建 bean 之后，在调用任何配置方法之前，立即注入字段。这样的配置字段不必是 public。
+//
+// <h3>Autowired Methods<h3> @Autowired 标注方法，自动装配方法，实际上是自动装配方法参数。
+// <p>配置方法可以有任意名称和任意数量的参数；这些参数中的每一个都将使用 Spring 容器中的匹配 bean 自动装配。
+// Bean 属性 setter 方法实际上只是这种通用配置方法的一个特例。这样的配置方法不必是公开的。
+//
+// <h3>Autowired 参数<h3>
+// <p>虽然从 Spring Framework 5.0 开始，{@code @Autowired} 技术上可以在独立的方法或构造函数参数上声明，
+// 但框架的大部分部分都忽略了这样的声明。核心 Spring 框架中唯一主动支持自动装配参数的部分是 {@code spring-test}
+// 模块中的 JUnit Jupiter 支持（参见 <a href="https:docs.spring.iospringdocscurrentspring-framework-referencetesting.
+// htmltestcontext- junit-jupiter-di">TestContext framework<a> 参考文档了解详情）。
+//
+// <h3>Multiple Arguments and 'required' Semantics<h3> 多参数和“必需”语义
+// <p>在多参数构造函数或方法的情况下，{@link required} 属性适用于所有参数。
+// 单个参数可以声明为 Java-8 样式 {@link java.util.Optional} 或者，从 Spring Framework 5.0 开始，
+// 也可以声明为 {@code @Nullable} 或 Kotlin 中的非空参数类型，覆盖基本的 'required ' 语义。
+//
+// <h3>Autowiring Arrays, Collections, and Maps<h3>自动装配数组、集合和映射
+// <p>如果是数组、{@link java.util.Collection} 或 {@link java.util.Map} 依赖类型，容器会自动装配所有 bean匹配声明的值类型。
+// 为此，必须将映射 key 声明为 {@code String} 类型，该类型将被解析为相应的 bean 名称。这样一个容器提供的集合将被排序，
+// 考虑到目标组件的 {@link org.springframework.core.Ordered Ordered} 和
+// {@link org.springframework.core.annotation.Order @Order} 值，否则按照它们的容器中的注册顺序。
+// 或者，单个匹配的目标 bean 也可能是一个普通类型的 {@code Collection} 或 {@code Map} 本身，这样被注入。
+//
+// <h3>不支持 {@code BeanPostProcessor} 或 {@code BeanFactoryPostProcessor}<h3>
+// <p>注意，实际注入是通过 {@link org.springframework.beans.factory.config.BeanPostProcessor BeanPostProcessor} 执行的
+// 意味着您<em>不能<em>使用 {@code @Autowired} 将引用注入到 {@link org.springframework.beans.factory.config.
+// BeanPostProcessor BeanPostProcessor} 或 {@link org.springframework.beans.factory.config .
+// BeanFactoryPostProcessor BeanFactoryPostProcessor} 类型。
+// 请查阅 {@link AutowiredAnnotationBeanPostProcessor} 类的 javadoc（默认情况下，它会检查此注释的存在）。
 @Target({ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -107,6 +151,7 @@ public @interface Autowired {
 	 * Declares whether the annotated dependency is required.
 	 * <p>Defaults to {@code true}.
 	 */
+	// 声明注解依赖是否是必须的，<p>默认为 {@code true}。
 	boolean required() default true;
 
 }

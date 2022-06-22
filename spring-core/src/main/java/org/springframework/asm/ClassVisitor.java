@@ -37,15 +37,24 @@ package org.springframework.asm;
  *
  * @author Eric Bruneton
  */
+// 访问 Java 类的访问者。 该类的方法必须按以下顺序调用： visit [ visitSource ][ visitModule ]
+// [ visitNestHost ][ visitOuterClass ]( visitAnnotation | visitTypeAnnotation | visitAttribute )
+// *( visitNestMember |[ * visitPermittedSubclass ]| visitInnerClass | visitRecordComponent | visitField | visitMethod )
+// * visitEnd
+// 字节码提升框架，Spring 中进行了内联，通过不同的版本来直接操作字节码。
+//
+//	Visitor 访问者模式：实现了语法分析。
 public abstract class ClassVisitor {
 
   /**
    * The ASM API version implemented by this visitor. The value of this field must be one of the
    * {@code ASM}<i>x</i> values in {@link Opcodes}.
    */
+  // 此访问者实现的 ASM API 版本。该字段的值必须是操作码 {@link org.springframework.asm.Opcodes}.中的 ASMx 值之一。
   protected final int api;
 
   /** The class visitor to which this visitor must delegate method calls. May be {@literal null}. */
+  // 此访问者 visitor 必须将方法调用委托给的类访问者。可能为空。
   protected ClassVisitor cv;
 
   /**
@@ -54,18 +63,23 @@ public abstract class ClassVisitor {
    * @param api the ASM API version implemented by this visitor. Must be one of the {@code
    *     ASM}<i>x</i> values in {@link Opcodes}.
    */
+  // 构造一个新的 {@link org.springframework.asm.ClassVisitor}
+  // @param api 此访问者实现的 ASM API 版本。必须是 {@link Opcodes} 中的 {@code ASM}<i>x<i> 值之一。
   public ClassVisitor(final int api) {
     this(api, null);
   }
 
   /**
    * Constructs a new {@link ClassVisitor}.
+   *@param api the ASM API version implemented by this visitor. Must be one of the {@code
+   *    *     ASM}<i>x</i> values in {@link Opcodes}.
    *
-   * @param api the ASM API version implemented by this visitor. Must be one of the {@code
-   *     ASM}<i>x</i> values in {@link Opcodes}.
    * @param classVisitor the class visitor to which this visitor must delegate method calls. May be
    *     null.
    */
+  // 构造一个新的 {@link ClassVisitor}。
+  // @param api 此访问者实现的 ASM API 版本。必须是 {@link Opcodes} 中的 {@code ASM}<i>x<i> 值之一。
+  // @param classVisitor 此访问者必须委托方法调用的类访问者。可能为空。
   public ClassVisitor(final int api, final ClassVisitor classVisitor) {
     if (api != Opcodes.ASM9
         && api != Opcodes.ASM8
@@ -77,6 +91,7 @@ public abstract class ClassVisitor {
       throw new IllegalArgumentException("Unsupported api " + api);
     }
     // SPRING PATCH: no preview mode check for ASM experimental
+    // SPRING PATCH：ASM 实验没有预览模式检查
     this.api = api;
     this.cv = classVisitor;
   }
@@ -98,6 +113,15 @@ public abstract class ClassVisitor {
    * @param interfaces the internal names of the class's interfaces (see {@link
    *     Type#getInternalName()}). May be {@literal null}.
    */
+  // 访问类的标题
+  // @param version 类版本。次要版本存储在 16 个最高有效位中，而主要版本存储在 16 个最低有效位中。
+  // @param access 类的访问标志（参见 {@link Opcodes}）。此参数还指示类是否已弃用
+  // {@link OpcodesACC_DEPRECATED} 或记录 {@link OpcodesACC_RECORD}。
+  // @param name 类的内部名称（请参阅 {@link TypegetInternalName()}）。
+  // @param signature 这个类的签名。如果类不是通用类，并且不扩展或实现通用类或接口，则可能为 {@literal null}。
+  // @param superName 超类的内部名称（参见 {@link TypegetInternalName()}）。对于接口，超类是 {@link Object}。
+  // 可能是 {@literal null}，但仅适用于 {@link Object} 类。
+  // @param interfaces 类接口的内部名称（参见 {@link TypegetInternalName()}）。可能是 {@literal null}。
   public void visit(
       final int version,
       final int access,
@@ -121,6 +145,9 @@ public abstract class ClassVisitor {
    * @param debug additional debug information to compute the correspondence between source and
    *     compiled elements of the class. May be {@literal null}.
    */
+  // 访问类的源
+  // @param source 编译类的源文件的名称。可能是 {@literal null}。
+  // @param debug 额外的调试信息来计算类的源元素和编译元素之间的对应关系。可能是 {@literal null}。
   public void visitSource(final String source, final String debug) {
     if (cv != null) {
       cv.visitSource(source, debug);
@@ -137,6 +164,9 @@ public abstract class ClassVisitor {
    * @return a visitor to visit the module values, or {@literal null} if this visitor is not
    *     interested in visiting this module.
    */
+  // 访问类对应的模块
+  // @param name 模块的完全限定名称（使用点）
+  // @param access 模块访问标志，包括 {@code ACC_OPEN}、{@code ACC_SYNTHETIC} 和 {@code ACC_MANDATED}。
   public ModuleVisitor visitModule(final String name, final int access, final String version) {
     if (api < Opcodes.ASM6) {
       throw new UnsupportedOperationException("Module requires ASM6");
@@ -157,6 +187,11 @@ public abstract class ClassVisitor {
    *
    * @param nestHost the internal name of the host class of the nest.
    */
+  // 访问类的嵌套宿主类。嵌套是同一包的一组类，它们共享对其私有成员的访问权限。其中一个称为宿主的类列出了内部的其他成员，
+  // 而这些成员又应该链接到它们的宿主。此方法必须只调用一次，并且仅当被访问的类是嵌套的非主机成员时。
+  // 一个类隐式是它自己的嵌套，因此以被访问的类名作为参数调用此方法是无效的。
+  //
+  // @param nestHost 内部类的宿主类的内部名称
   public void visitNestHost(final String nestHost) {
     if (api < Opcodes.ASM7) {
       throw new UnsupportedOperationException("NestHost requires ASM7");

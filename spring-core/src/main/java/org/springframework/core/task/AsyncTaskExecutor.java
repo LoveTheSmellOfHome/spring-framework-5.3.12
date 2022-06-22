@@ -39,12 +39,22 @@ import java.util.concurrent.Future;
  * @see java.util.concurrent.Callable
  * @see java.util.concurrent.Executors
  */
+// {@link TaskExecutor} 实现的异步扩展接口，提供带有启动超时参数的重载 {@link #execute(Runnable, long)}
+// 变体以及对 {@link java.util.concurrent.Callable} 的支持。
+//
+// <p>注意：{@link java.util.concurrent.Executors} 类包含一组方法，可以将一些其他常见的类似闭包的对象，
+// 例如，{@link java.security.PrivilegedAction} 转换为 {@link Callable} 在执行它们之前。
+//
+// <p>实现这个接口也表明 {@link #execute(Runnable)} 方法不会在调用者的线程中执行它的 Runnable，
+// 而是在其他一些线程中异步执行。
 public interface AsyncTaskExecutor extends TaskExecutor {
 
 	/** Constant that indicates immediate execution. */
+	// 表示立即执行的常量
 	long TIMEOUT_IMMEDIATE = 0;
 
 	/** Constant that indicates no time limit. */
+	// 表示没有时间限制的常数
 	long TIMEOUT_INDEFINITE = Long.MAX_VALUE;
 
 
@@ -59,6 +69,13 @@ public interface AsyncTaskExecutor extends TaskExecutor {
 	 * of the timeout (i.e. it cannot be started in time)
 	 * @throws TaskRejectedException if the given task was not accepted
 	 */
+	// 执行给定的 {@code task}
+	// @param task {@code Runnable} 执行任务（从不{@code null}）
+	// @param startTimeout 任务应该开始的持续时间（毫秒）。
+	// 这旨在作为对执行者的提示，允许优先处理即时任务。典型值为 {@link TIMEOUT_IMMEDIATE} 或
+	// {@link TIMEOUT_INDEFINITE}（{@link execute(Runnable)} 使用的默认值）
+	// @throws TaskTimeoutException，以防任务因超时而被拒绝（即无法及时启动）
+	// @throws TaskRejectedException 如果给定的任务未被接受
 	void execute(Runnable task, long startTimeout);
 
 	/**
@@ -69,6 +86,10 @@ public interface AsyncTaskExecutor extends TaskExecutor {
 	 * @throws TaskRejectedException if the given task was not accepted
 	 * @since 3.0
 	 */
+	// 提交 Runnable 任务以执行，接收代表该任务的 Future。 Future 将在完成后返回 {@code null} 结果。
+	// @param task {@code Runnable} 执行任务（从不{@code null}）
+	// @return 代表待完成任务的 Future
+	// @throws TaskRejectedException 如果给定的任务未被接受
 	Future<?> submit(Runnable task);
 
 	/**
@@ -79,6 +100,9 @@ public interface AsyncTaskExecutor extends TaskExecutor {
 	 * @throws TaskRejectedException if the given task was not accepted
 	 * @since 3.0
 	 */
+	// 提交 Callable 执行任务，接收代表该任务的 Future。 Future 将在完成后返回 Callable 的结果
+	// @param task {@code Callable} 执行任务（从不{@code null}）
+	// @throws TaskRejectedException 如果给定的任务未被接受
 	<T> Future<T> submit(Callable<T> task);
 
 }

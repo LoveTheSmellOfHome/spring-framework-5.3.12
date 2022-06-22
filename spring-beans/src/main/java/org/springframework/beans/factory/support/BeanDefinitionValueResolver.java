@@ -58,6 +58,10 @@ import org.springframework.util.StringUtils;
  * @since 1.2
  * @see AbstractAutowireCapableBeanFactory
  */
+// 用于 bean 工厂实现的帮助类，将 bean 定义对象中包含的值解析为应用于目标 bean 实例的实际值。
+//
+// 对 AbstractBeanFactory 和一个普通的 BeanDefinition 对象进行操作。
+// 由 AbstractAutowireCapableBeanFactory 使用。
 class BeanDefinitionValueResolver {
 
 	private final AbstractAutowireCapableBeanFactory beanFactory;
@@ -66,6 +70,7 @@ class BeanDefinitionValueResolver {
 
 	private final BeanDefinition beanDefinition;
 
+	// 类型转换器，非线程安全实现
 	private final TypeConverter typeConverter;
 
 
@@ -104,10 +109,19 @@ class BeanDefinitionValueResolver {
 	 * @param value the value object to resolve
 	 * @return the resolved object
 	 */
+	// 给定一个 PropertyValue，返回一个值，必要时解析对工厂中其他 bean 的任何引用。该值可能是：
+	// <li>一个 BeanDefinition，它导致创建一个相应的新 bean 实例。此类“内部 bean”的单例标志和名称始终被忽略：
+	// 内部 bean 是匿名原型。
+	// <li>必须解析的 RuntimeBeanReference。
+	// <li>托管列表 ManagedList。这是一个特殊的集合，可能包含需要解析的 RuntimeBeanReferences 或 Collections。
+	// <li>托管集 ManagedSet。可能还包含需要解析的 RuntimeBeanReferences 或 Collections。
+	// <li>托管地图 ManagedMap。在这种情况下，该值可能是需要解析的 RuntimeBeanReference 或 Collection。
+	// <li>一个普通对象或 {@code null}，在这种情况下它是单独存在的。
 	@Nullable
 	public Object resolveValueIfNecessary(Object argName, @Nullable Object value) {
 		// We must check each value to see whether it requires a runtime reference
 		// to another bean to be resolved.
+		// 我们必须检查每个值以查看它是否需要对另一个要解析的 bean 的运行时引用。
 		if (value instanceof RuntimeBeanReference) {
 			RuntimeBeanReference ref = (RuntimeBeanReference) value;
 			return resolveReference(argName, ref);
@@ -232,6 +246,9 @@ class BeanDefinitionValueResolver {
 	 * @param value the candidate value (may be an expression)
 	 * @return the resolved value
 	 */
+	// 如有必要，将给定值计算为表达式。
+	// @param value 候选值（可能是一个表达式）
+	// @return 解析后的值
 	@Nullable
 	protected Object evaluate(TypedStringValue value) {
 		Object result = doEvaluate(value.getValue());

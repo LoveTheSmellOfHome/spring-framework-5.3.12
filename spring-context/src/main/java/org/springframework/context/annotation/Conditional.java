@@ -56,6 +56,31 @@ import java.lang.annotation.Target;
  * @since 4.0
  * @see Condition
  */
+// 表示只有在所有指定条件都匹配时，组件才有资格注册
+//
+// 条件是可以在注册 bean 定义之前以编程方式确定的任何状态（有关详细信息，请参阅{@link Condition}）
+//
+// @Conditional 注释可以通过以下任何一种方式使用：
+// 作为任何直接或间接用@Component 注释的类的类型级注释，包括@Configuration 类
+// 作为元注释，用于编写自定义构造型注释
+// 作为任何@Bean 方法的方法级注解
+//
+// 如果@Configuration 类用@Conditional 标记，则与该类关联的所有@Bean 方法、@Import 注释和@ComponentScan 注释都将受条件约束。
+//
+// 注意：不支持@Conditional 注解的继承；不会考虑来自超类或覆盖方法的任何条件。为了强制执行这些语义，
+// @Conditional 本身没有声明为@Inherited；此外，任何使用@Conditional 元注释的自定义组合注释不得声明为@Inherited。
+//
+// Bean 有条件的进行加载
+//
+// 基于编程条件注解-@Conditional
+//		关联对象：- {@link org.springframework.context.annotation.Condition}
+//	@Conditional 实现原理
+//
+//+ 上下文对象 - org.springframework.context.annotation.ConditionContext
+//+ 条件判断 - org.springframework.context.annotation.ConditionEvaluator
+//+ 配置阶段 org.springframework.context.annotation.ConfigurationCondition.ConfigurationPhase
+//+ 判断入口 - org.springframework.context.annotation.ConfigurationClassPostProcessor
+//  + org.springframework.context.annotation.ConfigurationClassParser
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -65,6 +90,7 @@ public @interface Conditional {
 	 * All {@link Condition} classes that must {@linkplain Condition#matches match}
 	 * in order for the component to be registered.
 	 */
+	// 必须匹配才能注册组件的所有条件类
 	Class<? extends Condition>[] value();
 
 }

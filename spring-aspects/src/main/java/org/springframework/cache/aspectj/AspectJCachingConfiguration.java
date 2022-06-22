@@ -34,6 +34,7 @@ import org.springframework.context.annotation.Role;
  * @see org.springframework.cache.annotation.EnableCaching
  * @see org.springframework.cache.annotation.CachingConfigurationSelector
  */
+// @Configuration类，它注册启用基于 AspectJ 的注解驱动的缓存管理所需的 Spring 基础设施 bean。
 @Configuration(proxyBeanMethods = false)
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class AspectJCachingConfiguration extends AbstractCachingConfiguration {

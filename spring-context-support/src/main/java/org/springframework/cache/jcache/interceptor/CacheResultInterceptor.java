@@ -34,6 +34,7 @@ import org.springframework.util.SerializationUtils;
  * @author Stephane Nicoll
  * @since 4.1
  */
+// 使用 @CacheResult 注解的拦截方法。
 @SuppressWarnings("serial")
 class CacheResultInterceptor extends AbstractKeyCacheInterceptor<CacheResultOperation, CacheResult> {
 
@@ -76,6 +77,7 @@ class CacheResultInterceptor extends AbstractKeyCacheInterceptor<CacheResultOper
 	/**
 	 * Check for a cached exception. If the exception is found, throw it directly.
 	 */
+	// 检查缓存的异常。如果发现异常，直接抛出。
 	protected void checkForCachedException(@Nullable Cache exceptionCache, Object cacheKey) {
 		if (exceptionCache == null) {
 			return;
@@ -122,6 +124,16 @@ class CacheResultInterceptor extends AbstractKeyCacheInterceptor<CacheResultOper
 	 * {@code methodName} arguments, followed by stack trace elements of the specified
 	 * {@code exception} after the common ancestor.
 	 */
+	// 重写指定 exception 的调用堆栈，使其匹配当前调用堆栈直到（包括）指定的方法调用。
+	// 克隆指定的异常。如果异常不可 serializable ，则返回原始异常。如果找不到共同的祖先，则返回原始异常。
+	// 用于确保缓存的异常具有有效的调用上下文。
+	// 参形：
+	//			exception – 与当前调用堆栈合并的异常
+	//			className – 共同祖先的类名
+	//			methodName – 共同祖先的方法名称
+	// 返回值：
+	//			具有重写调用堆栈的克隆异常，该调用堆栈由当前调用堆栈组成，直到（包括）由 className和methodName 参数
+	//			指定的公共祖先，然后是公共祖先之后指定 exception 的堆栈跟踪元素。
 	private static CacheOperationInvoker.ThrowableWrapper rewriteCallStack(
 			Throwable exception, String className, String methodName) {
 

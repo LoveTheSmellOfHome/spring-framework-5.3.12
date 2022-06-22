@@ -28,21 +28,28 @@ import org.springframework.lang.Nullable;
  * @author Rob Harrop
  * @since 2.0
  */
+// 可用于任何 AspectJ 切入点表达式的 Spring AOP Advisor
 @SuppressWarnings("serial")
 public class AspectJExpressionPointcutAdvisor extends AbstractGenericPointcutAdvisor implements BeanFactoryAware {
 
+	// Spring 支持的 AspectJ 原语表达式
 	private final AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
 
-
+	// 传递表达式
 	public void setExpression(@Nullable String expression) {
+		// 将表达式透传到 Pointcut,最终帮助 Pointcut 来筛选，这里告诉我们一个事实就是这里的实现基于 Pointcut
+		// 来设置我们的表达式。同时利用 AspectJ 表达式的能力来获取我们相应的元信息的能力。因为 Spring 只支持方法
+		// 级别的拦截，所以这里的 Joinpoint 是一个方法级别的 Joinpoint.关于这里的元信息就是指反射中的 Method
 		this.pointcut.setExpression(expression);
 	}
 
+	// 获取表达式
 	@Nullable
 	public String getExpression() {
 		return this.pointcut.getExpression();
 	}
 
+	// location 是 Pointcut 的元信息
 	public void setLocation(@Nullable String location) {
 		this.pointcut.setLocation(location);
 	}
@@ -60,6 +67,7 @@ public class AspectJExpressionPointcutAdvisor extends AbstractGenericPointcutAdv
 		this.pointcut.setParameterTypes(types);
 	}
 
+	// 和 IoC 容器进行关联
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) {
 		this.pointcut.setBeanFactory(beanFactory);

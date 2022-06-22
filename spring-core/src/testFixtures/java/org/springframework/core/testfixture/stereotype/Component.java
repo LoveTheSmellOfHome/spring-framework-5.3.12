@@ -28,6 +28,7 @@ import java.lang.annotation.Target;
  * @author Mark Fisher
  * @since 2.5
  */
+// 用于测试目的的标准 {@code Component} 注释的副本
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -39,6 +40,8 @@ public @interface Component {
 	 * to be turned into a Spring bean in case of an autodetected component.
 	 * @return the suggested component name, if any (or empty String otherwise)
 	 */
+	// 该值可能指示对逻辑组件名称的建议，在自动检测到的组件的情况下将其转换为 Spring bean。
+	// @return 建议的组件名称，如果有的话（否则为空字符串）
 	String value() default "";
 
 }

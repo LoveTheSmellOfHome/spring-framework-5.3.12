@@ -51,24 +51,29 @@ import org.springframework.util.StringUtils;
  * @author Sam Brannen
  * @since 1.1
  */
+// 在 BeanFactories 中使用的默认对象实例化策略。
+// <p>如果方法需要被容器覆盖以实现<em>方法注入<em>，则使用 CGLIB 动态生成子类。
 public class CglibSubclassingInstantiationStrategy extends SimpleInstantiationStrategy {
 
 	/**
 	 * Index in the CGLIB callback array for passthrough behavior,
 	 * in which case the subclass won't override the original class.
 	 */
+	// 传递行为的 CGLIB 回调数组中的索引，在这种情况下，子类不会覆盖原始类。
 	private static final int PASSTHROUGH = 0;
 
 	/**
 	 * Index in the CGLIB callback array for a method that should
 	 * be overridden to provide <em>method lookup</em>.
 	 */
+	// CGLIB 回调数组中的索引应该被覆盖以提供<em>方法查找<em>
 	private static final int LOOKUP_OVERRIDE = 1;
 
 	/**
 	 * Index in the CGLIB callback array for a method that should
 	 * be overridden using generic <em>method replacer</em> functionality.
 	 */
+	// CGLIB 回调数组中的索引，用于应使用通用<em>方法替换器<em> 功能覆盖的方法
 	private static final int METHOD_REPLACER = 2;
 
 
@@ -82,6 +87,7 @@ public class CglibSubclassingInstantiationStrategy extends SimpleInstantiationSt
 			@Nullable Constructor<?> ctor, Object... args) {
 
 		// Must generate CGLIB subclass...
+		// 必须生成CGLIB子类...
 		return new CglibSubclassCreator(bd, owner).instantiate(ctor, args);
 	}
 
@@ -90,6 +96,7 @@ public class CglibSubclassingInstantiationStrategy extends SimpleInstantiationSt
 	 * An inner class created for historical reasons to avoid external CGLIB dependency
 	 * in Spring versions earlier than 3.2.
 	 */
+	// 出于历史原因创建的内部类，以避免在早于 3.2 的 Spring 版本中产生外部 CGLIB 依赖。
 	private static class CglibSubclassCreator {
 
 		private static final Class<?>[] CALLBACK_TYPES = new Class<?>[]
@@ -113,6 +120,10 @@ public class CglibSubclassingInstantiationStrategy extends SimpleInstantiationSt
 		 * Ignored if the {@code ctor} parameter is {@code null}.
 		 * @return new instance of the dynamically generated subclass
 		 */
+		// 创建动态生成的子类的新实例，实现所需的查找。要使用的 @param ctor 构造函数。
+		// 如果这是 {@code null}，请使用无参数构造函数（无参数化或 Setter 注入）
+		// @param args 参数用于构造函数。如果 {@code ctor} 参数为 {@code null}，则忽略。
+		// @return 动态生成的子类的新实例
 		public Object instantiate(@Nullable Constructor<?> ctor, Object... args) {
 			Class<?> subclass = createEnhancedSubclass(this.beanDefinition);
 			Object instance;
@@ -131,6 +142,7 @@ public class CglibSubclassingInstantiationStrategy extends SimpleInstantiationSt
 			}
 			// SPR-10785: set callbacks directly on the instance instead of in the
 			// enhanced class (via the Enhancer) in order to avoid memory leaks.
+			// SPR-10785：直接在实例上而不是在增强类中（通过增强器）设置回调以避免内存泄漏
 			Factory factory = (Factory) instance;
 			factory.setCallbacks(new Callback[] {NoOp.INSTANCE,
 					new LookupOverrideMethodInterceptor(this.beanDefinition, this.owner),
@@ -142,6 +154,7 @@ public class CglibSubclassingInstantiationStrategy extends SimpleInstantiationSt
 		 * Create an enhanced subclass of the bean class for the provided bean
 		 * definition, using CGLIB.
 		 */
+		// 使用 CGLIB，为提供的 bean 定义创建 bean 类的增强子类
 		private Class<?> createEnhancedSubclass(RootBeanDefinition beanDefinition) {
 			Enhancer enhancer = new Enhancer();
 			enhancer.setSuperclass(beanDefinition.getBeanClass());
@@ -162,6 +175,7 @@ public class CglibSubclassingInstantiationStrategy extends SimpleInstantiationSt
 	 * ensure that CGLIB doesn't generate a distinct class per bean.
 	 * Identity is based on class and bean definition.
 	 */
+	// 类提供 CGLIB 所需的 hashCode 和 equals 方法，以确保 CGLIB 不会为每个 bean 生成不同的类。 标识基于类和 bean 定义
 	private static class CglibIdentitySupport {
 
 		private final RootBeanDefinition beanDefinition;
@@ -190,6 +204,7 @@ public class CglibSubclassingInstantiationStrategy extends SimpleInstantiationSt
 	/**
 	 * CGLIB callback for filtering method interception behavior.
 	 */
+	// 用于过滤方法拦截行为的 CGLIB 回调
 	private static class MethodOverrideCallbackFilter extends CglibIdentitySupport implements CallbackFilter {
 
 		private static final Log logger = LogFactory.getLog(MethodOverrideCallbackFilter.class);
@@ -223,6 +238,7 @@ public class CglibSubclassingInstantiationStrategy extends SimpleInstantiationSt
 	 * CGLIB MethodInterceptor to override methods, replacing them with an
 	 * implementation that returns a bean looked up in the container.
 	 */
+	// CGLIB MethodInterceptor 覆盖方法，用返回在容器中查找的 bean 的实现替换它们
 	private static class LookupOverrideMethodInterceptor extends CglibIdentitySupport implements MethodInterceptor {
 
 		private final BeanFactory owner;
@@ -235,17 +251,20 @@ public class CglibSubclassingInstantiationStrategy extends SimpleInstantiationSt
 		@Override
 		public Object intercept(Object obj, Method method, Object[] args, MethodProxy mp) throws Throwable {
 			// Cast is safe, as CallbackFilter filters are used selectively.
+			// Cast 是安全的，因为有选择地使用 CallbackFilter 过滤器
 			LookupOverride lo = (LookupOverride) getBeanDefinition().getMethodOverrides().getOverride(method);
 			Assert.state(lo != null, "LookupOverride not found");
-			Object[] argsToUse = (args.length > 0 ? args : null);  // if no-arg, don't insist on args at all
+			Object[] argsToUse = (args.length > 0 ? args : null);  // if no-arg, don't insist on args at all,如果没有 arg，则根本不要坚持使用 args
 			if (StringUtils.hasText(lo.getBeanName())) {
 				Object bean = (argsToUse != null ? this.owner.getBean(lo.getBeanName(), argsToUse) :
 						this.owner.getBean(lo.getBeanName()));
 				// Detect package-protected NullBean instance through equals(null) check
+				// 通过 equals(null) 检查检测包保护的 NullBean 实例
 				return (bean.equals(null) ? null : bean);
 			}
 			else {
 				// Find target bean matching the (potentially generic) method return type
+				// 查找与（可能是通用的）方法返回类型匹配的目标 bean
 				ResolvableType genericReturnType = ResolvableType.forMethodReturnType(method);
 				return (argsToUse != null ? this.owner.getBeanProvider(genericReturnType).getObject(argsToUse) :
 						this.owner.getBeanProvider(genericReturnType).getObject());
@@ -258,6 +277,7 @@ public class CglibSubclassingInstantiationStrategy extends SimpleInstantiationSt
 	 * CGLIB MethodInterceptor to override methods, replacing them with a call
 	 * to a generic MethodReplacer.
 	 */
+	// CGLIB MethodInterceptor 覆盖方法，将它们替换为对通用 MethodReplacer 的调用。
 	private static class ReplaceOverrideMethodInterceptor extends CglibIdentitySupport implements MethodInterceptor {
 
 		private final BeanFactory owner;

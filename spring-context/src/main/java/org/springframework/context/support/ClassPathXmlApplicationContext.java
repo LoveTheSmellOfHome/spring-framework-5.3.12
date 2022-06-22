@@ -49,6 +49,18 @@ import org.springframework.util.Assert;
  * @see #getResourceByPath
  * @see GenericApplicationContext
  */
+// 独立的 XML 应用程序上下文，从类路径中获取上下文定义文件，将普通路径解释为包含包路径的类路径资源名称
+// （例如“mypackage/myresource.txt”）。对于测试工具以及嵌入在 JAR 中的应用程序上下文很有用
+//
+// <p>配置位置默认值可以通过 {@link getConfigLocations} 覆盖，配置位置可以表示具体文件，
+// 如“/myfiles/context.xml”或Ant 样式模式，如“/myfiles/*-context.xml”（参见
+// {@link org .springframework.util.AntPathMatcher} 模式详细信息的 javadoc）
+//
+// <p>注意：在多个配置位置的情况下，稍后的 bean 定义将覆盖在先前加载的文件中定义的那些。这可以用来通过额外的 XML 文件
+// 故意覆盖某些 bean 定义
+//
+// <p><b>这是一个简单的、一站式便利的ApplicationContext。考虑将 {@link GenericApplicationContext} 类与
+// {@link org.springframework.beans.factory.xml.XmlBeanDefinitionReader} 结合使用，以获得更灵活的上下文设置。<b>
 public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContext {
 
 	@Nullable
@@ -61,6 +73,7 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 	 * @see #setConfigLocations
 	 * @see #afterPropertiesSet()
 	 */
+	// 为 bean 样式配置创建一个新的 ClassPathXmlApplicationContext。
 	public ClassPathXmlApplicationContext() {
 	}
 
@@ -71,6 +84,7 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 	 * @see #setConfigLocations
 	 * @see #afterPropertiesSet()
 	 */
+	// 为 bean 样式配置创建一个新的 ClassPathXmlApplicationContext
 	public ClassPathXmlApplicationContext(ApplicationContext parent) {
 		super(parent);
 	}
@@ -81,6 +95,7 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 	 * @param configLocation resource location
 	 * @throws BeansException if context creation failed
 	 */
+	// 创建一个新的 ClassPathXmlApplicationContext，从给定的 XML 文件加载定义并自动刷新上下文
 	public ClassPathXmlApplicationContext(String configLocation) throws BeansException {
 		this(new String[] {configLocation}, true, null);
 	}
@@ -91,6 +106,8 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 	 * @param configLocations array of resource locations
 	 * @throws BeansException if context creation failed
 	 */
+	// 创建一个新的 ClassPathXmlApplicationContext，从给定的 XML 文件加载定义并自动刷新上下文。
+	// @param configLocations 资源位置数组
 	public ClassPathXmlApplicationContext(String... configLocations) throws BeansException {
 		this(configLocations, true, null);
 	}
@@ -103,6 +120,12 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 	 * @param parent the parent context
 	 * @throws BeansException if context creation failed
 	 */
+	// 使用给定的父级创建一个新的 ClassPathXmlApplicationContext，从给定的 XML 文件加载定义并自动刷新上下文。
+	// 参形：
+	//			configLocations – 资源位置数组
+	//			parent – 父上下文
+	// 抛出：
+	//			BeansException – 如果上下文创建失败
 	public ClassPathXmlApplicationContext(String[] configLocations, @Nullable ApplicationContext parent)
 			throws BeansException {
 
@@ -119,6 +142,12 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 	 * @throws BeansException if context creation failed
 	 * @see #refresh()
 	 */
+	// 创建一个新的 ClassPathXmlApplicationContext，从给定的 XML 文件加载定义。
+	// 参形：
+	//			configLocations – 资源位置数组
+	//			refresh – 是否自动刷新上下文，加载所有 bean 定义并创建所有单例。 或者，在进一步配置上下文后手动调用刷新。
+	// 抛出：
+	//			BeansException – 如果上下文创建失败
 	public ClassPathXmlApplicationContext(String[] configLocations, boolean refresh) throws BeansException {
 		this(configLocations, refresh, null);
 	}
@@ -134,6 +163,14 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 	 * @throws BeansException if context creation failed
 	 * @see #refresh()
 	 */
+	// 使用给定的父级创建一个新的 ClassPathXmlApplicationContext，从给定的 XML 文件加载定义。
+	// 参形：
+	//			configLocations – 资源位置数组
+	//			refresh – 是否自动刷新上下文，加载所有 bean 定义并创建所有单例。
+	//			或者，在进一步配置上下文后手动调用刷新。
+	//			parent – 父上下文
+	// 抛出：
+	//			BeansException – 如果上下文创建失败
 	public ClassPathXmlApplicationContext(
 			String[] configLocations, boolean refresh, @Nullable ApplicationContext parent)
 			throws BeansException {
@@ -141,6 +178,7 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 		super(parent);
 		setConfigLocations(configLocations);
 		if (refresh) {
+			// 自动启动 Spring 容器
 			refresh();
 		}
 	}

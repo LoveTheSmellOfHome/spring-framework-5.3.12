@@ -31,6 +31,7 @@ import org.springframework.util.StringUtils;
  * @since 2.0.3
  * @see AbstractAutoProxyCreator
  */
+// 自动代理感知组件的实用程序。主要供框架内部使用。
 public abstract class AutoProxyUtils {
 
 	/**
@@ -42,6 +43,11 @@ public abstract class AutoProxyUtils {
 	 * to its target class (even if AOP advices get applied through auto-proxying).
 	 * @see #shouldProxyTargetClass
 	 */
+	// Bean 定义属性，它可以指示给定的 bean 是否应该与其目标类一起代理（以防它首先被代理）。该值为
+	// Boolean.TRUE 或 Boolean.FALSE 。
+	//
+	// 如果代理工厂为特定 bean 构建了目标类代理，并且希望强制该 bean 始终可以转换为其目标类（即使 AOP 建议通过
+	// 自动代理应用），则可以设置此属性。
 	public static final String PRESERVE_TARGET_CLASS_ATTRIBUTE =
 			Conventions.getQualifiedAttributeName(AutoProxyUtils.class, "preserveTargetClass");
 
@@ -52,6 +58,7 @@ public abstract class AutoProxyUtils {
 	 * @since 4.2.3
 	 * @see #determineTargetClass
 	 */
+	// 指示自动代理 bean 的原始目标类的 bean 定义属性，例如用于在基于接口的代理后面的目标类上的注解的自省。
 	public static final String ORIGINAL_TARGET_CLASS_ATTRIBUTE =
 			Conventions.getQualifiedAttributeName(AutoProxyUtils.class, "originalTargetClass");
 
@@ -65,6 +72,12 @@ public abstract class AutoProxyUtils {
 	 * @param beanName the name of the bean
 	 * @return whether the given bean should be proxied with its target class
 	 */
+	// 确定给定的 bean 是否应该使用它的目标类而不是它的接口来代理。检查相应 bean 定义的"preserveTargetClass" attribute 。
+	// 参形：
+	//			beanFactory - 包含 ConfigurableListableBeanFactory
+	//			beanName – bean 的名称
+	// 返回值：
+	//			给定的 bean 是否应该用它的目标类代理
 	public static boolean shouldProxyTargetClass(
 			ConfigurableListableBeanFactory beanFactory, @Nullable String beanName) {
 
@@ -84,6 +97,12 @@ public abstract class AutoProxyUtils {
 	 * @since 4.2.3
 	 * @see org.springframework.beans.factory.BeanFactory#getType(String)
 	 */
+	// 如果可能，确定指定 bean 的原始目标类，否则回退到常规getType查找。
+	// 参形：
+	//			beanFactory - 包含 ConfigurableListableBeanFactory
+	//			beanName – bean 的名称
+	// 返回值：
+	//			存储在 bean 定义中的原始目标类（如果有）
 	@Nullable
 	public static Class<?> determineTargetClass(
 			ConfigurableListableBeanFactory beanFactory, @Nullable String beanName) {
@@ -108,6 +127,11 @@ public abstract class AutoProxyUtils {
 	 * @param targetClass the corresponding target class
 	 * @since 4.2.3
 	 */
+	// 如果可能，公开指定 bean 的给定目标类。
+	// 参形：
+	//			beanFactory - 包含 ConfigurableListableBeanFactory
+	//			beanName – bean 的名称
+	//			targetClass – 对应的目标类
 	static void exposeTargetClass(
 			ConfigurableListableBeanFactory beanFactory, @Nullable String beanName, Class<?> targetClass) {
 
@@ -125,7 +149,12 @@ public abstract class AutoProxyUtils {
 	 * @since 5.1
 	 * @see AutowireCapableBeanFactory#ORIGINAL_INSTANCE_SUFFIX
 	 */
+	// 根据 AutowireCapableBeanFactory.ORIGINAL_INSTANCE_SUFFIX 确定给定的 bean 名称是否指示“原始实例”，跳过任何代理尝试。
+	// 参形：
+	//			beanName – bean 的名称
+	//			beanClass – 对应的 bean 类
 	static boolean isOriginalInstance(String beanName, Class<?> beanClass) {
+		// 判断同源的依据是根据后缀进行判断
 		if (!StringUtils.hasLength(beanName) || beanName.length() !=
 				beanClass.getName().length() + AutowireCapableBeanFactory.ORIGINAL_INSTANCE_SUFFIX.length()) {
 			return false;

@@ -34,6 +34,10 @@ import org.springframework.beans.factory.BeanDefinitionStoreException;
  * @since 18.12.2003
  * @see XmlBeanDefinitionReader#setDocumentReaderClass
  */
+// 用于解析包含 Spring bean 定义的 XML 文档的 SPI 扩展点。 {@link XmlBeanDefinitionReader} 用于实际解析 DOM 文档
+//
+// <p>根据要解析的文档实例化：实现可以在 {@code registerBeanDefinitions} 方法的执行期间在实例变量中保存状态——例如，
+// 为文档中的所有 bean 定义定义的全局设置。
 public interface BeanDefinitionDocumentReader {
 
 	/**
@@ -44,6 +48,10 @@ public interface BeanDefinitionDocumentReader {
 	 * (includes the target registry and the resource being parsed)
 	 * @throws BeanDefinitionStoreException in case of parsing errors
 	 */
+	// 从给定的 DOM 文档中读取 bean 定义，并将它们注册到给定阅读器上下文中的注册表中
+	// @param doc DOM 文档
+	// @param readerContext 读取器的当前上下文（包括目标注册表和正在解析的资源）
+	// 解析错误时@throws BeanDefinitionStoreException
 	void registerBeanDefinitions(Document doc, XmlReaderContext readerContext)
 			throws BeanDefinitionStoreException;
 

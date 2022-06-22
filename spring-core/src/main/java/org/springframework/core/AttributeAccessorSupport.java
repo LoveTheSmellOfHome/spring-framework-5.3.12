@@ -16,14 +16,14 @@
 
 package org.springframework.core;
 
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
-
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * Support class for {@link AttributeAccessor AttributeAccessors}, providing
@@ -36,10 +36,13 @@ import org.springframework.util.StringUtils;
  * @author Sam Brannen
  * @since 2.0
  */
+// 支持 AttributeAccessors 类，提供所有方法的基本实现。由子类扩展。
+// 如果子类和所有属性值都是 Serializable ，则 Serializable
 @SuppressWarnings("serial")
 public abstract class AttributeAccessorSupport implements AttributeAccessor, Serializable {
 
 	/** Map with String keys and Object values. */
+	// 记录 Sring key 和 对象
 	private final Map<String, Object> attributes = new LinkedHashMap<>();
 
 
@@ -58,6 +61,7 @@ public abstract class AttributeAccessorSupport implements AttributeAccessor, Ser
 	@Nullable
 	public Object getAttribute(String name) {
 		Assert.notNull(name, "Name must not be null");
+		// 获取对象
 		return this.attributes.get(name);
 	}
 

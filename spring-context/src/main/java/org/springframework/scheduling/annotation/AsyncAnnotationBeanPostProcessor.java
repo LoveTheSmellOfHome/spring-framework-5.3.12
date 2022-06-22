@@ -16,13 +16,8 @@
 
 package org.springframework.scheduling.annotation;
 
-import java.lang.annotation.Annotation;
-import java.util.concurrent.Executor;
-import java.util.function.Supplier;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.aop.framework.autoproxy.AbstractBeanFactoryAwareAdvisingPostProcessor;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.beans.factory.BeanFactory;
@@ -30,6 +25,10 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.function.SingletonSupplier;
+
+import java.lang.annotation.Annotation;
+import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 /**
  * Bean post-processor that automatically applies asynchronous invocation
@@ -61,6 +60,15 @@ import org.springframework.util.function.SingletonSupplier;
  * @see #setBeforeExistingAdvisors
  * @see ScheduledAnnotationBeanPostProcessor
  */
+// 通过将相应的 Async AsyncAnnotationAdvisor 到暴露的代理（现有的 AOP 代理或新生成的实现所有目标接口）。
+//
+// 可以提供负责异步执行的 TaskExecutor 以及指示应该异步调用方法的注解类型。如果未指定注解类型，
+// 则此后处理器将检测 Spring 的 @Async 注解以及 EJB 3.1 javax.ejb.Asynchronous 注解。
+//
+// 对于返回类型为 void 的方法，调用者无法访问异步方法调用期间抛出的任何异常。可以
+// 指定 AsyncUncaughtExceptionHandler 来处理这些情况。
+//
+// 注意：默认情况下，底层异步顾问在现有顾问之前应用，以便在调用链中尽早切换到异步执行
 @SuppressWarnings("serial")
 public class AsyncAnnotationBeanPostProcessor extends AbstractBeanFactoryAwareAdvisingPostProcessor {
 
@@ -71,15 +79,19 @@ public class AsyncAnnotationBeanPostProcessor extends AbstractBeanFactoryAwareAd
 	 * @since 4.2
 	 * @see AnnotationAsyncExecutionInterceptor#DEFAULT_TASK_EXECUTOR_BEAN_NAME
 	 */
+	// 要获取的 TaskExecutor bean 的默认名称：“taskExecutor”。
+	// 请注意，初始查找是按类型进行的；这只是在上下文中发现多个执行器 bean 的情况下的后备。
 	public static final String DEFAULT_TASK_EXECUTOR_BEAN_NAME =
 			AnnotationAsyncExecutionInterceptor.DEFAULT_TASK_EXECUTOR_BEAN_NAME;
 
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
+	// 执行器
 	@Nullable
 	private Supplier<Executor> executor;
 
+	// 异步异常处理器
 	@Nullable
 	private Supplier<AsyncUncaughtExceptionHandler> exceptionHandler;
 
@@ -98,6 +110,7 @@ public class AsyncAnnotationBeanPostProcessor extends AbstractBeanFactoryAwareAd
 	 * applying the corresponding default if a supplier is not resolvable.
 	 * @since 5.1
 	 */
+	// 使用给定的执行程序和异常处理程序供应商配置此后处理器，如果供应商不可解析，则应用相应的默认值
 	public void configure(
 			@Nullable Supplier<Executor> executor, @Nullable Supplier<AsyncUncaughtExceptionHandler> exceptionHandler) {
 
@@ -114,6 +127,10 @@ public class AsyncAnnotationBeanPostProcessor extends AbstractBeanFactoryAwareAd
 	 * @see AnnotationAsyncExecutionInterceptor#getDefaultExecutor(BeanFactory)
 	 * @see #DEFAULT_TASK_EXECUTOR_BEAN_NAME
 	 */
+	// 设置异步调用方法时使用的Executor 。
+	// 
+	// 如果未指定，则将应用默认执行器解析：在上下文中搜索唯一的 TaskExecutor bean，否则搜索名
+	// 为 “taskExecutor” 的 Executor bean。如果两者都无法解析，则将在拦截器中创建本地默认执行器。
 	public void setExecutor(Executor executor) {
 		this.executor = SingletonSupplier.of(executor);
 	}
@@ -123,6 +140,7 @@ public class AsyncAnnotationBeanPostProcessor extends AbstractBeanFactoryAwareAd
 	 * exceptions thrown by asynchronous method executions.
 	 * @since 4.1
 	 */
+	// 设置 AsyncUncaughtExceptionHandler 以用于处理异步方法执行引发的未捕获异常。
 	public void setExceptionHandler(AsyncUncaughtExceptionHandler exceptionHandler) {
 		this.exceptionHandler = SingletonSupplier.of(exceptionHandler);
 	}
@@ -136,6 +154,12 @@ public class AsyncAnnotationBeanPostProcessor extends AbstractBeanFactoryAwareAd
 	 * methods of a given class) should be invoked asynchronously.
 	 * @param asyncAnnotationType the desired annotation type
 	 */
+	// 设置要在类或方法级别检测的“异步”注解类型。默认情况下，将检测Async注解和 EJB 3.1 javax.ejb.Asynchronous注解。
+	// 
+	// 这个 setter 属性的存在使得开发人员可以提供他们自己的（非 Spring 特定的） 注解类型来指示一个
+	// 方法（或给定类的所有方法）应该被异步调用。
+	// 参形：
+	//			asyncAnnotationType – 所需的注解类型
 	public void setAsyncAnnotationType(Class<? extends Annotation> asyncAnnotationType) {
 		Assert.notNull(asyncAnnotationType, "'asyncAnnotationType' must not be null");
 		this.asyncAnnotationType = asyncAnnotationType;
@@ -144,13 +168,18 @@ public class AsyncAnnotationBeanPostProcessor extends AbstractBeanFactoryAwareAd
 
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) {
+		// 关联 IoC 容器
 		super.setBeanFactory(beanFactory);
 
+		// 关联 AsyncAnnotationAdvisor.
 		AsyncAnnotationAdvisor advisor = new AsyncAnnotationAdvisor(this.executor, this.exceptionHandler);
 		if (this.asyncAnnotationType != null) {
+			// 设置异常注解类型
 			advisor.setAsyncAnnotationType(this.asyncAnnotationType);
 		}
+		// advisor 关联 IoC 容器
 		advisor.setBeanFactory(beanFactory);
+		// 在这里关联了  @EnableAsync 注解的 advisor
 		this.advisor = advisor;
 	}
 

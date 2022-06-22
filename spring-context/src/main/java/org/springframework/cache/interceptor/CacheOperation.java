@@ -31,6 +31,7 @@ import org.springframework.util.Assert;
  * @author Marcin Kamionowski
  * @since 3.1
  */
+// 缓存操作的基类。对应着注解 @Cacheable
 public abstract class CacheOperation implements BasicOperation {
 
 	private final String name;

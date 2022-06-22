@@ -46,6 +46,10 @@ import org.springframework.util.StringUtils;
  * package have been replaced by {@link SimpleAnnotationMetadataReadingVisitor}
  * and related classes for internal use within the framework.
  */
+// ASM 类访问器，它只查找类名和实现的类型，通过 {@link org.springframework.core.type.ClassMetadata} 接口
+// 暴露它们。
+//
+// 类元信息：ASM 实现
 @Deprecated
 class ClassMetadataReadingVisitor extends ClassVisitor implements ClassMetadata {
 

@@ -43,6 +43,7 @@ import org.springframework.util.ClassUtils;
  * @author Ramnivas Laddad
  * @since 2.0
  */
+// AbstractAdvisorAutoProxyCreator 子类公开 AspectJ 的调用上下文并在多条建议来自同一切面时理解 AspectJ 的建议优先级规则
 @SuppressWarnings("serial")
 public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProxyCreator {
 
@@ -65,12 +66,23 @@ public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProx
 	 * advisor should run first. "On the way out" of a join point, the highest
 	 * precedence advisor should run last.
 	 */
+	// 根据 AspectJ 优先级对提供的Advisor实例进行排序。
+	//
+	// 如果两条建议来自同一方面，它们将具有相同的顺序。然后根据以下规则进一步排序来自同一方面的建议：
+	//
+	//  >如果这对中的任何一个在通知之后，则最后声明的通知获得最高优先级（即最后运行）。
+	//  >否则，首先声明的通知获得最高优先级（即首先运行）。
+	//
+	// 重要提示：顾问按优先级排序，从最高优先级到最低优先级。 “在进入”连接点的途中，最高优先级的顾问应该首先运行。
+	// “在退出”连接点时，最高优先级的顾问应该最后运行。
+	//
+	// 模板模式
 	@Override
 	protected List<Advisor> sortAdvisors(List<Advisor> advisors) {
 		List<PartiallyComparableAdvisorHolder> partiallyComparableAdvisors = new ArrayList<>(advisors.size());
 		for (Advisor advisor : advisors) {
 			partiallyComparableAdvisors.add(
-					new PartiallyComparableAdvisorHolder(advisor, DEFAULT_PRECEDENCE_COMPARATOR));
+					new PartiallyComparableAdvisorHolder(advisor, DEFAULT_PRECEDENCE_COMPARATOR)); // 使用默认优先级比较器
 		}
 		List<PartiallyComparableAdvisorHolder> sorted = PartialOrder.sort(partiallyComparableAdvisors);
 		if (sorted != null) {
@@ -90,16 +102,22 @@ public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProx
 	 * <p>This additional advice is needed when using AspectJ pointcut expressions
 	 * and when using AspectJ-style advice.
 	 */
+	// 将 ExposeInvocationInterceptor 添加到建议链的开头。
+	// 当使用 AspectJ 切入点表达式和使用 AspectJ 样式的建议时，需要此附加建议
 	@Override
 	protected void extendAdvisors(List<Advisor> candidateAdvisors) {
+		// 使 Advisor 链具有 AspectJ 的能力
 		AspectJProxyUtils.makeAdvisorChainAspectJCapableIfNecessary(candidateAdvisors);
 	}
 
 	@Override
 	protected boolean shouldSkip(Class<?> beanClass, String beanName) {
 		// TODO: Consider optimization by caching the list of the aspect names
+		// TODO: 考虑通过缓存切面名称列表进行优化
+		// 获取所有的 Advisor
 		List<Advisor> candidateAdvisors = findCandidateAdvisors();
 		for (Advisor advisor : candidateAdvisors) {
+			// 如果是 AspectJPointcutAdvisor，并且 bean 名称和切面名称相同，跳过，排除框架内部的东西
 			if (advisor instanceof AspectJPointcutAdvisor &&
 					((AspectJPointcutAdvisor) advisor).getAspectName().equals(beanName)) {
 				return true;
@@ -112,6 +130,7 @@ public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProx
 	/**
 	 * Implements AspectJ's {@link PartialComparable} interface for defining partial orderings.
 	 */
+	// 实现 AspectJ 的 PartialOrder.PartialComparable 接口以定义部分排序。
 	private static class PartiallyComparableAdvisorHolder implements PartialComparable {
 
 		private final Advisor advisor;

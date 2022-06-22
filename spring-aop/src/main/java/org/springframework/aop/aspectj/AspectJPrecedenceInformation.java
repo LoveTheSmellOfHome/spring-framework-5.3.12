@@ -26,6 +26,8 @@ import org.springframework.core.Ordered;
  * @since 2.0
  * @see org.springframework.aop.aspectj.autoproxy.AspectJPrecedenceComparator
  */
+// 由可以提供按 AspectJ 的优先规则对通知/顾问进行排序所需的信息的类型实现的接口
+// 供用户实现的 AspectJ 排序接口
 public interface AspectJPrecedenceInformation extends Ordered {
 
 	// Implementation note:
@@ -34,25 +36,32 @@ public interface AspectJPrecedenceInformation extends Ordered {
 	// in order to sort advisors. This causes problems with the
 	// InstantiationModelAwarePointcutAdvisor which needs to delay creating
 	// its advice for aspects with non-singleton instantiation models.
+	//
+	// 实现说明：我们需要此接口提供的间接级别，否则 AspectJPrecedenceComparator 在所有情况下都必须向顾问询问其建议，以便对顾问进行排序。
+	// 这会导致 InstantiationModelAwarePointcutAdvisor 出现问题，需要延迟为非单例实例化模型的方面创建建议。
 
 	/**
 	 * Return the name of the aspect (bean) in which the advice was declared.
 	 */
+	// 返回声明通知的切面（bean）的名称。
 	String getAspectName();
 
 	/**
 	 * Return the declaration order of the advice member within the aspect.
 	 */
+	// 返回切面内通知成员的声明顺序。
 	int getDeclarationOrder();
 
 	/**
 	 * Return whether this is a before advice.
 	 */
+	// 返回这是否是之前的建议
 	boolean isBeforeAdvice();
 
 	/**
 	 * Return whether this is an after advice.
 	 */
+	// 返回这是否是事后建议
 	boolean isAfterAdvice();
 
 }

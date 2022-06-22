@@ -32,6 +32,14 @@ package org.springframework.aop;
  * @see Pointcut
  * @see MethodMatcher
  */
+// 限制切入点匹配或对给定目标类的介绍的过滤器。
+//
+// 可用作Pointcut一部分或用于 IntroductionAdvisor 的整个定位。
+//
+// 这个接口的具体实现通常应该提供Object.equals(Object)和Object.hashCode()正确实现，以便允许在
+// 缓存场景中使用过滤器——例如，在 CGLIB 生成的代理中。
+//
+// 类过滤器：判断这个类是不是符合条件的，可以自定义去实现
 @FunctionalInterface
 public interface ClassFilter {
 
@@ -40,12 +48,18 @@ public interface ClassFilter {
 	 * @param clazz the candidate target class
 	 * @return whether the advice should apply to the given target class
 	 */
+	// 切入点是否应该应用于给定的接口或目标类？
+	// 参形：
+	//			clazz – 候选目标类
+	// 返回值：
+	//			建议是否应适用于给定的目标类
 	boolean matches(Class<?> clazz);
 
 
 	/**
 	 * Canonical instance of a ClassFilter that matches all classes.
 	 */
+	// 匹配所有类的 ClassFilter 的规范实例。
 	ClassFilter TRUE = TrueClassFilter.INSTANCE;
 
 }

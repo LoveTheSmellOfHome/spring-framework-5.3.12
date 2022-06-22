@@ -29,6 +29,8 @@ import org.springframework.lang.Nullable;
  * @author Stephane Nicoll
  * @since 4.1
  */
+// 抽象缓存操作的调用。
+// 不提供传输检查异常的方法，但提供一个特殊异常，用于包装底层调用引发的任何异常。调用者应专门处理此问题类型。
 @FunctionalInterface
 public interface CacheOperationInvoker {
 
@@ -38,6 +40,11 @@ public interface CacheOperationInvoker {
 	 * @return the result of the operation
 	 * @throws ThrowableWrapper if an error occurred while invoking the operation
 	 */
+	// 调用此实例定义的缓存操作。将调用期间引发的任何异常包装在CacheOperationInvoker.ThrowableWrapper中。
+	// 返回值：
+	//				操作的结果
+	// 抛出：
+	//				CacheOperationInvoker.ThrowableWrapper – 如果在调用操作时发生错误
 	@Nullable
 	Object invoke() throws ThrowableWrapper;
 
@@ -45,6 +52,7 @@ public interface CacheOperationInvoker {
 	/**
 	 * Wrap any exception thrown while invoking {@link #invoke()}.
 	 */
+	// 包装调用 invoke() 时抛出的任何异常。
 	@SuppressWarnings("serial")
 	class ThrowableWrapper extends RuntimeException {
 

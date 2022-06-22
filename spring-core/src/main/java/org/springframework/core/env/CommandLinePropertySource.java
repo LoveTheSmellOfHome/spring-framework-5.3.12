@@ -16,11 +16,11 @@
 
 package org.springframework.core.env;
 
-import java.util.Collection;
-import java.util.List;
-
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
+
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Abstract base class for {@link PropertySource} implementations backed by command line
@@ -205,12 +205,120 @@ import org.springframework.util.StringUtils;
  * @see SimpleCommandLinePropertySource
  * @see JOptCommandLinePropertySource
  */
+// 由命令行参数支持的PropertySource实现的抽象基类。 参数化类型T表示命令行选项的底层来源。 这可能是一样简单在的情况下，
+// 字符串数组SimpleCommandLinePropertySource ，或专用于特定API诸如JOPT的OptionSet中的情况下
+// JOptCommandLinePropertySource 。
+//用途和一般用途
+//用于独立的基于 Spring 的应用程序，即那些通过从命令行接受String[]参数的传统main方法引导的应用程序。 在许多情况下，
+// 直接在main方法中处理命令行参数可能就足够了，但在其他情况下，可能需要将参数作为值注入 Spring bean。
+// 在后一组情况下， CommandLinePropertySource变得有用。 CommandLinePropertySource通常会添加到 Spring
+// ApplicationContext的Environment中，此时所有命令行参数都可以通过Environment.getProperty(String)系列方法获得。 例如：
+//   public static void main(String[] args) {
+//       CommandLinePropertySource clps = ...;
+//       AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
+//       ctx.getEnvironment().getPropertySources().addFirst(clps);
+//       ctx.register(AppConfig.class);
+//       ctx.refresh();
+//   }
+//使用上面的引导逻辑， AppConfig类可以@Inject Spring Environment并直接查询它的属性：
+//   @Configuration
+//   public class AppConfig {
+//
+//       @Inject
+//       Environment env;
+//
+//       @Bean
+//       public void DataSource dataSource() {
+//           MyVendorDataSource dataSource = new MyVendorDataSource();
+//           dataSource.setHostname(env.getProperty("db.hostname", "localhost"));
+//           dataSource.setUsername(env.getRequiredProperty("db.username"));
+//           dataSource.setPassword(env.getRequiredProperty("db.password"));
+//           // ...
+//           return dataSource;
+//       }
+//   }
+//因为CommandLinePropertySource是使用#addFirst方法添加到Environment的MutablePropertySources #addFirst ，
+// 所以它具有最高的搜索优先级，这意味着虽然“db.hostname”和其他属性可能存在于其他属性源（例如系统环境变量）中，
+// 但它将首先从命令行属性源中选择。 这是一种合理的方法，因为在命令行上指定的参数自然比指定为环境变量的参数更具体。
+//作为注入Environment的替代方法，Spring 的@Value注释可用于注入这些属性， @Value是已经注册了
+// PropertySourcesPropertyResolver bean，直接或通过使用  元素。 例如：
+//   @Component
+//   public class MyComponent {
+//
+//       @Value("my.property:defaultVal")
+//       private String myProperty;
+//
+//       public void getMyProperty() {
+//           return this.myProperty;
+//       }
+//
+//       // ...
+//   }
+//使用选项参数
+//单个命令行参数通过通常的PropertySource.getProperty(String)和PropertySource.containsProperty(String)
+// 方法表示为属性。 例如，给定以下命令行：
+//--o1=v1 --o2
+//'o1' 和 'o2' 被视为“选项参数”，以下断言将评估为真：
+//   CommandLinePropertySource<?> ps = ...
+//   assert ps.containsProperty("o1") == true;
+//   assert ps.containsProperty("o2") == true;
+//   assert ps.containsProperty("o3") == false;
+//   assert ps.getProperty("o1").equals("v1");
+//   assert ps.getProperty("o2").equals("");
+//   assert ps.getProperty("o3") == null;
+//
+//请注意， 'o2' 选项没有参数，但getProperty("o2")解析为空字符串 ( "" ) 而不是null ，而getProperty("o3")
+// 解析为null因为它没有被指定。 此行为与所有PropertySource实现要遵循的一般合同一致。
+//另请注意，虽然在上面的示例中使用“--”来表示选项参数，但此语法可能因各个命令行参数库而异。 例如，基于 JOpt 或 Commons CLI
+// 的实现可能允许单破折号（“-”）“短”选项参数等。
+//使用非选项参数
+//通过此抽象也支持非选项参数。 任何不带选项样式前缀（例如“-”或“--”）的参数都被视为“非选项参数”，可通过特殊的“nonOptionArgs”
+// 属性获得。 如果指定了多个非选项参数，则此属性的值将是包含所有参数的逗号分隔字符串。 这种方法确保了来自
+// CommandLinePropertySource所有属性的简单且一致的返回类型（String），同时在与 Spring Environment及其内置
+// ConversionService结合使用时有助于ConversionService 。 考虑以下示例：
+//--o1=v1 --o2=v2 /path/to/file1 /path/to/file2
+//在此示例中，“o1”和“o2”将被视为“选项参数”，而两个文件系统路径则被视为“非选项参数”。 因此，以下断言将评估为真：
+//   CommandLinePropertySource<?> ps = ...
+//   assert ps.containsProperty("o1") == true;
+//   assert ps.containsProperty("o2") == true;
+//   assert ps.containsProperty("nonOptionArgs") == true;
+//   assert ps.getProperty("o1").equals("v1");
+//   assert ps.getProperty("o2").equals("v2");
+//   assert ps.getProperty("nonOptionArgs").equals("/path/to/file1,/path/to/file2");
+//
+//如上所述，当与 Spring Environment抽象结合使用时，这个逗号分隔的字符串可以很容易地转换为 String 数组或列表：
+//   Environment env = applicationContext.getEnvironment();
+//   String[] nonOptionArgs = env.getProperty("nonOptionArgs", String[].class);
+//   assert nonOptionArgs[0].equals("/path/to/file1");
+//   assert nonOptionArgs[1].equals("/path/to/file2");
+//
+//可以通过setNonOptionArgsPropertyName(String)方法自定义特殊“非选项参数”属性的setNonOptionArgsPropertyName(String) 。
+// 建议这样做，因为它为非选项参数提供了适当的语义值。 例如，如果文件系统路径被指定为非选项参数，那么将它们称为“file.locations”
+// 之类的东西可能比“nonOptionArgs”的默认值更可取：
+//   public static void main(String[] args) {
+//       CommandLinePropertySource clps = ...;
+//       clps.setNonOptionArgsPropertyName("file.locations");
+//
+//       AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
+//       ctx.getEnvironment().getPropertySources().addFirst(clps);
+//       ctx.register(AppConfig.class);
+//       ctx.refresh();
+//   }
+//限制
+//此抽象并非旨在展示底层命令行解析 API（例如 JOpt 或 Commons CLI）的全部功能。 它的意图恰恰相反：提供最简单的抽象，
+// 以便在解析后访问命令行参数。 因此，典型情况将涉及完全配置底层命令行解析 API，解析传入 main 方法的参数的String[] ，
+// 然后简单地将解析结果提供给CommandLinePropertySource的实现。 此时，所有参数都可以被视为“选项”或“非选项”参数，
+// 并且如上所述可以通过普通的PropertySource和Environment API 访问
+//
+// Spring 內建的配置属性源 - 命令行配置属性源
 public abstract class CommandLinePropertySource<T> extends EnumerablePropertySource<T> {
 
 	/** The default name given to {@link CommandLinePropertySource} instances: {@value}. */
+	// 赋予 {@link CommandLinePropertySource} 实例的默认名称：{@value}。
 	public static final String COMMAND_LINE_PROPERTY_SOURCE_NAME = "commandLineArgs";
 
 	/** The default name of the property representing non-option arguments: {@value}. */
+	// 表示非选项参数的属性的默认名称：{@value}。
 	public static final String DEFAULT_NON_OPTION_ARGS_PROPERTY_NAME = "nonOptionArgs";
 
 
@@ -221,6 +329,8 @@ public abstract class CommandLinePropertySource<T> extends EnumerablePropertySou
 	 * Create a new {@code CommandLinePropertySource} having the default name
 	 * {@value #COMMAND_LINE_PROPERTY_SOURCE_NAME} and backed by the given source object.
 	 */
+	// 创建一个具有默认名称 {@value #COMMAND_LINE_PROPERTY_SOURCE_NAME} 并由给定源对象支持的新
+	// {@code CommandLinePropertySource}。
 	public CommandLinePropertySource(T source) {
 		super(COMMAND_LINE_PROPERTY_SOURCE_NAME, source);
 	}
@@ -229,6 +339,7 @@ public abstract class CommandLinePropertySource<T> extends EnumerablePropertySou
 	 * Create a new {@link CommandLinePropertySource} having the given name
 	 * and backed by the given source object.
 	 */
+	// 创建一个具有给定名称并由给定源对象支持的新 {@link CommandLinePropertySource}。
 	public CommandLinePropertySource(String name, T source) {
 		super(name, source);
 	}
@@ -238,6 +349,7 @@ public abstract class CommandLinePropertySource<T> extends EnumerablePropertySou
 	 * Specify the name of the special "non-option arguments" property.
 	 * The default is {@value #DEFAULT_NON_OPTION_ARGS_PROPERTY_NAME}.
 	 */
+	// 指定特殊“非选项参数”属性的名称。默认值为 {@value #DEFAULT_NON_OPTION_ARGS_PROPERTY_NAME}
 	public void setNonOptionArgsPropertyName(String nonOptionArgsPropertyName) {
 		this.nonOptionArgsPropertyName = nonOptionArgsPropertyName;
 	}
@@ -249,6 +361,9 @@ public abstract class CommandLinePropertySource<T> extends EnumerablePropertySou
 	 * checking to see whether it returns an empty collection. Otherwise delegates to and
 	 * returns the value of the abstract {@link #containsOption(String)} method.
 	 */
+	// 此实现首先检查指定的名称是否是特殊的 {@linkplain #setNonOptionArgsPropertyName(String)
+	// "non-option arguments" property}，如果是，则委托抽象的 {@link #getNonOptionArgs()} 方法
+	// 检查它是否返回一个空的集合。否则委托并返回抽象 {@link #containsOption(String)} 方法的值。
 	@Override
 	public final boolean containsProperty(String name) {
 		if (this.nonOptionArgsPropertyName.equals(name)) {
@@ -266,6 +381,9 @@ public abstract class CommandLinePropertySource<T> extends EnumerablePropertySou
 	 * arguments. Otherwise delegates to and returns the result of the abstract {@link
 	 * #getOptionValues(String)} method.
 	 */
+	// 此实现首先检查指定的名称是否是特殊的 {@linkplain #setNonOptionArgsPropertyName(String) “非选项参数”属性}，
+	// 如果是，则委托给抽象的 {@link #getNonOptionArgs()} 方法。如果是这样并且非选项参数的集合为空，则此方法返回 {@code null}。
+	// 如果不为空，则返回所有非选项参数的逗号分隔字符串。否则委托并返回抽象 {@link #getOptionValues(String)} 方法的结果。
 	@Override
 	@Nullable
 	public final String getProperty(String name) {
@@ -292,6 +410,7 @@ public abstract class CommandLinePropertySource<T> extends EnumerablePropertySou
 	 * Return whether the set of option arguments parsed from the command line contains
 	 * an option with the given name.
 	 */
+	// 返回从命令行解析的选项参数集是否包含具有给定名称的选项。
 	protected abstract boolean containsOption(String name);
 
 	/**
@@ -308,6 +427,11 @@ public abstract class CommandLinePropertySource<T> extends EnumerablePropertySou
 	 * <li>if the option is not present, return {@code null}</li>
 	 * </ul>
 	 */
+	// 返回与具有给定名称的命令行选项关联的值的集合。
+	//如果该选项存在且没有参数（例如：“--foo”），则返回一个空集合（ [] ）
+	//如果该选项存在并且只有一个值（例如“--foo=bar”），则返回一个包含一个元素的集合（ ["bar"] ）
+	//如果该选项存在并且底层命令行解析库支持多个参数（例如“--foo=bar --foo=baz”），则返回一个包含每个值元素的集合（ ["bar", "baz"] ）
+	//如果该选项不存在，则返回null
 	@Nullable
 	protected abstract List<String> getOptionValues(String name);
 
@@ -315,6 +439,7 @@ public abstract class CommandLinePropertySource<T> extends EnumerablePropertySou
 	 * Return the collection of non-option arguments parsed from the command line.
 	 * Never {@code null}.
 	 */
+	// 返回从命令行解析的非选项参数的集合。从不为空
 	protected abstract List<String> getNonOptionArgs();
 
 }

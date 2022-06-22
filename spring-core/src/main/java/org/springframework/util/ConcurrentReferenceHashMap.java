@@ -377,6 +377,8 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implemen
 	 * items are added or removed from the Map. This method can be used to force a purge,
 	 * and is useful when the Map is read frequently but updated less often.
 	 */
+	// 删除任何已被垃圾收集且不再被引用的条目。在正常情况下，垃圾收集条目会随着项目的添加或从地图中删除而自动清除。
+	// 此方法可用于强制清除，当 Map 被频繁读取但更新频率较低时非常有用。
 	public void purgeUnreferencedEntries() {
 		for (Segment segment : this.segments) {
 			segment.restructureIfNecessary(false);

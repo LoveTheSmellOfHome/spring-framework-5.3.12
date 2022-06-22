@@ -28,6 +28,7 @@ import org.springframework.util.concurrent.ListenableFuture;
  * @since 4.0
  * @see ListenableFuture
  */
+// AsyncTaskExecutor 接口的扩展，添加了为 ListenableFutures 提交任务的能力。
 public interface AsyncListenableTaskExecutor extends AsyncTaskExecutor {
 
 	/**
@@ -37,6 +38,13 @@ public interface AsyncListenableTaskExecutor extends AsyncTaskExecutor {
 	 * @return a {@code ListenableFuture} representing pending completion of the task
 	 * @throws TaskRejectedException if the given task was not accepted
 	 */
+	// 提交Runnable任务以执行，接收表示该任务的ListenableFuture 。 Future 将在完成后返回null结果。
+	// 参形：
+	//				task – 要执行的Runnable （从不为null ）
+	// 返回值：
+	//				表示待完成任务的ListenableFuture
+	// 抛出：
+	//				TaskRejectedException – 如果给定的任务没有被接受
 	ListenableFuture<?> submitListenable(Runnable task);
 
 	/**
@@ -47,6 +55,13 @@ public interface AsyncListenableTaskExecutor extends AsyncTaskExecutor {
 	 * @return a {@code ListenableFuture} representing pending completion of the task
 	 * @throws TaskRejectedException if the given task was not accepted
 	 */
+	// 提交 Callable 任务以执行，接收代表该任务的 ListenableFuture 。 Future 将在完成后返回 Callable 的结果。
+	// 参形：
+	//				task - Callable的执行（从不为null ）
+	// 返回值：
+	//				表示待完成任务的ListenableFuture
+	// 抛出：
+	//				TaskRejectedException – 如果给定的任务没有被接受
 	<T> ListenableFuture<T> submitListenable(Callable<T> task);
 
 }

@@ -26,6 +26,7 @@ import org.springframework.lang.Nullable;
  * @author Marcin Kamionowski
  * @since 3.1
  */
+// 描述缓存“放置”操作的类。
 public class CachePutOperation extends CacheOperation {
 
 	@Nullable

@@ -41,16 +41,23 @@ import org.springframework.util.Assert;
  * @author Juergen Hoeller
  * @since 3.1
  */
+// AOP 联盟 MethodInterceptor 用于声明式缓存管理，使用常见的 Spring 缓存基础架构（ org.springframework.cache.Cache ）。
+//
+// 派生自 CacheAspectSupport 类，该类包含与 Spring 的底层缓存 API 的集成。
+// CacheInterceptor 只是以正确的顺序调用相关的超类方法。
 @SuppressWarnings("serial")
 public class CacheInterceptor extends CacheAspectSupport implements MethodInterceptor, Serializable {
 
 	@Override
 	@Nullable
 	public Object invoke(final MethodInvocation invocation) throws Throwable {
+		// 首先获取方法
 		Method method = invocation.getMethod();
 
+		// 回调操作，在这里还没执行
 		CacheOperationInvoker aopAllianceInvoker = () -> {
 			try {
+				// 拦截方法调用
 				return invocation.proceed();
 			}
 			catch (Throwable ex) {
@@ -58,9 +65,11 @@ public class CacheInterceptor extends CacheAspectSupport implements MethodInterc
 			}
 		};
 
+		// 获取调用对象
 		Object target = invocation.getThis();
 		Assert.state(target != null, "Target must not be null");
 		try {
+			// 方法在这里执行
 			return execute(aopAllianceInvoker, target, method, invocation.getArguments());
 		}
 		catch (CacheOperationInvoker.ThrowableWrapper th) {

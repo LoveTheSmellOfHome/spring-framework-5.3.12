@@ -31,6 +31,7 @@ import org.springframework.util.Assert;
  * @since 2.0.1
  * @see #getNestedComponents()
  */
+// ComponentDefinition 实现包含一个或多个嵌套的 ComponentDefinition 实例，将它们聚合到一组命名的组
 public class CompositeComponentDefinition extends AbstractComponentDefinition {
 
 	private final String name;
@@ -46,6 +47,10 @@ public class CompositeComponentDefinition extends AbstractComponentDefinition {
 	 * @param name the name of the composite component
 	 * @param source the source element that defines the root of the composite component
 	 */
+	// 创建一个新的 CompositeComponentDefinition。
+	// 参形：
+	//			name – 复合组件的名称
+	//			source – 定义复合组件根的源元素
 	public CompositeComponentDefinition(String name, @Nullable Object source) {
 		Assert.notNull(name, "Name must not be null");
 		this.name = name;
@@ -69,6 +74,8 @@ public class CompositeComponentDefinition extends AbstractComponentDefinition {
 	 * Add the given component as nested element of this composite component.
 	 * @param component the nested component to add
 	 */
+	// 将给定组件添加为此复合组件的嵌套元素。
+	// 参形：component – 要添加的嵌套组件
 	public void addNestedComponent(ComponentDefinition component) {
 		Assert.notNull(component, "ComponentDefinition must not be null");
 		this.nestedComponents.add(component);
@@ -78,6 +85,8 @@ public class CompositeComponentDefinition extends AbstractComponentDefinition {
 	 * Return the nested components that this composite component holds.
 	 * @return the array of nested components, or an empty array if none
 	 */
+	// 返回此复合组件所包含的嵌套组件。
+	// 返回值：嵌套组件的数组，如果没有则为空数组
 	public ComponentDefinition[] getNestedComponents() {
 		return this.nestedComponents.toArray(new ComponentDefinition[0]);
 	}

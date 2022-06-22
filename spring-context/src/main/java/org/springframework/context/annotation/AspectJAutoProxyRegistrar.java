@@ -31,6 +31,8 @@ import org.springframework.core.type.AnnotationMetadata;
  * @since 3.1
  * @see EnableAspectJAutoProxy
  */
+// 根据给定的 @EnableAspectJAutoProxy 注解，根据当前的 BeanDefinitionRegistry 注册
+// AnnotationAwareAspectJAutoProxyCreator 。
 class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
 	/**
@@ -38,12 +40,21 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 	 * of the @{@link EnableAspectJAutoProxy#proxyTargetClass()} attribute on the importing
 	 * {@code @Configuration} class.
 	 */
+	// 根据导入的 @Configuration 类上的 @EnableAspectJAutoProxy.proxyTargetClass() 属性的值注册、
+	// 升级和配置 AspectJ 自动代理创建者。
+	// 注册一组 BeanDefinition:它有三种模式,其一是 Import 其二是 CongigurationClass,ImportSelector 实现
+	// 其三是 ImportBeanDefinitionRegistrar
 	@Override
 	public void registerBeanDefinitions(
 			AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 
+		// 如果能注册就注册，不能注册就取消，这也是防止注册的方式，防止重复注册这个 bean:AspectJAnnotationAutoProxyCreator
+		// 真实注册的名称有所差异：AnnotationAwareAspectJAutoProxyCreator
 		AopConfigUtils.registerAspectJAnnotationAutoProxyCreatorIfNecessary(registry);
 
+		// @EnableAspectJAutoProxy 注解的两个属性方法，注入原理
+		// 通过 AnnotationAttributes 这个 API, AnnotationAttributes  底层实际上是个 Map,
+		// 将 Annotation 里边的属性方法变成属性
 		AnnotationAttributes enableAspectJAutoProxy =
 				AnnotationConfigUtils.attributesFor(importingClassMetadata, EnableAspectJAutoProxy.class);
 		if (enableAspectJAutoProxy != null) {

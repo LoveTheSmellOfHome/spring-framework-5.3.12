@@ -41,12 +41,15 @@ import java.io.InputStream;
  * @author Eric Bruneton
  * @author Eugene Kuleshov
  */
+// 使 {@link ClassVisitor} 访问 ClassFile 结构的解析器，如 Java 虚拟机规范 (JVMS) 中所定义。
+// 此类解析 ClassFile 内容并为遇到的每个字段、方法和字节码指令调用给定 {@link ClassVisitor} 的适当访问方法。
 public class ClassReader {
 
   /**
    * A flag to skip the Code attributes. If this flag is set the Code attributes are neither parsed
    * nor visited.
    */
+  // 跳过代码属性的标志。如果设置了此标志，则既不会解析也不会访问代码属性。
   public static final int SKIP_CODE = 1;
 
   /**
@@ -56,6 +59,10 @@ public class ClassReader {
    * MethodVisitor#visitLocalVariable}, {@link MethodVisitor#visitLineNumber} and {@link
    * MethodVisitor#visitParameter} are not called).
    */
+  // 跳过 SourceFile、SourceDebugExtension、LocalVariableTable、LocalVariableTypeTable、LineNumberTable
+  // 和 MethodParameters 属性的标志。如果设置了这个标志，这些属性既不会被解析也不会被访问（即
+  // {@link ClassVisitorvisitSource}、{@link MethodVisitorvisitLocalVariable}、
+  // {@link MethodVisitorvisitLineNumber} 和 {@link MethodVisitorvisitParameter} 不被调用）。
   public static final int SKIP_DEBUG = 2;
 
   /**
@@ -64,6 +71,9 @@ public class ClassReader {
    * is useful when the {@link ClassWriter#COMPUTE_FRAMES} option is used: it avoids visiting frames
    * that will be ignored and recomputed from scratch.
    */
+  // 跳过 StackMap 和 StackMapTable 属性的标志。如果设置了此标志，则既不会解析也不会访问这些属性（
+  // 即不调用 {@link MethodVisitorvisitFrame}）。当使用 {@link ClassWriterCOMPUTE_FRAMES} 选项时，
+  // 此标志很有用：它避免访问将被忽略并从头开始重新计算的帧。
   public static final int SKIP_FRAMES = 4;
 
   /**
@@ -73,6 +83,9 @@ public class ClassReader {
    * format (this option adds a decompression/compression step in ClassReader and ClassWriter which
    * degrades performance quite a lot).
    */
+  // 用于扩展堆栈映射帧的标志。默认情况下，堆栈映射帧以其原始格式访问（即对于版本低于 V1_6 的类进行“扩展”，
+  // 对于其他类进行“压缩”）。如果设置了此标志，则始终以扩展格式访问堆栈映射帧（此选项在 ClassReader 和 ClassWriter
+  // 中添加了一个解压缩步骤，这会大大降低性能）。
   public static final int EXPAND_FRAMES = 8;
 
   /**
@@ -86,12 +99,19 @@ public class ClassReader {
    * infinite loops where a goto_w is replaced with a goto in ClassReader and converted back to a
    * goto_w in ClassWriter cannot occur.
    */
+  // 将 ASM 特定指令扩展为标准字节码指令的等效序列的标志。在解析前向跳转时，可能会发生为它保留的带符号的 2 字节偏移量
+  // 不足以存储字节码偏移量。在这种情况下，跳转指令被替换为使用无符号 2 字节偏移量的临时 ASM 特定指令（参见
+  // {@link Labelresolve}）。此内部标志用于重新读取包含此类指令的类，以便用标准指令替换它们。此外，当使用这个标志时，
+  // goto_w 和 jsr_w 被<i>not<i> 转换成 goto 和 jsr，以确保在 ClassReader 中 goto_w 被替换为 goto 并在
+  // ClassWriter 中转换回 goto_w 的无限循环不能发生。
   static final int EXPAND_ASM_INSNS = 256;
 
   /** The maximum size of array to allocate. */
+  // 要分配的数组的最大大小
   private static final int MAX_BUFFER_SIZE = 1024 * 1024;
 
   /** The size of the temporary byte array used to read class input streams chunk by chunk. */
+  // 用于逐块读取类输入流的临时字节数组的大小
   private static final int INPUT_STREAM_DATA_CHUNK_SIZE = 4096;
 
   /**
@@ -100,11 +120,15 @@ public class ClassReader {
    * @deprecated Use {@link #readByte(int)} and the other read methods instead. This field will
    *     eventually be deleted.
    */
+  // 包含要解析的 JVMS ClassFile 结构的字节数组
+  // @deprecated 改用 {@link readByte(int)} 和其他读取方法。该字段最终将被删除。
   @Deprecated
   // DontCheck(MemberName): can't be renamed (for backward binary compatibility).
+  // DontCheck(MemberName)：不能重命名（为了向后二进制兼容）
   public final byte[] b;
 
   /** The offset in bytes of the ClassFile's access_flags field. */
+  // ClassFile 的 access_flags 字段的偏移量（以字节为单位）。
   public final int header;
 
   /**
@@ -116,6 +140,10 @@ public class ClassReader {
    * necessarily start at offset 0. Use {@link #getItem} and {@link #header} to get correct
    * ClassFile element offsets within this byte array.
    */
+  // 包含要解析的 JVMS ClassFile 结构的字节数组。
+  // <i>不得修改此数组的内容。此字段用于 {@link Attribute} 子类，类访问者通常不需要。<i>
+  // <p>注意：ClassFile 结构可以在此数组中的任何偏移量处开始，即它不一定从偏移量 0 处开始。使用 {@link getItem} 和
+  // {@link header} 来获取此字节数组中正确的 ClassFile 元素偏移量。
   final byte[] classFileBuffer;
 
   /**
@@ -124,18 +152,24 @@ public class ClassReader {
    * given by cpInfoOffsets[i] - 1, i.e. its cp_info's tag field is given by b[cpInfoOffsets[i] -
    * 1].
    */
+  // ClassFile 的constant_pool 数组的每个cp_info 条目在{@link classFileBuffer} 中以字节为单位的偏移量，
+  // <i>加上一个<i>。换句话说，常量池条目 i 的偏移量由 cpInfoOffsets[i] - 1 给出，即其 cp_info 的标签字段由
+  // b[cpInfoOffsets[i] - 1] 给出。
   private final int[] cpInfoOffsets;
 
   /**
    * The String objects corresponding to the CONSTANT_Utf8 constant pool items. This cache avoids
    * multiple parsing of a given CONSTANT_Utf8 constant pool item.
    */
+  // 与 CONSTANT_Utf8 常量池项对应的 String 对象。此缓存避免了对给定 CONSTANT_Utf8 常量池项的多次解析。
   private final String[] constantUtf8Values;
 
   /**
    * The ConstantDynamic objects corresponding to the CONSTANT_Dynamic constant pool items. This
    * cache avoids multiple parsing of a given CONSTANT_Dynamic constant pool item.
    */
+  // 与 CONSTANT_Dynamic 常量池项对应的 ConstantDynamic 对象。
+  // 此缓存避免了对给定 CONSTANT_Dynamic 常量池项的多次解析。
   private final ConstantDynamic[] constantDynamicValues;
 
   /**
@@ -145,16 +179,19 @@ public class ClassReader {
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se9/html/jvms-4.html#jvms-4.7.23">JVMS
    *     4.7.23</a>
    */
+  // bootstrap_methods 数组（在 BootstrapMethods 属性中）的每个元素的 {@link classFileBuffer} 中的起始偏移量。
   private final int[] bootstrapMethodOffsets;
 
   /**
    * A conservative estimate of the maximum length of the strings contained in the constant pool of
    * the class.
    */
+  // 类的常量池中包含的字符串的最大长度的保守估计
   private final int maxStringLength;
 
   // -----------------------------------------------------------------------------------------------
   // Constructors
+  // 构造函数
   // -----------------------------------------------------------------------------------------------
 
   /**
@@ -283,6 +320,10 @@ public class ClassReader {
    *     current position to its end.
    * @throws IOException if a problem occurs during reading.
    */
+  // 构造一个新的 {@link ClassReader} 对象。
+  //
+  // @param inputStream 要读取的 JVM 类文件结构的输入流。这个输入流只能包含类文件结构本身。它从当前位置读取到结束。
+  //  @throws IOException 如果在阅读过程中出现问题
   public ClassReader(final InputStream inputStream) throws IOException {
     this(readStream(inputStream, false));
   }

@@ -32,6 +32,7 @@ import org.springframework.util.Assert;
  * @author Juergen Hoeller
  * @since 3.1
  */
+// 对给定的一组 CacheOperationSource 实例数组进行迭代的复合 CacheOperationSource 实现。
 @SuppressWarnings("serial")
 public class CompositeCacheOperationSource implements CacheOperationSource, Serializable {
 
@@ -42,6 +43,8 @@ public class CompositeCacheOperationSource implements CacheOperationSource, Seri
 	 * Create a new CompositeCacheOperationSource for the given sources.
 	 * @param cacheOperationSources the CacheOperationSource instances to combine
 	 */
+	// 为给定的源创建一个新的 CompositeCacheOperationSource。
+	// 参形：cacheOperationSources – 要组合的 CacheOperationSource 实例
 	public CompositeCacheOperationSource(CacheOperationSource... cacheOperationSources) {
 		Assert.notEmpty(cacheOperationSources, "CacheOperationSource array must not be empty");
 		this.cacheOperationSources = cacheOperationSources;
@@ -51,6 +54,7 @@ public class CompositeCacheOperationSource implements CacheOperationSource, Seri
 	 * Return the {@code CacheOperationSource} instances that this
 	 * {@code CompositeCacheOperationSource} combines.
 	 */
+	// 返回此 CompositeCacheOperationSource 组合的 CacheOperationSource 实例。
 	public final CacheOperationSource[] getCacheOperationSources() {
 		return this.cacheOperationSources;
 	}

@@ -29,6 +29,10 @@ import java.lang.reflect.Method;
  * @author Stephane Nicoll
  * @since 4.1
  */
+// 一种处理异步方法抛出的未捕获异常的策略。
+//
+// 异步方法通常返回一个 java.util.concurrent.Future 实例，该实例提供对底层异常的访问权限。
+// 当方法不提供该返回类型时，此处理程序可用于管理此类未捕获的异常。
 @FunctionalInterface
 public interface AsyncUncaughtExceptionHandler {
 
@@ -38,6 +42,11 @@ public interface AsyncUncaughtExceptionHandler {
 	 * @param method the asynchronous method
 	 * @param params the parameters used to invoked the method
 	 */
+	// 处理从异步方法抛出的给定未捕获异常。
+	// 参形：
+	//			ex – 异步方法抛出的异常
+	//			method - 异步方法
+	//			params – 用于调用方法的参数
 	void handleUncaughtException(Throwable ex, Method method, Object... params);
 
 }

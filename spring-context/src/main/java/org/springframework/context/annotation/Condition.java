@@ -38,6 +38,12 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
  * @see Conditional
  * @see ConditionContext
  */
+// 必须匹配才能注册组件的单个条件
+//
+// 在注册 bean-definition 之前立即检查条件，并且可以根据当时可以确定的任何标准自由否决注册。
+//
+// 条件必须遵循与 BeanFactoryPostProcessor 相同的限制，并注意不要与 bean 实例交互。
+// 要对与 @Configuration bean 交互的条件进行更细粒度的控制，请考虑实现 ConfigurationCondition 接口。
 @FunctionalInterface
 public interface Condition {
 
@@ -49,6 +55,7 @@ public interface Condition {
 	 * @return {@code true} if the condition matches and the component can be registered,
 	 * or {@code false} to veto the annotated component's registration
 	 */
+	// 确定条件是否匹配，如果条件匹配，就会激活这个条件定义，如@Profile,如果匹配，就会激活这个环境
 	boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
 
 }

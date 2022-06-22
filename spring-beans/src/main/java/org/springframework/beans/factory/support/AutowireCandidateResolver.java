@@ -29,6 +29,7 @@ import org.springframework.lang.Nullable;
  * @author Mark Fisher
  * @since 2.5
  */
+// 自定绑定候选对象处理器
 public interface AutowireCandidateResolver {
 
 	/**
@@ -80,6 +81,9 @@ public interface AutowireCandidateResolver {
 	 * or {@code null} if none found
 	 * @since 3.0
 	 */
+	// 确定是否为给定的依赖项建议了默认值。
+	// <p>默认实现只返回 {@code null}。
+	// @param descriptor 目标方法参数或字段的描述符
 	@Nullable
 	default Object getSuggestedValue(DependencyDescriptor descriptor) {
 		return null;

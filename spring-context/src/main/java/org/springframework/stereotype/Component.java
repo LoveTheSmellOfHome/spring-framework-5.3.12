@@ -39,6 +39,25 @@ import java.lang.annotation.Target;
  * @see Controller
  * @see org.springframework.context.annotation.ClassPathBeanDefinitionScanner
  */
+// 表示带注解的类是“组件”。在使用基于注解的配置和类路径扫描时，此类类被视为自动检测的候选对象。组件是应用组成的一部分
+// 在注解 2.0 时代并没有提供 @ComponentScan 注解
+//
+// <p>其他类级别的注解也可以被视为标识组件，通常是一种特殊类型的组件：例如{@link Repository @Repository} 注解或 AspectJ 的
+// {@link org.aspectj.lang.annotation.Aspect @Aspect} 注解。
+//
+// 1.它是个组件 2.它是个范式(模式 stereotype annotation)注解
+//
+// @Component “派⽣性”原理：
+// 核心组件：org.springframework.context.annotation.ClassPathBeanDefinitionScanner
+//		org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider
+// 资源处理：org.springframework.core.io.support.ResourcePatternResolver 通配符资源路径加载器
+// 资源-类元信息：org.springframework.core.type.classreading.MetadataReaderFactory
+// 类元信息： org.springframework.core.type.ClassMetadata
+// 		ASM 实现 - org.springframework.core.type.classreading.ClassMetadataReadingVisitor
+//		反射实现 - org.springframework.core.type.StandardAnnotationMetadata
+// 注解元信息 - org.springframework.core.type.AnnotationMetadata
+//		ASM 实现 - org.springframework.core.type.classreading.AnnotationMetadataReadingVisitor
+//		反射实现 - org.springframework.core.type.StandardAnnotationMetadata
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -50,6 +69,8 @@ public @interface Component {
 	 * to be turned into a Spring bean in case of an autodetected component.
 	 * @return the suggested component name, if any (or empty String otherwise)
 	 */
+	// 该值可能指示对逻辑组件名称的建议，在自动检测到的组件的情况下将其转换为 Spring bean。
+	// @return 建议的组件名称，如果有的话（否则为空字符串）
 	String value() default "";
 
 }

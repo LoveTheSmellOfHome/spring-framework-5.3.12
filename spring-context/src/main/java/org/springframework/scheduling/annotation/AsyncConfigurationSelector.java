@@ -31,6 +31,7 @@ import org.springframework.lang.Nullable;
  * @see EnableAsync
  * @see ProxyAsyncConfiguration
  */
+// 根据导入 @Configuration 类的 EnableAsync.mode 值选择应使用 AbstractAsyncConfiguration 的哪个实现。
 public class AsyncConfigurationSelector extends AdviceModeImportSelector<EnableAsync> {
 
 	private static final String ASYNC_EXECUTION_ASPECT_CONFIGURATION_CLASS_NAME =
@@ -42,6 +43,8 @@ public class AsyncConfigurationSelector extends AdviceModeImportSelector<EnableA
 	 * for {@code PROXY} and {@code ASPECTJ} values of {@link EnableAsync#mode()},
 	 * respectively.
 	 */
+	// 分别为 EnableAsync.mode() 的 PROXY 和 ASPECTJ 值返回 ProxyAsyncConfiguration
+	// 或 AspectJAsyncConfiguration 。
 	@Override
 	@Nullable
 	public String[] selectImports(AdviceMode adviceMode) {

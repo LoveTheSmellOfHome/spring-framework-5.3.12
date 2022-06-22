@@ -36,6 +36,8 @@ import org.springframework.core.type.AnnotationMetadata;
  * @see org.springframework.cache.annotation.EnableCaching
  * @see org.springframework.transaction.annotation.EnableTransactionManagement
  */
+// 根据将 mode 和 proxyTargetClass 属性设置为正确值的 @Enable* 注解，根据当前 BeanDefinitionRegistry 
+// 注册一个自动代理创建者,将 AutoProxyCreator 注册到上下文中
 public class AutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
 	private final Log logger = LogFactory.getLog(getClass());
@@ -55,6 +57,13 @@ public class AutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 	 * {@code proxyTargetClass} attributes, the APC can be registered and configured all
 	 * the same.
 	 */
+	// 针对给定注册表注册、升级和配置标准自动代理创建者 (APC)。通过查找在具有 mode 和 proxyTargetClass
+	// 属性的导入 @Configuration 类上声明的最近注解来工作。如果 mode设置为 PROXY ，则注册 APC；
+	// 如果 proxyTargetClass 设置为 true ，则 APC 被迫使用子类 (CGLIB) 代理。
+	//
+	// 几个 @Enable* 注解公开了 mode 和 proxyTargetClass 属性。值得注意的是，这些功能中的大多数最终都
+	// 共享一个APC 。出于这个原因，这个实现并不“关心”它找到了哪个注解——只要它公开了正确的 mode 和
+	// proxyTargetClass属性，APC 就可以注册和配置。
 	@Override
 	public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 		boolean candidateFound = false;
@@ -69,7 +78,8 @@ public class AutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 			if (mode != null && proxyTargetClass != null && AdviceMode.class == mode.getClass() &&
 					Boolean.class == proxyTargetClass.getClass()) {
 				candidateFound = true;
-				if (mode == AdviceMode.PROXY) {
+				if (mode == AdviceMode.PROXY) { // 如果是 JDK 自动代理
+					// 注册 APC
 					AopConfigUtils.registerAutoProxyCreatorIfNecessary(registry);
 					if ((Boolean) proxyTargetClass) {
 						AopConfigUtils.forceAutoProxyCreatorToUseClassProxying(registry);
