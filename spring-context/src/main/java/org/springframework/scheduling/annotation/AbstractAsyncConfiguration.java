@@ -39,19 +39,24 @@ import org.springframework.util.CollectionUtils;
  * @since 3.1
  * @see EnableAsync
  */
+// 抽象的基本 Configuration 类，为启用 Spring 的异步方法执行能力提供通用结构。
 @Configuration(proxyBeanMethods = false)
 public abstract class AbstractAsyncConfiguration implements ImportAware {
 
+	// 注解属性
 	@Nullable
 	protected AnnotationAttributes enableAsync;
 
+	// 执行器
 	@Nullable
 	protected Supplier<Executor> executor;
 
+	// 异步异常处理器
 	@Nullable
 	protected Supplier<AsyncUncaughtExceptionHandler> exceptionHandler;
 
 
+	// 设置导入元数据
 	@Override
 	public void setImportMetadata(AnnotationMetadata importMetadata) {
 		this.enableAsync = AnnotationAttributes.fromMap(
@@ -65,6 +70,7 @@ public abstract class AbstractAsyncConfiguration implements ImportAware {
 	/**
 	 * Collect any {@link AsyncConfigurer} beans through autowiring.
 	 */
+	// 通过自动装配收集任何 AsyncConfigurer  bean。
 	@Autowired(required = false)
 	void setConfigurers(Collection<AsyncConfigurer> configurers) {
 		if (CollectionUtils.isEmpty(configurers)) {

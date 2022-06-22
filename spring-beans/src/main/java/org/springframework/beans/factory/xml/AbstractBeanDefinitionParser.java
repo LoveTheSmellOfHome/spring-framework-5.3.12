@@ -63,6 +63,7 @@ public abstract class AbstractBeanDefinitionParser implements BeanDefinitionPars
 		AbstractBeanDefinition definition = parseInternal(element, parserContext);
 		if (definition != null && !parserContext.isNested()) {
 			try {
+				//
 				String id = resolveId(element, definition, parserContext);
 				if (!StringUtils.hasText(id)) {
 					parserContext.getReaderContext().error(
@@ -76,7 +77,9 @@ public abstract class AbstractBeanDefinitionParser implements BeanDefinitionPars
 						aliases = StringUtils.trimArrayElements(StringUtils.commaDelimitedListToStringArray(name));
 					}
 				}
+				// 将 AbstractBeanDefinition 包装成 BeanDefinitionHolder
 				BeanDefinitionHolder holder = new BeanDefinitionHolder(definition, id, aliases);
+				// 注册 BeanDefinition
 				registerBeanDefinition(holder, parserContext.getRegistry());
 				if (shouldFireEvents()) {
 					BeanComponentDefinition componentDefinition = new BeanComponentDefinition(holder);
@@ -106,6 +109,12 @@ public abstract class AbstractBeanDefinitionParser implements BeanDefinitionPars
 	 * @throws BeanDefinitionStoreException if no unique name could be generated
 	 * for the given bean definition
 	 */
+	// 解析提供的 {@link BeanDefinition} 的 ID。 <p>使用 {@link shouldGenerateId generation} 时，会自动生成名称。
+	// 否则，从“id”属性中提取 ID，可能带有 {@link shouldGenerateIdAsFallback() fallback} 到生成的 id
+	// @param element 构建 bean 定义的元素
+	// @param definition 要注册的bean定义
+	// @param parserContext 封装当前解析过程状态的对象；提供对
+	// {@link org.springframework.beans.factory.support.BeanDefinitionRegistry} 的访问
 	protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext)
 			throws BeanDefinitionStoreException {
 
@@ -199,6 +208,11 @@ public abstract class AbstractBeanDefinitionParser implements BeanDefinitionPars
 	 * @see #postProcessComponentDefinition
 	 * @see org.springframework.beans.factory.parsing.ReaderContext#fireComponentRegistered
 	 */
+	// 确定此解析器是否应该在解析 bean 定义后触发
+	// {@link org.springframework.beans.factory.parsing.BeanComponentDefinition} 事件。
+	//
+	// p>这个实现默认返回{@code true}；也就是说，当 bean 定义被完全解析时，将触发一个事件。覆盖它以返回 {@code false} 以抑制事件。
+	// @return {@code true} 以便在解析 bean 定义后触发组件注册事件； {@code false} 抑制事件
 	protected boolean shouldFireEvents() {
 		return true;
 	}

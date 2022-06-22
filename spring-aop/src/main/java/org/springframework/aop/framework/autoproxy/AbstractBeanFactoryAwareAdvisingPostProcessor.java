@@ -36,10 +36,14 @@ import org.springframework.lang.Nullable;
  * @see AutoProxyUtils#shouldProxyTargetClass
  * @see AutoProxyUtils#determineTargetClass
  */
+// 实现 BeanFactoryAware 的 AbstractAutoProxyCreator 的扩展，为每个代理 bean
+// ( AutoProxyUtils.ORIGINAL_TARGET_CLASS_ATTRIBUTE ) 添加原始目标类的公开，并参与任何给定 bean 的外部强制
+// 目标类模式 ( AutoProxyUtils.PRESERVE_TARGET_CLASS_ATTRIBUTE )。因此，此后处理器与 AbstractAutoProxyCreator 对齐。
 @SuppressWarnings("serial")
 public abstract class AbstractBeanFactoryAwareAdvisingPostProcessor extends AbstractAdvisingBeanPostProcessor
 		implements BeanFactoryAware {
 
+	// Spring IoC 容器
 	@Nullable
 	private ConfigurableListableBeanFactory beanFactory;
 
@@ -50,12 +54,16 @@ public abstract class AbstractBeanFactoryAwareAdvisingPostProcessor extends Abst
 				(ConfigurableListableBeanFactory) beanFactory : null);
 	}
 
+	// 准备代理工厂,ProxyFactory 可以设置 Advisor,Advice,以及其他一些配置
+	// 利用 ProxyFactory#getProxy() 来创建 bean,并没有直接创建（注入） 一个 AbstractAutoProxyCreator bean(
+	// 即没有利用 Spring BeanDefinition 去注册一个 bean
 	@Override
 	protected ProxyFactory prepareProxyFactory(Object bean, String beanName) {
 		if (this.beanFactory != null) {
 			AutoProxyUtils.exposeTargetClass(this.beanFactory, beanName, bean.getClass());
 		}
 
+		// 产生一个代理对象
 		ProxyFactory proxyFactory = super.prepareProxyFactory(bean, beanName);
 		if (!proxyFactory.isProxyTargetClass() && this.beanFactory != null &&
 				AutoProxyUtils.shouldProxyTargetClass(this.beanFactory, beanName)) {

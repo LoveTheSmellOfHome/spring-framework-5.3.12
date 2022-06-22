@@ -47,6 +47,12 @@ import org.springframework.util.ObjectUtils;
  * @see ThreadLocalTargetSource
  * @see CommonsPool2TargetSource
  */
+// 基于 Spring BeanFactory 的 TargetSource 实现的基类，委托给 Spring 管理的 bean 实例。
+//
+// 例如，子类可以创建原型实例或延迟访问单例目标。有关具体策略，请参阅 LazyInitTargetSource 和
+// AbstractPrototypeBasedTargetSource的子类。
+//
+// 基于 BeanFactory 的 TargetSource 是可序列化的。这涉及断开当前目标并变成 SingletonTargetSource
 public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSource, BeanFactoryAware, Serializable {
 
 	/** use serialVersionUID from Spring 1.2.7 for interoperability. */
@@ -57,15 +63,18 @@ public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSour
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	/** Name of the target bean we will create on each invocation. */
+	// 我们将在每次调用时创建的目标 bean 的名称
 	private String targetBeanName;
 
 	/** Class of the target. */
+	// 目标的类别
 	private volatile Class<?> targetClass;
 
 	/**
 	 * BeanFactory that owns this TargetSource. We need to hold onto this
 	 * reference so that we can create new prototype instances as necessary.
 	 */
+	// 拥有此 TargetSource 的 BeanFactory。我们需要保留这个引用，以便我们可以根据需要创建新的原型实例。
 	private BeanFactory beanFactory;
 
 
@@ -78,6 +87,10 @@ public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSour
 	 * that owns this interceptor
 	 * @see SingletonTargetSource
 	 */
+	// 在工厂中设置目标 bean 的名称。
+	// 目标 bean 不应是单例，否则将始终从工厂获取相同的实例，从而导致与 SingletonTargetSource 提供的相同行为。
+	// 参形：
+	//			targetBeanName – BeanFactory 中拥有此拦截器的目标 bean 的名称
 	public void setTargetBeanName(String targetBeanName) {
 		this.targetBeanName = targetBeanName;
 	}
@@ -85,6 +98,7 @@ public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSour
 	/**
 	 * Return the name of the target bean in the factory.
 	 */
+	// 返回工厂中目标bean的名称。
 	public String getTargetBeanName() {
 		return this.targetBeanName;
 	}
@@ -95,6 +109,8 @@ public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSour
 	 * <p>Default is to detect the type automatically, through a {@code getType}
 	 * call on the BeanFactory (or even a full {@code getBean} call as fallback).
 	 */
+	// 显式指定目标类，以避免对目标 bean 进行任何类型的访问（例如，避免初始化 FactoryBean 实例）。
+	// 默认是通过对 BeanFactory 的 getType 调用（甚至完整的getBean调用作为后备）自动检测类型。
 	public void setTargetClass(Class<?> targetClass) {
 		this.targetClass = targetClass;
 	}
@@ -103,17 +119,20 @@ public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSour
 	 * Set the owning BeanFactory. We need to save a reference so that we can
 	 * use the {@code getBean} method on every invocation.
 	 */
+	// 设置拥有的 BeanFactory。我们需要保存一个引用，以便我们可以在每次调用时使用getBean方法。
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) {
 		if (this.targetBeanName == null) {
 			throw new IllegalStateException("Property 'targetBeanName' is required");
 		}
+		// 关联 IoC 容器
 		this.beanFactory = beanFactory;
 	}
 
 	/**
 	 * Return the owning BeanFactory.
 	 */
+	// 返回拥有的 BeanFactory。
 	public BeanFactory getBeanFactory() {
 		return this.beanFactory;
 	}
@@ -127,9 +146,11 @@ public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSour
 		}
 		synchronized (this) {
 			// Full check within synchronization, entering the BeanFactory interaction algorithm only once...
+			// 同步内全查，只进一次BeanFactory交互算法……
 			targetClass = this.targetClass;
 			if (targetClass == null && this.beanFactory != null) {
 				// Determine type of the target bean.
+				// 确定目标 bean 的类型
 				targetClass = this.beanFactory.getType(this.targetBeanName);
 				if (targetClass == null) {
 					if (logger.isTraceEnabled()) {
@@ -160,6 +181,8 @@ public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSour
 	 * Subclasses should override this if they wish to expose it.
 	 * @param other object to copy configuration from
 	 */
+	// 从另一个 AbstractBeanFactoryBasedTargetSource 对象复制配置。如果他们希望公开它，子类应该覆盖它。
+	// 参形：other - 要从中复制配置的对象
 	protected void copyFrom(AbstractBeanFactoryBasedTargetSource other) {
 		this.targetBeanName = other.targetBeanName;
 		this.targetClass = other.targetClass;

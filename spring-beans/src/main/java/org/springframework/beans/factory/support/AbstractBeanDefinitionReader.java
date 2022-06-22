@@ -46,6 +46,8 @@ import org.springframework.util.Assert;
  * @since 11.12.2003
  * @see BeanDefinitionReaderUtils
  */
+// 实现 {@link BeanDefinitionReader} 接口的 bean 定义读取器的抽象基类。
+// <p>提供常用属性，例如要处理的 bean 工厂和用于加载 bean 类的类加载器
 public abstract class AbstractBeanDefinitionReader implements BeanDefinitionReader, EnvironmentCapable {
 
 	/** Logger available to subclasses. */
@@ -81,6 +83,14 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 	 * @see #setResourceLoader
 	 * @see #setEnvironment
 	 */
+	// 为给定的 bean 工厂创建一个新的 AbstractBeanDefinitionReader。
+	// <p>如果传入的 bean factory 不仅实现了 BeanDefinitionRegistry 接口，还实现了 ResourceLoader 接口，
+	// 它也会作为默认的 ResourceLoader 使用。 {@link org.springframework.context.ApplicationContext} 实现通常就是这种情况。
+	// <p>如果给定一个普通的 BeanDefinitionRegistry，默认的 ResourceLoader 将是一个
+	// {@link org.springframework.core.io.support.PathMatchingResourcePatternResolver}。
+	// <p>如果传入的 bean factory 也实现了 {@link EnvironmentCapable} 它的环境将被这个读者使用。
+	// 否则，阅读器将初始化并使用 {@link StandardEnvironment}。
+	// 所有 ApplicationContext 实现都是 EnvironmentCapable，而普通的 BeanFactory 实现则不是。
 	protected AbstractBeanDefinitionReader(BeanDefinitionRegistry registry) {
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
 		this.registry = registry;
@@ -123,6 +133,10 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 	 * @see org.springframework.core.io.support.ResourcePatternResolver
 	 * @see org.springframework.core.io.support.PathMatchingResourcePatternResolver
 	 */
+	// 设置 ResourceLoader 以用于资源位置。如果指定 ResourcePatternResolver，
+	// 则 bean 定义阅读器将能够将资源模式解析为 Resource 数组。
+	// <p>默认是PathMatchingResourcePatternResolver，也可以通过ResourcePatternResolver接口进行资源模式解析。
+	// <p>将此设置为 {@code null} 表明此 bean 定义阅读器无法使用绝对资源加载。
 	public void setResourceLoader(@Nullable ResourceLoader resourceLoader) {
 		this.resourceLoader = resourceLoader;
 	}
@@ -140,6 +154,8 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 	 * with the corresponding Classes to be resolved later (or never).
 	 * @see Thread#getContextClassLoader()
 	 */
+	// 设置 ClassLoader 以用于 bean 类。
+	// <p>默认值是 {@code null}，这表明不要急切地加载 bean 类，而是只用类名注册 bean 定义，稍后（或永远不会）解析相应的类
 	public void setBeanClassLoader(@Nullable ClassLoader beanClassLoader) {
 		this.beanClassLoader = beanClassLoader;
 	}
@@ -155,6 +171,8 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 	 * for evaluating profile information to determine which bean definitions
 	 * should be read and which should be omitted.
 	 */
+	// 设置读取 bean 定义时要使用的环境。
+	// 最常用于评估配置文件信息以确定应读取哪些 bean 定义以及应省略哪些 bean 定义
 	public void setEnvironment(Environment environment) {
 		Assert.notNull(environment, "Environment must not be null");
 		this.environment = environment;
@@ -210,6 +228,11 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 	 * @see #loadBeanDefinitions(org.springframework.core.io.Resource)
 	 * @see #loadBeanDefinitions(org.springframework.core.io.Resource[])
 	 */
+	// 从指定的资源位置加载 bean 定义。
+	// <p>位置也可以是位置模式，前提是这个bean定义阅读器的ResourceLoader是一个ResourcePatternResolver。
+	// @param location 资源位置，用这个bean定义阅读器的ResourceLoader（或ResourcePatternResolver）加载
+	// @param actualResources 一个 Set，用于填充在加载过程中已解析的实际 Resource 对象。
+	// 可能是 {@code null} 表示调用者对那些 Resource 对象不感兴趣。
 	public int loadBeanDefinitions(String location, @Nullable Set<Resource> actualResources) throws BeanDefinitionStoreException {
 		ResourceLoader resourceLoader = getResourceLoader();
 		if (resourceLoader == null) {
@@ -220,9 +243,12 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 		if (resourceLoader instanceof ResourcePatternResolver) {
 			// Resource pattern matching available.
 			try {
+				// 加载 xml 资源
 				Resource[] resources = ((ResourcePatternResolver) resourceLoader).getResources(location);
+				// 加载 beanDefinitions
 				int count = loadBeanDefinitions(resources);
 				if (actualResources != null) {
+					// 添加加载过程中已解析的实际 Resource 对象
 					Collections.addAll(actualResources, resources);
 				}
 				if (logger.isTraceEnabled()) {
