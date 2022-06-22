@@ -30,24 +30,36 @@ package org.springframework.aop;
  * @see org.springframework.aop.support.ClassFilters
  * @see org.springframework.aop.support.MethodMatchers
  */
+// 核心 Spring 切入点抽象。Joinpoint 条件接口
+// 切入点由 ClassFilter 和 MethodMatcher 这些基本术语和切入点本身都可以组合起来
+// 构建组合（例如，通过org.springframework.aop.support.ComposablePointcut ）。
+//
+// Spring AOP 的判断条件
 public interface Pointcut {
 
 	/**
 	 * Return the ClassFilter for this pointcut.
 	 * @return the ClassFilter (never {@code null})
 	 */
+	// 返回此切入点的类过滤器 ClassFilter。
+	// 返回值：
+	//				ClassFilter（从不为null ）
 	ClassFilter getClassFilter();
 
 	/**
 	 * Return the MethodMatcher for this pointcut.
 	 * @return the MethodMatcher (never {@code null})
 	 */
+	// 返回此切入点的方法匹配器 MethodMatcher。
+	// 返回值：
+	//				MethodMatcher（从不为null ）
 	MethodMatcher getMethodMatcher();
 
 
 	/**
 	 * Canonical Pointcut instance that always matches.
 	 */
+	// 始终匹配的规范切入点实例，默认匹配所有方法,即拦截所有方法
 	Pointcut TRUE = TruePointcut.INSTANCE;
 
 }

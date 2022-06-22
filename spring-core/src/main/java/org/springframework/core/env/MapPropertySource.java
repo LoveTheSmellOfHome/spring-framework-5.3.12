@@ -31,6 +31,8 @@ import org.springframework.util.StringUtils;
  * @since 3.1
  * @see PropertiesPropertySource
  */
+// {@link PropertySource} 从 {@code Map} 对象读取键和值。底层映射不应包含任何 {@code null} 值以
+// 符合 {@link getProperty} 和 {@link containsProperty} 语义
 public class MapPropertySource extends EnumerablePropertySource<Map<String, Object>> {
 
 	/**
@@ -39,14 +41,17 @@ public class MapPropertySource extends EnumerablePropertySource<Map<String, Obje
 	 * @param source the Map source (without {@code null} values in order to get
 	 * consistent {@link #getProperty} and {@link #containsProperty} behavior)
 	 */
+	// 使用给定的名称和 {@code Map} 创建一个新的 {@code MapPropertySource}
+	// @param name 关联名称
+	// @param source Map 源（没有 {@code null} 值以获得一致的 {@link getProperty} 和 {@link containsProperty} 行为）
 	public MapPropertySource(String name, Map<String, Object> source) {
 		super(name, source);
 	}
 
-
 	@Override
 	@Nullable
 	public Object getProperty(String name) {
+		// 从 Map 中 get(name)
 		return this.source.get(name);
 	}
 

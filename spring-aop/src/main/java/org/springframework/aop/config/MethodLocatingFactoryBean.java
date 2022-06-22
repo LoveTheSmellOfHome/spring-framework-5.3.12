@@ -31,14 +31,18 @@ import org.springframework.util.StringUtils;
  * @author Rob Harrop
  * @since 2.0
  */
+// 在指定 bean 上定位Method的FactoryBean实现
 public class MethodLocatingFactoryBean implements FactoryBean<Method>, BeanFactoryAware {
 
+	// 目标 bean 名称
 	@Nullable
 	private String targetBeanName;
 
+	// 方法名称
 	@Nullable
 	private String methodName;
 
+	// 方法
 	@Nullable
 	private Method method;
 
@@ -61,6 +65,7 @@ public class MethodLocatingFactoryBean implements FactoryBean<Method>, BeanFacto
 		this.methodName = methodName;
 	}
 
+	// 设置工厂
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) {
 		if (!StringUtils.hasText(this.targetBeanName)) {
@@ -70,6 +75,7 @@ public class MethodLocatingFactoryBean implements FactoryBean<Method>, BeanFacto
 			throw new IllegalArgumentException("Property 'methodName' is required");
 		}
 
+		// 找到 bean 的类型而非 bean, bean 的类型相对来讲是固定的
 		Class<?> beanClass = beanFactory.getType(this.targetBeanName);
 		if (beanClass == null) {
 			throw new IllegalArgumentException("Can't determine type of bean with name '" + this.targetBeanName + "'");

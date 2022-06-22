@@ -27,22 +27,28 @@ import org.springframework.core.type.ClassMetadata;
  * @author Juergen Hoeller
  * @since 2.5
  */
+// 用于访问类元数据的简单门面，由 ASM {@link org.springframework.asm.ClassReader} 读取
+// MetadataReader： 把 JAR 包下的 ".class" 资源文件 -> 类元信息。实现从静态资源 -> 动态类对象的转变
+// 元信息读取器（存储器）
 public interface MetadataReader {
 
 	/**
 	 * Return the resource reference for the class file.
 	 */
+	// 返回类文件的资源引用
 	Resource getResource();
 
 	/**
 	 * Read basic class metadata for the underlying class.
 	 */
+	// 读取底层类的基本类元数据
 	ClassMetadata getClassMetadata();
 
 	/**
 	 * Read full annotation metadata for the underlying class,
 	 * including metadata for annotated methods.
 	 */
+	// 读取底层类的完整注解元数据，包括注解方法的元数据
 	AnnotationMetadata getAnnotationMetadata();
 
 }

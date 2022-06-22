@@ -28,6 +28,7 @@ import org.springframework.lang.Nullable;
  * @see AfterReturningAdvice
  * @see ThrowsAdvice
  */
+// 在调用方法之前调用的建议动作。 这样的建议不能阻止方法调用的进行，除非它们抛出一个 Throwable
 public interface MethodBeforeAdvice extends BeforeAdvice {
 
 	/**
@@ -40,6 +41,14 @@ public interface MethodBeforeAdvice extends BeforeAdvice {
 	 * allowed by the method signature. Otherwise the exception
 	 * will be wrapped as a runtime exception.
 	 */
+	// 调用给定方法之前的回调。
+	// 形参：
+	//			method - 被调用的方法，其实它就是 Joinpoint
+	//			args – 方法的参数
+	//			target – 方法调用的目标。 可能为null 。
+	// 异常：
+	//			Throwable - 如果此对象希望中止调用。 如果方法签名允许，任何抛出的异常都将返回给调用者。
+	//			否则异常将被包装为运行时异常。
 	void before(Method method, Object[] args, @Nullable Object target) throws Throwable;
 
 }

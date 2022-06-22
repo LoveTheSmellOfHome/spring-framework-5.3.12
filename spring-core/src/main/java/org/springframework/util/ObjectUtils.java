@@ -16,14 +16,14 @@
 
 package org.springframework.util;
 
+import org.springframework.lang.Nullable;
+
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringJoiner;
-
-import org.springframework.lang.Nullable;
 
 /**
  * Miscellaneous object utility methods.
@@ -339,6 +339,7 @@ public abstract class ObjectUtils {
 	 * @see #nullSafeEquals(Object, Object)
 	 * @see java.util.Arrays#equals
 	 */
+	// 将给定的数组与 {@code Arrays.equals} 进行比较，根据数组元素而不是数组引用执行相等性检查
 	private static boolean arrayEquals(Object o1, Object o2) {
 		if (o1 instanceof Object[] && o2 instanceof Object[]) {
 			return Arrays.equals((Object[]) o1, (Object[]) o2);
@@ -502,6 +503,7 @@ public abstract class ObjectUtils {
 	 * Return a hash code based on the contents of the specified array.
 	 * If {@code array} is {@code null}, this method returns 0.
 	 */
+	// 根据指定数组的内容返回哈希码。如果 {@code array} 为 {@code null}，则此方法返回 0。
 	public static int nullSafeHashCode(@Nullable float[] array) {
 		if (array == null) {
 			return 0;
@@ -517,6 +519,7 @@ public abstract class ObjectUtils {
 	 * Return a hash code based on the contents of the specified array.
 	 * If {@code array} is {@code null}, this method returns 0.
 	 */
+	// 根据指定数组的内容返回哈希码。如果 {@code array} 为 {@code null}，则此方法返回 0
 	public static int nullSafeHashCode(@Nullable int[] array) {
 		if (array == null) {
 			return 0;
@@ -532,6 +535,7 @@ public abstract class ObjectUtils {
 	 * Return a hash code based on the contents of the specified array.
 	 * If {@code array} is {@code null}, this method returns 0.
 	 */
+	// 根据指定数组的内容返回哈希码
 	public static int nullSafeHashCode(@Nullable long[] array) {
 		if (array == null) {
 			return 0;
@@ -547,6 +551,7 @@ public abstract class ObjectUtils {
 	 * Return a hash code based on the contents of the specified array.
 	 * If {@code array} is {@code null}, this method returns 0.
 	 */
+	// 根据指定数组的内容返回哈希码
 	public static int nullSafeHashCode(@Nullable short[] array) {
 		if (array == null) {
 			return 0;
@@ -562,6 +567,7 @@ public abstract class ObjectUtils {
 	 * Return the same value as {@link Boolean#hashCode(boolean)}}.
 	 * @deprecated as of Spring Framework 5.0, in favor of the native JDK 8 variant
 	 */
+	// 返回与 {@link BooleanhashCode(boolean)}} 相同的值
 	@Deprecated
 	public static int hashCode(boolean bool) {
 		return Boolean.hashCode(bool);
@@ -571,6 +577,7 @@ public abstract class ObjectUtils {
 	 * Return the same value as {@link Double#hashCode(double)}}.
 	 * @deprecated as of Spring Framework 5.0, in favor of the native JDK 8 variant
 	 */
+	// 返回与 {@link DoublehashCode(double)}} 相同的值
 	@Deprecated
 	public static int hashCode(double dbl) {
 		return Double.hashCode(dbl);
@@ -580,6 +587,7 @@ public abstract class ObjectUtils {
 	 * Return the same value as {@link Float#hashCode(float)}}.
 	 * @deprecated as of Spring Framework 5.0, in favor of the native JDK 8 variant
 	 */
+	// 返回与 {@link FloathashCode(float)}} 相同的值
 	@Deprecated
 	public static int hashCode(float flt) {
 		return Float.hashCode(flt);
@@ -589,6 +597,7 @@ public abstract class ObjectUtils {
 	 * Return the same value as {@link Long#hashCode(long)}}.
 	 * @deprecated as of Spring Framework 5.0, in favor of the native JDK 8 variant
 	 */
+	// 返回与 {@link LonghashCode(long)}} 相同的值
 	@Deprecated
 	public static int hashCode(long lng) {
 		return Long.hashCode(lng);
@@ -605,6 +614,7 @@ public abstract class ObjectUtils {
 	 * @return the object's identity as String representation,
 	 * or an empty String if the object was {@code null}
 	 */
+	// 返回对象整体标识的字符串表示形式
 	public static String identityToString(@Nullable Object obj) {
 		if (obj == null) {
 			return EMPTY_STRING;
@@ -617,6 +627,7 @@ public abstract class ObjectUtils {
 	 * @param obj the object
 	 * @return the object's identity code in hex notation
 	 */
+	// 返回对象标识哈希代码的十六进制字符串形式
 	public static String getIdentityHexString(Object obj) {
 		return Integer.toHexString(System.identityHashCode(obj));
 	}

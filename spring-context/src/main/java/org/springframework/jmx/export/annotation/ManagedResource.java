@@ -40,6 +40,12 @@ import org.springframework.core.annotation.AliasFor;
  * @since 1.2
  * @see org.springframework.jmx.export.metadata.ManagedResource
  */
+// 类级注解，指示向 JMX 服务器注册类的实例，对应于 {@code ManagedResource} 属性
+// <p><b>注意：<b>这个注解被标记为继承的，允许通用的管理感知基类。在这种情况下，建议<i>不要<i>指定对象名称值，
+// 因为这会在注册多个子类的情况下导致命名冲突。
+// JMX:Java 管理扩展，Java Manged Extension,JMX 本身实现是非常复杂的，这个注解将 JMX 的复杂给大大简化了，
+// 它提供了许多抽象概念，如：DynamicBean,DynamicMBean,MXBean,模型Bean,OpenMBean 等
+// Spring 擅长将 API 封装，并且将复杂问题简单化
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
@@ -49,6 +55,7 @@ public @interface ManagedResource {
 	/**
 	 * Alias for the {@link #objectName} attribute, for simple default usage.
 	 */
+	// {@link objectName} 属性的别名，用于简单的默认用法
 	@AliasFor("objectName")
 	String value() default "";
 

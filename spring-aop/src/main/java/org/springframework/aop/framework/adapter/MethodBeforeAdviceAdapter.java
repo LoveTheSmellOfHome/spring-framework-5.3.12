@@ -31,14 +31,17 @@ import org.springframework.aop.MethodBeforeAdvice;
  * @author Rod Johnson
  * @author Juergen Hoeller
  */
+// 使 MethodBeforeAdvice 能够在 Spring AOP 框架中使用的适配器。将 Advice 适配成 MethodInterceptor
 @SuppressWarnings("serial")
 class MethodBeforeAdviceAdapter implements AdvisorAdapter, Serializable {
 
+	// 判断类型是否匹配
 	@Override
 	public boolean supportsAdvice(Advice advice) {
 		return (advice instanceof MethodBeforeAdvice);
 	}
 
+	// 将 advice 转换称对应的拦截器
 	@Override
 	public MethodInterceptor getInterceptor(Advisor advisor) {
 		MethodBeforeAdvice advice = (MethodBeforeAdvice) advisor.getAdvice();

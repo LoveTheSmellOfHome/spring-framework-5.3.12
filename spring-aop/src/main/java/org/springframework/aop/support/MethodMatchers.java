@@ -40,6 +40,8 @@ import org.springframework.util.Assert;
  * @see ClassFilters
  * @see Pointcuts
  */
+// 用于构成 MethodMatchers 的静态实用程序方法。
+// MethodMatcher 可以静态评估（基于方法和目标类）或需要进一步动态评估（基于方法调用时的参数）。
 public abstract class MethodMatchers {
 
 	/**
@@ -49,6 +51,12 @@ public abstract class MethodMatchers {
 	 * @return a distinct MethodMatcher that matches all methods that either
 	 * of the given MethodMatchers matches
 	 */
+	// 匹配给定 MethodMatchers 中的一个（或两者）匹配的所有方法。
+	// 参形：
+	//			mm1 – 第一个MethodMatcher
+	//			mm2 – 第二个 MethodMatcher
+	// 返回值：
+	//			一个独特的 MethodMatcher，它匹配给定 MethodMatchers 匹配的所有方法
 	public static MethodMatcher union(MethodMatcher mm1, MethodMatcher mm2) {
 		return (mm1 instanceof IntroductionAwareMethodMatcher || mm2 instanceof IntroductionAwareMethodMatcher ?
 				new UnionIntroductionAwareMethodMatcher(mm1, mm2) : new UnionMethodMatcher(mm1, mm2));
@@ -63,6 +71,14 @@ public abstract class MethodMatchers {
 	 * @return a distinct MethodMatcher that matches all methods that either
 	 * of the given MethodMatchers matches
 	 */
+	// 匹配给定 MethodMatchers 中的一个（或两者）匹配的所有方法。
+	// 参形：
+	//			mm1 – 第一个MethodMatcher
+	//			cf1 – 第一个 MethodMatcher 对应的 ClassFilter
+	//			mm2 – 第二个 MethodMatcher
+	//			cf2 – 第二个 MethodMatcher 对应的 ClassFilter
+	// 返回值：
+	//			一个独特的 MethodMatcher，它匹配给定 MethodMatchers 匹配的所有方法
 	static MethodMatcher union(MethodMatcher mm1, ClassFilter cf1, MethodMatcher mm2, ClassFilter cf2) {
 		return (mm1 instanceof IntroductionAwareMethodMatcher || mm2 instanceof IntroductionAwareMethodMatcher ?
 				new ClassFilterAwareUnionIntroductionAwareMethodMatcher(mm1, cf1, mm2, cf2) :
@@ -76,6 +92,12 @@ public abstract class MethodMatchers {
 	 * @return a distinct MethodMatcher that matches all methods that both
 	 * of the given MethodMatchers match
 	 */
+	// 匹配两个给定 MethodMatchers 匹配的所有方法。
+	// 参形：
+	//			mm1 – 第一个MethodMatcher
+	//			mm2 – 第二个 MethodMatcher
+	// 返回值：
+	//			一个独特的 MethodMatcher，它匹配两个给定 MethodMatchers 匹配的所有方法
 	public static MethodMatcher intersection(MethodMatcher mm1, MethodMatcher mm2) {
 		return (mm1 instanceof IntroductionAwareMethodMatcher || mm2 instanceof IntroductionAwareMethodMatcher ?
 				new IntersectionIntroductionAwareMethodMatcher(mm1, mm2) : new IntersectionMethodMatcher(mm1, mm2));
@@ -92,6 +114,14 @@ public abstract class MethodMatchers {
 	 * asking is the subject on one or more introductions; {@code false} otherwise
 	 * @return whether or not this method matches statically
 	 */
+	// 将给定的 MethodMatcher 应用于给定的 Method，支持IntroductionAwareMethodMatcher （如果适用）。
+	// 参形：
+	//			mm – 要应用的 MethodMatcher（可能是 IntroductionAwareMethodMatcher）
+	//			method - 候选方法
+	//			targetClass – 目标类
+	//			hasIntroductions – 如果我们代表其询问的对象是一个或多个介绍的主题，则为true ； 否则false
+	// 返回值：
+	//			此方法是否静态匹配
 	public static boolean matches(MethodMatcher mm, Method method, Class<?> targetClass, boolean hasIntroductions) {
 		Assert.notNull(mm, "MethodMatcher must not be null");
 		return (mm instanceof IntroductionAwareMethodMatcher ?
@@ -103,6 +133,7 @@ public abstract class MethodMatchers {
 	/**
 	 * MethodMatcher implementation for a union of two given MethodMatchers.
 	 */
+	// 两个给定 MethodMatcher 的联合的 MethodMatcher 实现
 	@SuppressWarnings("serial")
 	private static class UnionMethodMatcher implements MethodMatcher, Serializable {
 
@@ -170,6 +201,7 @@ public abstract class MethodMatchers {
 	 * of which at least one is an IntroductionAwareMethodMatcher.
 	 * @since 5.1
 	 */
+	// 两个给定 MethodMatcher 的联合的 MethodMatcher 实现，其中至少一个是 IntroductionAwareMethodMatcher
 	@SuppressWarnings("serial")
 	private static class UnionIntroductionAwareMethodMatcher extends UnionMethodMatcher
 			implements IntroductionAwareMethodMatcher {
@@ -190,6 +222,7 @@ public abstract class MethodMatchers {
 	 * MethodMatcher implementation for a union of two given MethodMatchers,
 	 * supporting an associated ClassFilter per MethodMatcher.
 	 */
+	// 两个给定 MethodMatcher 的联合的 MethodMatcher 实现，支持每个 MethodMatcher 关联的 ClassFilter
 	@SuppressWarnings("serial")
 	private static class ClassFilterAwareUnionMethodMatcher extends UnionMethodMatcher {
 
@@ -234,6 +267,7 @@ public abstract class MethodMatchers {
 		@Override
 		public int hashCode() {
 			// Allow for matching with regular UnionMethodMatcher by providing same hash...
+			// 允许通过提供相同的哈希与常规的 UnionMethodMatcher 进行匹配...
 			return super.hashCode();
 		}
 
@@ -250,6 +284,8 @@ public abstract class MethodMatchers {
 	 * supporting an associated ClassFilter per MethodMatcher.
 	 * @since 5.1
 	 */
+	// 两个给定 MethodMatcher 的联合的 MethodMatcher 实现，其中至少一个是 IntroductionAwareMethodMatcher，
+	// 支持每个 MethodMatcher 关联的 ClassFilter。
 	@SuppressWarnings("serial")
 	private static class ClassFilterAwareUnionIntroductionAwareMethodMatcher extends ClassFilterAwareUnionMethodMatcher
 			implements IntroductionAwareMethodMatcher {
@@ -271,6 +307,7 @@ public abstract class MethodMatchers {
 	/**
 	 * MethodMatcher implementation for an intersection of two given MethodMatchers.
 	 */
+	// 两个给定 MethodMatcher 的交集的 MethodMatcher 实现
 	@SuppressWarnings("serial")
 	private static class IntersectionMethodMatcher implements MethodMatcher, Serializable {
 
@@ -300,6 +337,7 @@ public abstract class MethodMatchers {
 			// Because a dynamic intersection may be composed of a static and dynamic part,
 			// we must avoid calling the 3-arg matches method on a dynamic matcher, as
 			// it will probably be an unsupported operation.
+			// 因为动态交集可能由静态和动态部分组成，所以我们必须避免在动态匹配器上调用 3-arg 匹配方法，因为它可能是不受支持的操作
 			boolean aMatches = (this.mm1.isRuntime() ?
 					this.mm1.matches(method, targetClass, args) : this.mm1.matches(method, targetClass));
 			boolean bMatches = (this.mm2.isRuntime() ?
@@ -336,6 +374,7 @@ public abstract class MethodMatchers {
 	 * of which at least one is an IntroductionAwareMethodMatcher.
 	 * @since 5.1
 	 */
+	// MethodMatcher 实现，用于两个给定 MethodMatcher 的交集，其中至少一个是 IntroductionAwareMethodMatcher
 	@SuppressWarnings("serial")
 	private static class IntersectionIntroductionAwareMethodMatcher extends IntersectionMethodMatcher
 			implements IntroductionAwareMethodMatcher {

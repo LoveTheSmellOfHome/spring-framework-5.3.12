@@ -29,6 +29,7 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.jmx.export.naming.MetadataNamingStrategy
  * @see org.springframework.jmx.export.MBeanExporter
  */
+// 元数据指示一个带注解的类的实例将被注册到一个 JMX 服务器。仅在用于 {@code Class} 时有效。
 public class ManagedResource extends AbstractJmxAttribute {
 
 	@Nullable
@@ -54,6 +55,7 @@ public class ManagedResource extends AbstractJmxAttribute {
 	/**
 	 * Set the JMX ObjectName of this managed resource.
 	 */
+	// 设置此托管资源的 JMX ObjectName。
 	public void setObjectName(@Nullable String objectName) {
 		this.objectName = objectName;
 	}
@@ -61,6 +63,7 @@ public class ManagedResource extends AbstractJmxAttribute {
 	/**
 	 * Return the JMX ObjectName of this managed resource.
 	 */
+	// 返回此托管资源的 JMX ObjectName
 	@Nullable
 	public String getObjectName() {
 		return this.objectName;

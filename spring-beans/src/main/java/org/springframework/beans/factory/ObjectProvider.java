@@ -38,6 +38,8 @@ import org.springframework.lang.Nullable;
  * @see BeanFactory#getBeanProvider
  * @see org.springframework.beans.factory.annotation.Autowired
  */
+// 专为注入点设计的ObjectFactory变体，允许编程可选和宽松的非唯一处理。
+// 从 5.1 开始，此接口扩展了Iterable并提供了Stream支持。 因此，它可以用于for循环，提供forEach迭代并允许集合样式的stream访问。
 public interface ObjectProvider<T> extends ObjectFactory<T>, Iterable<T> {
 
 	/**
@@ -50,6 +52,8 @@ public interface ObjectProvider<T> extends ObjectFactory<T>, Iterable<T> {
 	 * @throws BeansException in case of creation errors
 	 * @see #getObject()
 	 */
+	// 返回此工厂管理的对象的实例（可能是共享的或独立的）。
+	// 允许按照BeanFactory.getBean(String, Object...)指定显式构造参数。
 	T getObject(Object... args) throws BeansException;
 
 	/**
@@ -59,6 +63,8 @@ public interface ObjectProvider<T> extends ObjectFactory<T>, Iterable<T> {
 	 * @throws BeansException in case of creation errors
 	 * @see #getObject()
 	 */
+	// 返回此工厂管理的对象的实例（可能是共享的或独立的）。
+	// 返回值：bean 的一个实例，如果不可用则为null
 	@Nullable
 	T getIfAvailable() throws BeansException;
 
@@ -73,6 +79,10 @@ public interface ObjectProvider<T> extends ObjectFactory<T>, Iterable<T> {
 	 * @since 5.0
 	 * @see #getIfAvailable()
 	 */
+	// 返回此工厂管理的对象的实例（可能是共享的或独立的）。
+	// 形参：defaultSupplier – 如果工厂中不存在默认对象，则用于提供默认对象的回调
+	// 返回值：bean 的一个实例，或者如果没有这样的 bean 可用，则提供默认对象
+	// BeansException - 在创建错误的情况下
 	default T getIfAvailable(Supplier<T> defaultSupplier) throws BeansException {
 		T dependency = getIfAvailable();
 		return (dependency != null ? dependency : defaultSupplier.get());
@@ -87,6 +97,9 @@ public interface ObjectProvider<T> extends ObjectFactory<T>, Iterable<T> {
 	 * @since 5.0
 	 * @see #getIfAvailable()
 	 */
+	// 如果可用，请使用由该工厂管理的对象的实例（可能是共享的或独立的）。
+	// 形参：dependencyConsumer – 用于处理目标对象（如果可用）的回调（不以其他方式调用）
+	// BeansException - 在创建错误的情况下
 	default void ifAvailable(Consumer<T> dependencyConsumer) throws BeansException {
 		T dependency = getIfAvailable();
 		if (dependency != null) {
@@ -102,6 +115,8 @@ public interface ObjectProvider<T> extends ObjectFactory<T>, Iterable<T> {
 	 * @throws BeansException in case of creation errors
 	 * @see #getObject()
 	 */
+	// 返回此工厂管理的对象的实例（可能是共享的或独立的）。
+	// 返回值：bean 的一个实例，如果不可用或不是唯一的，则为null （即找到多个没有标记为主要的候选者）
 	@Nullable
 	T getIfUnique() throws BeansException;
 
@@ -117,6 +132,10 @@ public interface ObjectProvider<T> extends ObjectFactory<T>, Iterable<T> {
 	 * @since 5.0
 	 * @see #getIfUnique()
 	 */
+	// 返回此工厂管理的对象的实例（可能是共享的或独立的）。
+	// 形参：defaultSupplier – 如果工厂中不存在唯一候选对象，则用于提供默认对象的回调
+	// 返回值：bean 的一个实例，或者提供的默认对象，如果没有这样的 bean 可用或者它在工厂中
+	// 不是唯一的（即发现多个候选对象，但没有标记为主要的）
 	default T getIfUnique(Supplier<T> defaultSupplier) throws BeansException {
 		T dependency = getIfUnique();
 		return (dependency != null ? dependency : defaultSupplier.get());
@@ -131,6 +150,8 @@ public interface ObjectProvider<T> extends ObjectFactory<T>, Iterable<T> {
 	 * @since 5.0
 	 * @see #getIfAvailable()
 	 */
+	// 如果唯一，则使用由该工厂管理的对象的实例（可能是共享的或独立的）。
+	// 形参：dependencyConsumer – 用于处理目标对象的回调，如果唯一（否则不调用）
 	default void ifUnique(Consumer<T> dependencyConsumer) throws BeansException {
 		T dependency = getIfUnique();
 		if (dependency != null) {
@@ -144,6 +165,7 @@ public interface ObjectProvider<T> extends ObjectFactory<T>, Iterable<T> {
 	 * @since 5.1
 	 * @see #stream()
 	 */
+	// 在所有匹配的对象实例上返回一个Iterator ，没有特定的排序保证（但通常按注册顺序）
 	@Override
 	default Iterator<T> iterator() {
 		return stream().iterator();
@@ -156,6 +178,7 @@ public interface ObjectProvider<T> extends ObjectFactory<T>, Iterable<T> {
 	 * @see #iterator()
 	 * @see #orderedStream()
 	 */
+	// 在所有匹配的对象实例上返回一个顺序Stream ，没有特定的排序保证（但通常按注册顺序）
 	default Stream<T> stream() {
 		throw new UnsupportedOperationException("Multi element access not supported");
 	}
@@ -172,6 +195,11 @@ public interface ObjectProvider<T> extends ObjectFactory<T>, Iterable<T> {
 	 * @see #stream()
 	 * @see org.springframework.core.OrderComparator
 	 */
+	// 返回所有匹配对象实例的顺序Stream ，根据工厂的公共顺序比较器预先排序。
+	//
+	// 在标准的 Spring 应用上下文中，这将根据org.springframework.core.Ordered 约定进行排序，
+	// 并且在基于注解的配置的情况下也考虑 org.springframework.core.annotation.Order 注解，
+	// 类似于多元素注入列表/数组类型的点。
 	default Stream<T> orderedStream() {
 		throw new UnsupportedOperationException("Ordered element access not supported");
 	}

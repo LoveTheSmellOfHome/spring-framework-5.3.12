@@ -32,12 +32,18 @@ import java.util.concurrent.Future;
  * @since 4.0
  * @param <T> the result type returned by this Future's {@code get} method
  */
+// 扩展 Future 以接受完成回调的能力。如果在添加回调时 future 已经完成，则立即触发回调。
+// 受 com.google.common.util.concurrent.ListenableFuture启发。
+//
+// 类型形参： <T>——这个 Future 的 get 方法返回的结果类型
 public interface ListenableFuture<T> extends Future<T> {
 
 	/**
 	 * Register the given {@code ListenableFutureCallback}.
 	 * @param callback the callback to register
 	 */
+	// 注册给定的 ListenableFutureCallback 。
+	// 参形：callback – 要注册的回调
 	void addCallback(ListenableFutureCallback<? super T> callback);
 
 	/**
@@ -46,6 +52,10 @@ public interface ListenableFuture<T> extends Future<T> {
 	 * @param failureCallback the failure callback
 	 * @since 4.1
 	 */
+	// Java 8 lambda 友好的替代方案，带有成功和失败回调。
+	// 参形：
+	//			successCallback – 成功回调
+	//			failureCallback – 失败回调
 	void addCallback(SuccessCallback<? super T> successCallback, FailureCallback failureCallback);
 
 
@@ -53,6 +63,7 @@ public interface ListenableFuture<T> extends Future<T> {
 	 * Expose this {@link ListenableFuture} as a JDK {@link CompletableFuture}.
 	 * @since 5.0
 	 */
+	// 将此ListenableFuture公开为 JDK CompletableFuture 。
 	default CompletableFuture<T> completable() {
 		CompletableFuture<T> completable = new DelegatingCompletableFuture<>(this);
 		addCallback(completable::complete, completable::completeExceptionally);

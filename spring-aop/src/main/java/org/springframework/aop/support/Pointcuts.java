@@ -33,12 +33,16 @@ import org.springframework.util.Assert;
  * @author Rod Johnson
  * @author Juergen Hoeller
  */
+// 用于匹配 getter 和 setter 的切入点常量，以及用于操作和评估切入点的静态方法。
+// 这些方法对于使用并集和交集方法构成切入点特别有用
 public abstract class Pointcuts {
 
 	/** Pointcut matching all bean property setters, in any class. */
+	// 与任何类中的所有 bean 属性设置器 setter 匹配的切入点
 	public static final Pointcut SETTERS = SetterPointcut.INSTANCE;
 
 	/** Pointcut matching all bean property getters, in any class. */
+	// 与任何类中的所有 bean 属性获取器 getter 匹配的切入点
 	public static final Pointcut GETTERS = GetterPointcut.INSTANCE;
 
 
@@ -49,6 +53,12 @@ public abstract class Pointcuts {
 	 * @return a distinct Pointcut that matches all methods that either
 	 * of the given Pointcuts matches
 	 */
+	// 匹配给定切入点之一（或两者）匹配的所有方法。
+	// 参形：
+	//			pc1 - 第一个切入点
+	//			pc2 – 第二个切入点
+	// 返回值：
+	//			一个独特的切入点，匹配给定切入点匹配的所有方法
 	public static Pointcut union(Pointcut pc1, Pointcut pc2) {
 		return new ComposablePointcut(pc1).union(pc2);
 	}
@@ -60,6 +70,12 @@ public abstract class Pointcuts {
 	 * @return a distinct Pointcut that matches all methods that both
 	 * of the given Pointcuts match
 	 */
+	// 匹配给定切入点匹配的所有方法。
+	// 参形：
+	//			pc1 - 第一个切入点
+	//			pc2 – 第二个切入点
+	// 返回值：
+	//			一个独特的切入点，它匹配两个给定切入点匹配的所有方法
 	public static Pointcut intersection(Pointcut pc1, Pointcut pc2) {
 		return new ComposablePointcut(pc1).intersection(pc2);
 	}
@@ -72,19 +88,30 @@ public abstract class Pointcuts {
 	 * @param args arguments to the method
 	 * @return whether there's a runtime match
 	 */
+	// 对切入点匹配执行成本最低的检查。
+	// 参形：
+	//			pointcut - 要匹配的切入点,包含了匹配规则的空方法，方法名就是匹配点名称
+	//			method - 候选方法
+	//			targetClass – 目标类
+	//			args – 方法的参数
+	// 返回值：
+	//			是否存在运行时匹配
 	public static boolean matches(Pointcut pointcut, Method method, Class<?> targetClass, Object... args) {
 		Assert.notNull(pointcut, "Pointcut must not be null");
 		if (pointcut == Pointcut.TRUE) {
 			return true;
 		}
+		// 类过滤器过滤目标类
 		if (pointcut.getClassFilter().matches(targetClass)) {
 			// Only check if it gets past first hurdle.
 			MethodMatcher mm = pointcut.getMethodMatcher();
+			// 方法匹配器匹配目标类的指定方法
 			if (mm.matches(method, targetClass)) {
 				// We may need additional runtime (argument) check.
 				return (!mm.isRuntime() || mm.matches(method, targetClass, args));
 			}
 		}
+		// 默认非运行时方法
 		return false;
 	}
 
@@ -92,13 +119,16 @@ public abstract class Pointcuts {
 	/**
 	 * Pointcut implementation that matches bean property setters.
 	 */
+	// 与 bean 属性设置器匹配的切入点实现
 	@SuppressWarnings("serial")
 	private static class SetterPointcut extends StaticMethodMatcherPointcut implements Serializable {
 
+		// 常用设计方法：获取 Setter 方法判断点
 		public static final SetterPointcut INSTANCE = new SetterPointcut();
 
 		@Override
 		public boolean matches(Method method, Class<?> targetClass) {
+			// 以 set 开头，且有一个参数，返回值类型是 void
 			return (method.getName().startsWith("set") &&
 					method.getParameterCount() == 1 &&
 					method.getReturnType() == Void.TYPE);

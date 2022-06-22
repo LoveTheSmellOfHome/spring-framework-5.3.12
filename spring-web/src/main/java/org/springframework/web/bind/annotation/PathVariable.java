@@ -16,13 +16,9 @@
 
 package org.springframework.web.bind.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 import org.springframework.core.annotation.AliasFor;
+
+import java.lang.annotation.*;
 
 /**
  * Annotation which indicates that a method parameter should be bound to a URI template
@@ -37,6 +33,8 @@ import org.springframework.core.annotation.AliasFor;
  * @see RequestMapping
  * @see org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter
  */
+// 指示方法参数应绑定到 URI 模板变量的注解。支持RequestMapping注释的处理程序方法。
+// 如果方法参数是Map<String, String>则映射将填充所有路径变量名称和值。
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -63,6 +61,10 @@ public @interface PathVariable {
 	 * e.g. on a {@code ModelAttribute} method which serves for different requests.
 	 * @since 4.3.3
 	 */
+	// 是否需要路径变量。
+	//
+	// 默认为true ，如果传入请求中缺少路径变量，则会引发异常。如果在这种情况下您更喜欢 null 或 Java 8 java.util.Optional ，
+	// 请将其切换为 false 。例如，在用于不同请求的 ModelAttribute 方法上。
 	boolean required() default true;
 
 }

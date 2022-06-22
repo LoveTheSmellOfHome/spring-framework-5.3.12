@@ -27,6 +27,7 @@ import org.springframework.util.Assert;
  * @param <T> the value type
  * @see NamedInheritableThreadLocal
  */
+// {@link ThreadLocal} 子类，将指定名称公开为 {@link toString()} 结果（允许自省）。
 public class NamedThreadLocal<T> extends ThreadLocal<T> {
 
 	private final String name;
@@ -36,6 +37,7 @@ public class NamedThreadLocal<T> extends ThreadLocal<T> {
 	 * Create a new NamedThreadLocal with the given name.
 	 * @param name a descriptive name for this ThreadLocal
 	 */
+	// 使用给定的名称创建一个新的 NamedThreadLocal。
 	public NamedThreadLocal(String name) {
 		Assert.hasText(name, "Name must not be empty");
 		this.name = name;

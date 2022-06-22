@@ -30,6 +30,9 @@ import java.util.List;
  * @author Andy Clement
  * @since 3.0.1
  */
+// MethodFilter 实例允许 SpEL 用户微调方法解析过程的行为。 方法解析（从表达式中的方法名称转换为要调用的实际方法）通常
+// 会通过简单调用“Class.getMethods()”来检索候选方法以进行调用，并将选择适合输入的第一个方法参数。
+// 通过注册 MethodFilter 用户可以接收回调并更改将被认为合适的方法。
 @FunctionalInterface
 public interface MethodFilter {
 
@@ -42,6 +45,9 @@ public interface MethodFilter {
 	 * @param methods the full list of methods the resolver was going to choose from
 	 * @return a possible subset of input methods that may be sorted by order of relevance
 	 */
+	// 由方法解析器调用以允许 SpEL 用户组织可能被调用的候选方法列表。 过滤器可以删除不应被视为候选的方法，并且可以对结果进行排序。 当寻找合适的候选者时，解析器将搜索从过滤器返回的方法。
+	// 形参：methods- 解析器将从中选择的方法的完整列表
+	// 返回值：可以按相关性顺序排序的输入方法的可能子集
 	List<Method> filter(List<Method> methods);
 
 }

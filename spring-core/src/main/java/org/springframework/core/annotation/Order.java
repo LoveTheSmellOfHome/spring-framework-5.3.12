@@ -16,13 +16,13 @@
 
 package org.springframework.core.annotation;
 
+import org.springframework.core.Ordered;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import org.springframework.core.Ordered;
 
 /**
  * {@code @Order} defines the sort order for an annotated component.
@@ -60,6 +60,21 @@ import org.springframework.core.Ordered;
  * @see OrderUtils
  * @see javax.annotation.Priority
  */
+// {@code @Order} 定义带解解组件的排序顺序
+//
+// <p>{@link value} 是可选的，代表 {@link Ordered} 接口中定义的值。较低的值具有较高的优先级。
+// 默认值为 {@code Ordered.LOWEST_PRECEDENCE}，表示最低优先级（输给任何其他指定的订单值）。
+//
+// <p><b>注意：<b> 从 Spring 4.0 开始，Spring 中的多种组件都支持基于注解的排序，即使对于考虑目标组件的顺序值的
+// 集合注入（无论是从它们的目标类或来自他们的 {@code @Bean} 方法）。
+// 虽然此类顺序值可能会影响注入点的优先级，但请注意，它们不会影响单例启动顺序，
+// 这是由依赖关系和 {@code @DependsOn} 声明（影响运行时确定的依赖图）确定的正交问题
+//
+// <p>从 Spring 4.1 开始，标准的 {@link javax.annotation.Priority} 注解可以在排序场景中用作此注解的替代品。
+// 请注意，当必须选择单个元素时，{@code @Priority} 可能具有额外的语义（请参阅 {@link AnnotationAwareOrderComparatorgetPriority}）。
+//
+// <p>或者，也可以通过 {@link Ordered} 接口在每个实例的基础上确定顺序值，允许配置确定的实例值而不是附加到特定类的硬编码值。
+// <p>请参阅 {@link org.springframework.core.OrderComparator OrderComparator} 的 javadoc，了解有关无序对象的排序语义的详细信息。
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 @Documented

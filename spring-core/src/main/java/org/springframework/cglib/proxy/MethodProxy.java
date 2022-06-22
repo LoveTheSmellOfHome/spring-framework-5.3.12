@@ -33,6 +33,9 @@ import org.springframework.cglib.reflect.FastClass;
  * object of the same type.
  * @version $Id: MethodProxy.java,v 1.16 2009/01/11 20:09:48 herbyderby Exp $
  */
+// 当调用拦截的方法时，由 Enhancer 生成的类将此对象传递给已注册的 MethodInterceptor 对象。
+// 它可用于调用原始方法，或在相同类型的不同对象上调用相同方法。
+// 版本：$Id: MethodProxy.java,v 1.16 2009/01/11 20:09:48 herbyderby Exp $
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class MethodProxy {
 
@@ -50,6 +53,7 @@ public class MethodProxy {
 	 * For internal use by {@link Enhancer} only; see the {@link org.springframework.cglib.reflect.FastMethod} class
 	 * for similar functionality.
 	 */
+	// 仅供 Enhancer 内部使用；有关类似功能，请参见 org.springframework.cglib.reflect.FastMethod 类。
 	public static MethodProxy create(Class c1, Class c2, String desc, String name1, String name2) {
 		MethodProxy proxy = new MethodProxy();
 		proxy.sig1 = new Signature(name1, desc);
@@ -67,6 +71,8 @@ public class MethodProxy {
 		 * code could allow fastClassInfo to be instantiated more than once, which
 		 * appears to be benign.
 		 */
+		// 使用 volatile 不变量允许我们以原子方式初始化 FastClass 和方法索引对。
+		// 双重检查锁定在 Java 5 中使用 volatile 是安全的。在 1.5 之前，此代码可能允许多次实例化 fastClassInfo，这似乎是良性的。
 		if (fastClassInfo == null) {
 			synchronized (initLock) {
 				if (fastClassInfo == null) {
@@ -141,6 +147,7 @@ public class MethodProxy {
 	/**
 	 * Return the signature of the proxied method.
 	 */
+	// 返回代理方法的签名
 	public Signature getSignature() {
 		return sig1;
 	}
@@ -151,6 +158,7 @@ public class MethodProxy {
 	 * (non-intercepted) method implementation. The parameter types are
 	 * the same as the proxied method.
 	 */
+	// 返回由 CGLIB 创建的合成方法的名称，{@link invokeSuper} 使用它来调用超类（非拦截）方法实现。参数类型与代理方法相同
 	public String getSuperName() {
 		return sig2.getName();
 	}
@@ -162,6 +170,8 @@ public class MethodProxy {
 	 * can be useful to reference external metadata.
 	 * @see #getSuperName
 	 */
+	// 返回 {@link invokeSuper} 使用的方法的 {@link org.springframework.cglib.reflect.FastClass} 方法索引。
+	// 此索引唯一标识生成的代理中的方法，因此可用于引用外部元数据。
 	public int getSuperIndex() {
 		init();
 		return fastClassInfo.i2;
@@ -187,6 +197,14 @@ public class MethodProxy {
 	 * @return the MethodProxy instance, or null if no applicable matching method is found
 	 * @throws IllegalArgumentException if the Class was not created by Enhancer or does not use a MethodInterceptor
 	 */
+	// 返回拦截与给定签名匹配的方法时使用的MethodProxy 。
+	// 参形：
+	//			type – Enhancer 生成的类
+	//			sig - 要匹配的签名
+	// 返回值：
+	//			MethodProxy 实例，如果未找到适用的匹配方法，则返回 null
+	// 抛出：
+	//			IllegalArgumentException – 如果类不是由 Enhancer 创建或不使用 MethodInterceptor
 	public static MethodProxy find(Class type, Signature sig) {
 		try {
 			Method m = type.getDeclaredMethod(MethodInterceptorGenerator.FIND_PROXY_NAME,
@@ -211,6 +229,12 @@ public class MethodProxy {
 	 * without wrapping in an <code>InvocationTargetException</code>
 	 * @see MethodInterceptor#intercept
 	 */
+	// 在相同类型的不同对象上调用原始方法。
+	// 参形：
+	//			obj - 兼容对象；如果您使用作为第一个参数传递给 MethodInterceptor 的对象（通常不是您想要的），则会导致递归
+	//			args – 传递给拦截方法的参数；只要类型兼容，您就可以替换不同的参数数组
+	// 抛出：
+	//			Throwable – 被调用方法抛出的裸异常被传递，而不包含在InvocationTargetException中
 	public Object invoke(Object obj, Object[] args) throws Throwable {
 		try {
 			init();
@@ -237,6 +261,12 @@ public class MethodProxy {
 	 * without wrapping in an <code>InvocationTargetException</code>
 	 * @see MethodInterceptor#intercept
 	 */
+	// 在指定对象上调用原始（超级）方法。
+	// 参形：
+	//			obj – 增强对象，必须是作为第一个参数传递给 MethodInterceptor 的对象
+	//			args – 传递给拦截方法的参数；只要类型兼容，您就可以替换不同的参数数组
+	// 抛出：
+	//			Throwable – 被调用方法抛出的裸异常被传递，而不包含在InvocationTargetException中
 	public Object invokeSuper(Object obj, Object[] args) throws Throwable {
 		try {
 			init();

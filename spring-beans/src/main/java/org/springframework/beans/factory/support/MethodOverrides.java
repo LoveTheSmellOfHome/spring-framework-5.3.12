@@ -34,6 +34,8 @@ import org.springframework.lang.Nullable;
  * @since 1.1
  * @see MethodOverride
  */
+// 一组方法覆盖，确定 Spring IoC 容器将在运行时覆盖托管对象上的哪些方法（如果有）。
+// 当前支持的 MethodOverride 变体是 LookupOverride 和 ReplaceOverride
 public class MethodOverrides {
 
 	private final Set<MethodOverride> overrides = new CopyOnWriteArraySet<>();
@@ -42,12 +44,14 @@ public class MethodOverrides {
 	/**
 	 * Create new MethodOverrides.
 	 */
+	// 创建新的 MethodOverrides
 	public MethodOverrides() {
 	}
 
 	/**
 	 * Deep copy constructor.
 	 */
+	// 深拷贝构造函数
 	public MethodOverrides(MethodOverrides other) {
 		addOverrides(other);
 	}
@@ -56,6 +60,7 @@ public class MethodOverrides {
 	/**
 	 * Copy all given method overrides into this object.
 	 */
+	// 将所有给定的方法覆盖复制到此对象中
 	public void addOverrides(@Nullable MethodOverrides other) {
 		if (other != null) {
 			this.overrides.addAll(other.overrides);
@@ -65,6 +70,7 @@ public class MethodOverrides {
 	/**
 	 * Add the given method override.
 	 */
+	// 添加给定的方法覆盖
 	public void addOverride(MethodOverride override) {
 		this.overrides.add(override);
 	}
@@ -74,6 +80,8 @@ public class MethodOverrides {
 	 * @return a Set of MethodOverride objects
 	 * @see MethodOverride
 	 */
+	// 返回此对象包含的所有方法覆盖
+	// 返回值：一组 MethodOverride 对象
 	public Set<MethodOverride> getOverrides() {
 		return this.overrides;
 	}
@@ -81,6 +89,7 @@ public class MethodOverrides {
 	/**
 	 * Return whether the set of method overrides is empty.
 	 */
+	// 返回方法覆盖集是否为空
 	public boolean isEmpty() {
 		return this.overrides.isEmpty();
 	}
@@ -90,6 +99,9 @@ public class MethodOverrides {
 	 * @param method method to check for overrides for
 	 * @return the method override, or {@code null} if none
 	 */
+	// 返回给定方法的覆盖（如果有）。
+	// 形参：方法- 检查覆盖的方法
+	// 返回值：方法覆盖，如果没有，则为null
 	@Nullable
 	public MethodOverride getOverride(Method method) {
 		MethodOverride match = null;

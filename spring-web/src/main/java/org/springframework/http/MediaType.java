@@ -16,24 +16,13 @@
 
 package org.springframework.http;
 
+import org.springframework.lang.Nullable;
+import org.springframework.util.*;
+
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.InvalidMimeTypeException;
-import org.springframework.util.MimeType;
-import org.springframework.util.MimeTypeUtils;
-import org.springframework.util.StringUtils;
+import java.util.*;
 
 /**
  * A subclass of {@link MimeType} that adds support for quality parameters
@@ -49,6 +38,7 @@ import org.springframework.util.StringUtils;
  * @see <a href="https://tools.ietf.org/html/rfc7231#section-3.1.1.1">
  *     HTTP 1.1: Semantics and Content, section 3.1.1.1</a>
  */
+// MimeType的子类，添加了对 HTTP 规范中定义的质量参数的支持
 public class MediaType extends MimeType implements Serializable {
 
 	private static final long serialVersionUID = 2069937152339670231L;
@@ -56,54 +46,64 @@ public class MediaType extends MimeType implements Serializable {
 	/**
 	 * Public constant media type that includes all media ranges (i.e. "&#42;/&#42;").
 	 */
+	// 包括所有媒体范围的公共常量媒体类型（即“*/*”）。
 	public static final MediaType ALL;
 
 	/**
 	 * A String equivalent of {@link MediaType#ALL}.
 	 */
+	// 等价于ALL的字符串
 	public static final String ALL_VALUE = "*/*";
 
 	/**
 	 *  Public constant media type for {@code application/atom+xml}.
 	 */
+	// application/atom+xml的公共常量媒体类型
 	public static final MediaType APPLICATION_ATOM_XML;
 
 	/**
 	 * A String equivalent of {@link MediaType#APPLICATION_ATOM_XML}.
 	 */
+	// 相当于APPLICATION_ATOM_XML的字符串
 	public static final String APPLICATION_ATOM_XML_VALUE = "application/atom+xml";
 
 	/**
 	 * Public constant media type for {@code application/cbor}.
 	 * @since 5.2
 	 */
+	// application/cbor的公共常量媒体类型
 	public static final MediaType APPLICATION_CBOR;
 
 	/**
 	 * A String equivalent of {@link MediaType#APPLICATION_CBOR}.
 	 * @since 5.2
 	 */
+	// 相当于 APPLICATION_CBOR 的字符串
 	public static final String APPLICATION_CBOR_VALUE = "application/cbor";
 
 	/**
 	 * Public constant media type for {@code application/x-www-form-urlencoded}.
 	 */
+	// application/x-www-form-urlencoded公共常量媒体类型
 	public static final MediaType APPLICATION_FORM_URLENCODED;
 
 	/**
 	 * A String equivalent of {@link MediaType#APPLICATION_FORM_URLENCODED}.
 	 */
+	// 相当于APPLICATION_FORM_URLENCODED的字符串。
 	public static final String APPLICATION_FORM_URLENCODED_VALUE = "application/x-www-form-urlencoded";
 
 	/**
 	 * Public constant media type for {@code application/json}.
 	 */
+	// application/json的公共常量媒体类型
 	public static final MediaType APPLICATION_JSON;
 
 	/**
 	 * A String equivalent of {@link MediaType#APPLICATION_JSON}.
 	 * @see #APPLICATION_JSON_UTF8_VALUE
 	 */
+	// A String equivalent of APPLICATION_JSON.
 	public static final String APPLICATION_JSON_VALUE = "application/json";
 
 	/**
@@ -114,6 +114,10 @@ public class MediaType extends MimeType implements Serializable {
 	 * now comply with the specification</a> and interpret correctly UTF-8 special
 	 * characters without requiring a {@code charset=UTF-8} parameter.
 	 */
+	// application/json;charset=UTF-8的公共常量媒体类型。
+	//已弃用
+	//从 5.2 开始支持APPLICATION_JSON ，因为像 Chrome 这样的主要浏览器现在符合规范
+	// 并正确解释 UTF-8 特殊字符，而不需要charset=UTF-8参数。
 	@Deprecated
 	public static final MediaType APPLICATION_JSON_UTF8;
 
@@ -125,29 +129,37 @@ public class MediaType extends MimeType implements Serializable {
 	 * now comply with the specification</a> and interpret correctly UTF-8 special
 	 * characters without requiring a {@code charset=UTF-8} parameter.
 	 */
+	// 相当于APPLICATION_JSON_UTF8的字符串。
+	//已弃用
+	//从 5.2 开始支持APPLICATION_JSON_VALUE ，因为像 Chrome 这样的主要浏览器现在符合规范
+	// 并正确解释 UTF-8 特殊字符，而不需要charset=UTF-8参数。
 	@Deprecated
 	public static final String APPLICATION_JSON_UTF8_VALUE = "application/json;charset=UTF-8";
 
 	/**
 	 * Public constant media type for {@code application/octet-stream}.
 	 */
+	// application/octet-stream的公共常量媒体类型。
 	public static final MediaType APPLICATION_OCTET_STREAM;
 
 	/**
 	 * A String equivalent of {@link MediaType#APPLICATION_OCTET_STREAM}.
 	 */
+	// 相当于APPLICATION_OCTET_STREAM的字符串
 	public static final String APPLICATION_OCTET_STREAM_VALUE = "application/octet-stream";
 
 	/**
 	 * Public constant media type for {@code application/pdf}.
 	 * @since 4.3
 	 */
+	// application/pdf的公共常量媒体类型
 	public static final MediaType APPLICATION_PDF;
 
 	/**
 	 * A String equivalent of {@link MediaType#APPLICATION_PDF}.
 	 * @since 4.3
 	 */
+	// 相当于APPLICATION_PDF的字符串
 	public static final String APPLICATION_PDF_VALUE = "application/pdf";
 
 	/**
@@ -156,12 +168,14 @@ public class MediaType extends MimeType implements Serializable {
 	 * @see <a href="https://tools.ietf.org/html/rfc7807#section-6.1">
 	 *     Problem Details for HTTP APIs, 6.1. application/problem+json</a>
 	 */
+	// Public constant media type for application/problem+json
 	public static final MediaType APPLICATION_PROBLEM_JSON;
 
 	/**
 	 * A String equivalent of {@link MediaType#APPLICATION_PROBLEM_JSON}.
 	 * @since 5.0
 	 */
+	// 相当于APPLICATION_PROBLEM_JSON的字符串
 	public static final String APPLICATION_PROBLEM_JSON_VALUE = "application/problem+json";
 
 	/**
@@ -175,6 +189,10 @@ public class MediaType extends MimeType implements Serializable {
 	 * now comply with the specification</a> and interpret correctly UTF-8 special
 	 * characters without requiring a {@code charset=UTF-8} parameter.
 	 */
+	// application/problem+json的公共常量媒体类型。
+	//已弃用
+	//从 5.2 开始支持APPLICATION_PROBLEM_JSON ，因为像 Chrome 这样的主要浏览器现在符合规范并正确
+	// 解释 UTF-8 特殊字符，而不需要charset=UTF-8参数
 	@Deprecated
 	public static final MediaType APPLICATION_PROBLEM_JSON_UTF8;
 
@@ -187,6 +205,10 @@ public class MediaType extends MimeType implements Serializable {
 	 * now comply with the specification</a> and interpret correctly UTF-8 special
 	 * characters without requiring a {@code charset=UTF-8} parameter.
 	 */
+	// 相当于APPLICATION_PROBLEM_JSON_UTF8的字符串。
+	//已弃用
+	//从 5.2 开始支持APPLICATION_PROBLEM_JSON_VALUE ，因为像 Chrome 这样的主要浏览器现
+	// 在符合规范并正确解释 UTF-8 特殊字符，而不需要charset=UTF-8参数
 	@Deprecated
 	public static final String APPLICATION_PROBLEM_JSON_UTF8_VALUE = "application/problem+json;charset=UTF-8";
 
@@ -196,36 +218,42 @@ public class MediaType extends MimeType implements Serializable {
 	 * @see <a href="https://tools.ietf.org/html/rfc7807#section-6.2">
 	 *     Problem Details for HTTP APIs, 6.2. application/problem+xml</a>
 	 */
+	// Public constant media type for application/problem+xml
 	public static final MediaType APPLICATION_PROBLEM_XML;
 
 	/**
 	 * A String equivalent of {@link MediaType#APPLICATION_PROBLEM_XML}.
 	 * @since 5.0
 	 */
+	// 相当于APPLICATION_PROBLEM_XML的字符串
 	public static final String APPLICATION_PROBLEM_XML_VALUE = "application/problem+xml";
 
 	/**
 	 * Public constant media type for {@code application/rss+xml}.
 	 * @since 4.3.6
 	 */
+	// application/rss+xml的公共常量媒体类型
 	public static final MediaType APPLICATION_RSS_XML;
 
 	/**
 	 * A String equivalent of {@link MediaType#APPLICATION_RSS_XML}.
 	 * @since 4.3.6
 	 */
+	// 相当于APPLICATION_RSS_XML的字符串
 	public static final String APPLICATION_RSS_XML_VALUE = "application/rss+xml";
 
 	/**
 	 * Public constant media type for {@code application/x-ndjson}.
 	 * @since 5.3
 	 */
+	// application/x-ndjson的公共常量媒体类型
 	public static final MediaType APPLICATION_NDJSON;
 
 	/**
 	 * A String equivalent of {@link MediaType#APPLICATION_NDJSON}.
 	 * @since 5.3
 	 */
+	// 相当于APPLICATION_NDJSON的字符串
 	public static final String APPLICATION_NDJSON_VALUE = "application/x-ndjson";
 
 	/**
@@ -233,6 +261,7 @@ public class MediaType extends MimeType implements Serializable {
 	 * @since 5.0
 	 * @deprecated as of 5.3, see notice on {@link #APPLICATION_STREAM_JSON_VALUE}.
 	 */
+	// Public constant media type for application/stream+json
 	@Deprecated
 	public static final MediaType APPLICATION_STREAM_JSON;
 
@@ -245,91 +274,111 @@ public class MediaType extends MimeType implements Serializable {
 	 * a replacement or any other line-delimited JSON format (e.g. JSON Lines,
 	 * JSON Text Sequences).
 	 */
+	// 相当于APPLICATION_STREAM_JSON的字符串。
+	//已弃用
+	//从 5.3 开始，因为它源自 W3C 活动流规范，该规范具有更具体的目的，并且已被不同的 mime 类型所取代。
+	// 使用APPLICATION_NDJSON作为替代或任何其他以行分隔的 JSON 格式（例如 JSON 行、JSON 文本序列）
 	@Deprecated
 	public static final String APPLICATION_STREAM_JSON_VALUE = "application/stream+json";
 
 	/**
 	 * Public constant media type for {@code application/xhtml+xml}.
 	 */
+	// application/xhtml+xml的公共常量媒体类型
 	public static final MediaType APPLICATION_XHTML_XML;
 
 	/**
 	 * A String equivalent of {@link MediaType#APPLICATION_XHTML_XML}.
 	 */
+	// 相当于APPLICATION_XHTML_XML的字符串
 	public static final String APPLICATION_XHTML_XML_VALUE = "application/xhtml+xml";
 
 	/**
 	 * Public constant media type for {@code application/xml}.
 	 */
+	// application/xml的公共常量媒体类型
 	public static final MediaType APPLICATION_XML;
 
 	/**
 	 * A String equivalent of {@link MediaType#APPLICATION_XML}.
 	 */
+	// 相当于APPLICATION_XML的字符串
 	public static final String APPLICATION_XML_VALUE = "application/xml";
 
 	/**
 	 * Public constant media type for {@code image/gif}.
 	 */
+	// image/gif的公共常量媒体类型
 	public static final MediaType IMAGE_GIF;
 
 	/**
 	 * A String equivalent of {@link MediaType#IMAGE_GIF}.
 	 */
+	// 一个相当于IMAGE_GIF的字符串
 	public static final String IMAGE_GIF_VALUE = "image/gif";
 
 	/**
 	 * Public constant media type for {@code image/jpeg}.
 	 */
+	// image/jpeg的公共常量媒体类型
 	public static final MediaType IMAGE_JPEG;
 
 	/**
 	 * A String equivalent of {@link MediaType#IMAGE_JPEG}.
 	 */
+	// 相当于IMAGE_JPEG的字符串
 	public static final String IMAGE_JPEG_VALUE = "image/jpeg";
 
 	/**
 	 * Public constant media type for {@code image/png}.
 	 */
+	// image/png的公共常量媒体类型
 	public static final MediaType IMAGE_PNG;
 
 	/**
 	 * A String equivalent of {@link MediaType#IMAGE_PNG}.
 	 */
+	// 一个相当于IMAGE_PNG的字符串
 	public static final String IMAGE_PNG_VALUE = "image/png";
 
 	/**
 	 * Public constant media type for {@code multipart/form-data}.
 	 */
+	// multipart/form-data的公共常量媒体类型
 	public static final MediaType MULTIPART_FORM_DATA;
 
 	/**
 	 * A String equivalent of {@link MediaType#MULTIPART_FORM_DATA}.
 	 */
+	// 与MULTIPART_FORM_DATA等效的字符串
 	public static final String MULTIPART_FORM_DATA_VALUE = "multipart/form-data";
 
 	/**
 	 * Public constant media type for {@code multipart/mixed}.
 	 * @since 5.2
 	 */
+	// multipart/mixed的公共常量媒体类型
 	public static final MediaType MULTIPART_MIXED;
 
 	/**
 	 * A String equivalent of {@link MediaType#MULTIPART_MIXED}.
 	 * @since 5.2
 	 */
+	// 与MULTIPART_MIXED等效的字符串
 	public static final String MULTIPART_MIXED_VALUE = "multipart/mixed";
 
 	/**
 	 * Public constant media type for {@code multipart/related}.
 	 * @since 5.2.5
 	 */
+	// multipart/related的公共常量媒体类型
 	public static final MediaType MULTIPART_RELATED;
 
 	/**
 	 * A String equivalent of {@link MediaType#MULTIPART_RELATED}.
 	 * @since 5.2.5
 	 */
+	// 与MULTIPART_RELATED等效的字符串
 	public static final String MULTIPART_RELATED_VALUE = "multipart/related";
 
 	/**
@@ -337,39 +386,46 @@ public class MediaType extends MimeType implements Serializable {
 	 * @since 4.3.6
 	 * @see <a href="https://www.w3.org/TR/eventsource/">Server-Sent Events W3C recommendation</a>
 	 */
+	// Public constant media type for text/event-stream.
 	public static final MediaType TEXT_EVENT_STREAM;
 
 	/**
 	 * A String equivalent of {@link MediaType#TEXT_EVENT_STREAM}.
 	 * @since 4.3.6
 	 */
+	// 等效于TEXT_EVENT_STREAM的字符串
 	public static final String TEXT_EVENT_STREAM_VALUE = "text/event-stream";
 
 	/**
 	 * Public constant media type for {@code text/html}.
 	 */
+	// text/html的公共常量媒体类型
 	public static final MediaType TEXT_HTML;
 
 	/**
 	 * A String equivalent of {@link MediaType#TEXT_HTML}.
 	 */
+	// 等效于TEXT_HTML的字符串
 	public static final String TEXT_HTML_VALUE = "text/html";
 
 	/**
 	 * Public constant media type for {@code text/markdown}.
 	 * @since 4.3
 	 */
+	// text/markdown的公共常量媒体类型
 	public static final MediaType TEXT_MARKDOWN;
 
 	/**
 	 * A String equivalent of {@link MediaType#TEXT_MARKDOWN}.
 	 * @since 4.3
 	 */
+	// 等效于TEXT_MARKDOWN的字符串
 	public static final String TEXT_MARKDOWN_VALUE = "text/markdown";
 
 	/**
 	 * Public constant media type for {@code text/plain}.
 	 */
+	// text/plain的公共常量媒体类型
 	public static final MediaType TEXT_PLAIN;
 
 	/**

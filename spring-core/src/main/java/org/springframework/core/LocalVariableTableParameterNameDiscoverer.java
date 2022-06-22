@@ -54,6 +54,11 @@ import org.springframework.util.ClassUtils;
  * @author Sam Brannen
  * @since 2.0
  */
+// {@link ParameterNameDiscoverer} 的实现，它使用方法属性中的 LocalVariableTable 信息来发现参数名称。
+// 如果类文件是在没有调试信息的情况下编译的，则返回 {@code null}。
+//
+//	<p>使用 ObjectWeb 的 ASM 库来分析类文件。
+//	每个发现者实例都以线程安全的方式为每个内省的类缓存 ASM 发现的信息。建议尽量复用 ParameterNameDiscoverer 实例
 public class LocalVariableTableParameterNameDiscoverer implements ParameterNameDiscoverer {
 
 	private static final Log logger = LogFactory.getLog(LocalVariableTableParameterNameDiscoverer.class);

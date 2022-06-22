@@ -38,6 +38,9 @@ import org.springframework.util.ReflectionUtils;
  * @author Rossen Stoyanchev
  * @since 4.2.3
  */
+// 定义搜索元数据相关方法的算法，包括接口和父类，同时还处理参数化方法以及接口和基于类的代理遇到的常见场景
+//
+// <p>通常但不一定用于查找带注解的处理程序方法。
 public final class MethodIntrospector {
 
 	private MethodIntrospector() {
@@ -55,6 +58,12 @@ public final class MethodIntrospector {
 	 * @return the selected methods associated with their metadata (in the order of retrieval),
 	 * or an empty map in case of no match
 	 */
+	// 根据相关元数据的查找，在给定的目标类型上选择方法
+	// <p>调用者通过 {@link MetadataLookup} 参数定义感兴趣的方法，允许将关联的元数据收集到结果映射中。
+	// @param targetType 搜索方法的目标类型
+	// @param metadataLookup 一个 {@link MetadataLookup} 回调来检查感兴趣的方法，如果匹配则返回与给定方法关
+	// 联的非空元数据，或者 {@code null} 在不匹配情况下
+	// @return 与其元数据关联的选定方法（按检索顺序），或者在不匹配的情况下返回空映射
 	public static <T> Map<Method, T> selectMethods(Class<?> targetType, final MetadataLookup<T> metadataLookup) {
 		final Map<Method, T> methodMap = new LinkedHashMap<>();
 		Set<Class<?>> handlerTypes = new LinkedHashSet<>();
@@ -143,6 +152,8 @@ public final class MethodIntrospector {
 	 * A callback interface for metadata lookup on a given method.
 	 * @param <T> the type of metadata returned
 	 */
+	// 用于在给定方法上查找元数据的回调接口
+	// @param <T> 返回的元数据类型
 	@FunctionalInterface
 	public interface MetadataLookup<T> {
 

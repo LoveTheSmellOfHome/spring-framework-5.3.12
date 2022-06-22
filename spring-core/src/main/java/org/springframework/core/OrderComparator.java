@@ -50,11 +50,18 @@ import org.springframework.util.ObjectUtils;
  * @see java.util.List#sort(java.util.Comparator)
  * @see java.util.Arrays#sort(Object[], java.util.Comparator)
  */
+// Ordered对象的Comparator实现，按顺序值升序排序，分别按优先级降序排序
+//
+// PriorityOrdered对象将按比普通Ordered对象更高的优先级Ordered
+//
+// 任何不提供自己的 order 值的对象都被隐式分配了Ordered.LOWEST_PRECEDENCE的值，
+// 因此相对于具有相同 order 值的其他对象，以任意顺序结束在排序集合的末尾。最大整数值拥有最小优先级
 public class OrderComparator implements Comparator<Object> {
 
 	/**
 	 * Shared default instance of {@code OrderComparator}.
 	 */
+	// OrderComparator共享默认实例
 	public static final OrderComparator INSTANCE = new OrderComparator();
 
 
@@ -64,6 +71,7 @@ public class OrderComparator implements Comparator<Object> {
 	 * @return the adapted comparator
 	 * @since 4.1
 	 */
+	// 使用给定的源提供程序构建一个适配的顺序比较器
 	public Comparator<Object> withSourceProvider(OrderSourceProvider sourceProvider) {
 		return (o1, o2) -> doCompare(o1, o2, sourceProvider);
 	}
@@ -74,6 +82,7 @@ public class OrderComparator implements Comparator<Object> {
 	}
 
 	private int doCompare(@Nullable Object o1, @Nullable Object o2, @Nullable OrderSourceProvider sourceProvider) {
+		// 第一优先判断 PriorityOrdered 这个接口
 		boolean p1 = (o1 instanceof PriorityOrdered);
 		boolean p2 = (o2 instanceof PriorityOrdered);
 		if (p1 && !p2) {
@@ -83,6 +92,7 @@ public class OrderComparator implements Comparator<Object> {
 			return 1;
 		}
 
+		// 第二优先判断 getOrder()
 		int i1 = getOrder(o1, sourceProvider);
 		int i2 = getOrder(o2, sourceProvider);
 		return Integer.compare(i1, i2);
@@ -95,6 +105,8 @@ public class OrderComparator implements Comparator<Object> {
 	 * @param obj the object to check
 	 * @return the order value, or {@code Ordered.LOWEST_PRECEDENCE} as fallback
 	 */
+	// 确定给定对象的排序值 order value
+	// 默认实现使用 findOrder 检查给定的 OrderComparator.OrderSourceProvider 并回退到常规 getOrder(Object) 调用。
 	private int getOrder(@Nullable Object obj, @Nullable OrderSourceProvider sourceProvider) {
 		Integer order = null;
 		if (obj != null && sourceProvider != null) {
@@ -102,6 +114,7 @@ public class OrderComparator implements Comparator<Object> {
 			if (orderSource != null) {
 				if (orderSource.getClass().isArray()) {
 					for (Object source : ObjectUtils.toObjectArray(orderSource)) {
+						// 判断是不是 Ordered 接口，
 						order = findOrder(source);
 						if (order != null) {
 							break;
@@ -123,6 +136,10 @@ public class OrderComparator implements Comparator<Object> {
 	 * @param obj the object to check
 	 * @return the order value, or {@code Ordered.LOWEST_PRECEDENCE} as fallback
 	 */
+	// 确定给定对象的排序值。
+	// 默认实现通过委托给findOrder来检查Ordered接口。 可以在子类中覆盖。
+	// 形参：obj – 要检查的对象
+	// 返回值：排序值，或Ordered.LOWEST_PRECEDENCE作为最低优先级的兜底
 	protected int getOrder(@Nullable Object obj) {
 		if (obj != null) {
 			Integer order = findOrder(obj);
@@ -140,8 +157,12 @@ public class OrderComparator implements Comparator<Object> {
 	 * @param obj the object to check
 	 * @return the order value, or {@code null} if none found
 	 */
+	// 查找由给定对象指示的排序值。默认实现检查Ordered接口。 可以在子类中覆盖。
+	// 形参：obj – 要检查的对象
+	//返回值：排序值，如果没有找到，则为null
 	@Nullable
 	protected Integer findOrder(Object obj) {
+		// 判断是不是 Ordered 接口，获取接口中的值是多少
 		return (obj instanceof Ordered ? ((Ordered) obj).getOrder() : null);
 	}
 
@@ -156,6 +177,11 @@ public class OrderComparator implements Comparator<Object> {
 	 * @return the priority value, or {@code null} if none
 	 * @since 4.1
 	 */
+	// 确定给定对象的优先级值（如果有）。
+	// 默认实现始终返回null 。 除了它们的“顺序”语义之外，子类可以覆盖它以给特定种类的值一个“优先级”特征。
+	// 优先级表示它可以用于选择一个对象而不是另一个对象，除了用于列表/数组中的排序目的。
+	// 形参：obj – 要检查的对象
+	// 返回值：优先级值，如果没有，则为null
 	@Nullable
 	public Integer getPriority(Object obj) {
 		return null;
@@ -169,6 +195,10 @@ public class OrderComparator implements Comparator<Object> {
 	 * @param list the List to sort
 	 * @see java.util.List#sort(java.util.Comparator)
 	 */
+	// 使用默认的 OrderComparator 对给定的 List 进行排序。
+	// 优化为跳过大小为 0 或 1 的列表的排序，以避免不必要的数组提取。
+	// 形参：list – 要排序的列表
+	// 请参阅：List.sort(Comparator)
 	public static void sort(List<?> list) {
 		if (list.size() > 1) {
 			list.sort(INSTANCE);
@@ -182,6 +212,9 @@ public class OrderComparator implements Comparator<Object> {
 	 * @param array the array to sort
 	 * @see java.util.Arrays#sort(Object[], java.util.Comparator)
 	 */
+	// 使用默认的 OrderComparator 对给定数组进行排序。
+	// 优化为跳过大小为 0 或 1 的列表的排序，以避免不必要的数组提取。
+	// 形参：数组– 要排序的数组
 	public static void sort(Object[] array) {
 		if (array.length > 1) {
 			Arrays.sort(array, INSTANCE);
@@ -196,6 +229,9 @@ public class OrderComparator implements Comparator<Object> {
 	 * @param value the array or List to sort
 	 * @see java.util.Arrays#sort(Object[], java.util.Comparator)
 	 */
+	// 如有必要，使用默认的 OrderComparator 对给定的数组或列表进行排序。 当给定任何其他值时，简单地跳过排序。
+	// 优化为跳过大小为 0 或 1 的列表的排序，以避免不必要的数组提取。
+	// 形参：value – 要排序的数组或列表
 	public static void sortIfNecessary(Object value) {
 		if (value instanceof Object[]) {
 			sort((Object[]) value);
@@ -210,6 +246,7 @@ public class OrderComparator implements Comparator<Object> {
 	 * Strategy interface to provide an order source for a given object.
 	 * @since 4.1
 	 */
+	// 为给定对象提供排序源的策略接口
 	@FunctionalInterface
 	public interface OrderSourceProvider {
 
@@ -222,6 +259,11 @@ public class OrderComparator implements Comparator<Object> {
 		 * @param obj the object to find an order source for
 		 * @return the order source for that object, or {@code null} if none found
 		 */
+		// 返回指定对象的排序源，即应该检查排序值作为给定对象的替换的对象。
+		// 也可以是排序源对象的数组。
+		// 如果返回的对象没有指示任何顺序，比较器将回退到检查原始对象。
+		// 形参：obj – 要为其查找排序源的对象
+		// 返回值：该对象的订单来源，如果没有找到则为null
 		@Nullable
 		Object getOrderSource(Object obj);
 	}

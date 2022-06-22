@@ -30,6 +30,11 @@ import javax.annotation.Nonnull;
  * @author Rod Johnson
  * @see MethodInterceptor
  */
+// 方法调用的描述，在方法调用时提供给拦截器。
+// 方法调用是一个连接点，可以被方法拦截器拦截。间接说明了 Spring 里边它只支持方法级别的 Joinpoint
+// Spring AOP 只实现了方法调用，没有实现构造器调用，会具体到某个方法上面去
+//
+// 命令模式：MethodInvocation 是被拦截的东西
 public interface MethodInvocation extends Invocation {
 
 	/**
@@ -38,6 +43,11 @@ public interface MethodInvocation extends Invocation {
 	 * {@link Joinpoint#getStaticPart()} method (same result).
 	 * @return the method being called
 	 */
+	// 获取被调用的方法。
+	// 和 {@link org.aopalliance.intercept.Joinpoint}#getStaticPart() 返回的是同一个对象
+	// 此方法是 Joinpoint.getStaticPart() 方法的友好实现（结果相同）。
+	// 返回值：
+	//			被调用的方法
 	@Nonnull
 	Method getMethod();
 

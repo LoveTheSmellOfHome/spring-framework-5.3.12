@@ -35,6 +35,12 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
  * @since 2.5
  * @see org.springframework.beans.factory.config.ConfigurableBeanFactory#getMergedBeanDefinition
  */
+// 运行时合并bean 定义的后处理器回调接口。 BeanPostProcessor实现可以实现这个子接口，以便对 Spring BeanFactory用来
+// 创建 bean 实例的合并 bean 定义（原始 bean 定义的处理副本）进行后处理。
+//
+// postProcessMergedBeanDefinition方法可以例如内省 bean 定义，以便在对 bean 的实际实例进行后处理之前
+// 准备一些缓存的元数据。 还允许修改 bean 定义，但仅限于实际用于并发修改的定义属性。
+// 本质上，这仅适用于在RootBeanDefinition本身上定义的操作， RootBeanDefinition适用于其基类的属性
 public interface MergedBeanDefinitionPostProcessor extends BeanPostProcessor {
 
 	/**
@@ -44,6 +50,7 @@ public interface MergedBeanDefinitionPostProcessor extends BeanPostProcessor {
 	 * @param beanName the name of the bean
 	 * @see AbstractAutowireCapableBeanFactory#applyMergedBeanDefinitionPostProcessors
 	 */
+	// 对指定 bean 的给定合并 bean 定义进行后处理
 	void postProcessMergedBeanDefinition(RootBeanDefinition beanDefinition, Class<?> beanType, String beanName);
 
 	/**
@@ -54,6 +61,7 @@ public interface MergedBeanDefinitionPostProcessor extends BeanPostProcessor {
 	 * @since 5.1
 	 * @see DefaultListableBeanFactory#resetBeanDefinition
 	 */
+	// 重置指定 bean 的元数据
 	default void resetBeanDefinition(String beanName) {
 	}
 

@@ -55,6 +55,7 @@ import org.springframework.util.Assert;
  * @see java.nio.file.Files
  * @see FileSystemResource
  */
+// 将 JDK FILE 和 Path 合二为一的接口
 public class PathResource extends AbstractResource implements WritableResource {
 
 	private final Path path;

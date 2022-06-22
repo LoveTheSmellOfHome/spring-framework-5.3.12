@@ -33,6 +33,13 @@ import java.util.Map;
  * @since 1.2
  * @see AntPathMatcher
  */
+// 基于String的路径匹配的策略接口。
+// 由org.springframework.core.io.support.PathMatchingResourcePatternResolver 、
+// org.springframework.web.servlet.handler.AbstractUrlHandlerMapping和
+// org.springframework.web.servlet.mvc.WebContentInterceptor
+// 默认实现是AntPathMatcher ，支持 Ant 风格的模式语法
+//
+// 路径匹配器
 public interface PathMatcher {
 
 	/**
@@ -44,6 +51,10 @@ public interface PathMatcher {
 	 * @param path the path to check
 	 * @return {@code true} if the given {@code path} represents a pattern
 	 */
+	// 给定的path是否表示可以与此接口的实现匹配的模式？
+	// 如果返回值为false ，则不必使用match方法，因为在静态路径 Strings 上的直接相等比较将导致相同的结果。
+	//形参：path – 要检查的路径
+	//返回值：如果给定的path代表一个模式，则为true
 	boolean isPattern(String path);
 
 	/**
@@ -54,6 +65,10 @@ public interface PathMatcher {
 	 * @return {@code true} if the supplied {@code path} matched,
 	 * {@code false} if it didn't
 	 */
+	// 根据此 PathMatcher 的匹配策略，将给定path与给定pattern匹配。
+	// 形参：模式 - 要匹配的模式
+	// 路径 - 测试路径
+	// 返回值：如果提供的path匹配，则为true否则为false
 	boolean match(String pattern, String path);
 
 	/**
@@ -66,6 +81,11 @@ public interface PathMatcher {
 	 * @return {@code true} if the supplied {@code path} matched,
 	 * {@code false} if it didn't
 	 */
+	// 根据此 PathMatcher 的匹配策略，将给定path与给定pattern的相应部分匹配。
+	// 确定模式是否至少匹配给定的基本路径，假设完整路径也可能匹配。
+	// @param pattern - 要匹配的模式
+	// @param path - 测试路径
+	//返回值：如果提供的path匹配，则为true否则为false
 	boolean matchStart(String pattern, String path);
 
 	/**
@@ -88,6 +108,18 @@ public interface PathMatcher {
 	 * @return the pattern-mapped part of the given {@code path}
 	 * (never {@code null})
 	 */
+	// 给定模式和完整路径，确定模式映射部分。
+	// 该方法应该通过实际模式找出路径的哪一部分动态匹配，也就是说，它从给定的完整路径中剥离静态定义的
+	// 前导路径，仅返回路径中实际模式匹配的部分
+	// 例如：对于“myroot/*.html”作为模式和“myroot/myfile.html”作为完整路径，这个方法应该返回“myfile.html”。
+	// 该PathMatcher的匹配策略指定了详细的判断规则。
+	// 一个简单的实现可以在实际模式的情况下按原样返回给定的完整路径，这个方法应该返回“myfile.html”。
+	// 该PathMatcher的匹配策略指定了详细的判断规则。
+	// 一个简单的实现可以在实际模式的情况下按原样返回给定的完整路径，在模式不包含任何动态部分的情况下
+	// 返回空字符串（即pattern参数是一个静态路径，不符合实际pattern ）。 复杂的实现将区分给定路径模式的静态部分和动态部分
+	// @param pattern - 路径模式
+	// @param pattern - 完整的路径
+	// @return 给定path的模式映射部分（从不为null ）
 	String extractPathWithinPattern(String pattern, String path);
 
 	/**
@@ -99,6 +131,8 @@ public interface PathMatcher {
 	 * @param path the full path to extract template variables from
 	 * @return a map, containing variable names as keys; variables values as values
 	 */
+	// 给定模式和完整路径，提取 URI 模板变量。 URI 模板变量通过大括号（“{”和“}”）表示。
+	// 例如：对于 pattern “/hotels/{hotel}”和路径“/hotels/1”，此方法将返回一个包含“hotel”→“1”的Map。
 	Map<String, String> extractUriTemplateVariables(String pattern, String path);
 
 	/**
@@ -111,6 +145,10 @@ public interface PathMatcher {
 	 * @param path the full path to use for comparison
 	 * @return a comparator capable of sorting patterns in order of explicitness
 	 */
+	// 给定完整路径，返回一个 Comparator 适合按该路径的显式顺序对模式进行排序
+	// 使用的完整算法取决于底层实现，但通常，返回的 Comparator 将对列表进行排序，以便更具体的模式出现在通用模式之前。
+	// @param pattern - 用于比较的完整路径
+	// @return 能够按明确性顺序对模式进行排序的比较器
 	Comparator<String> getPatternComparator(String path);
 
 	/**
@@ -121,6 +159,8 @@ public interface PathMatcher {
 	 * @return the combination of the two patterns
 	 * @throws IllegalArgumentException when the two patterns cannot be combined
 	 */
+	// 将两个模式组合成一个返回的新模式。
+	// <p>用于组合这两种模式的完整算法取决于底层实现。
 	String combine(String pattern1, String pattern2);
 
 }

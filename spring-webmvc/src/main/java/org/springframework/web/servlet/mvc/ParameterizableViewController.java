@@ -16,15 +16,15 @@
 
 package org.springframework.web.servlet.mvc;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.support.RequestContextUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Trivial controller that always returns a pre-configured view and optionally
@@ -36,11 +36,14 @@ import org.springframework.web.servlet.support.RequestContextUtils;
  * @author Keith Donald
  * @author Rossen Stoyanchev
  */
+// 始终返回预配置视图并可选择设置响应状态代码的普通控制器。可以使用提供的配置属性来配置视图和状态
 public class ParameterizableViewController extends AbstractController {
 
+	// 定义视图
 	@Nullable
 	private Object view;
 
+	// HttpStatus
 	@Nullable
 	private HttpStatus statusCode;
 
@@ -57,6 +60,8 @@ public class ParameterizableViewController extends AbstractController {
 	 * DispatcherServlet via a ViewResolver. Will override any pre-existing
 	 * view name or View.
 	 */
+	// 为要返回的 ModelAndView 设置视图名称，由 DispatcherServlet 通过 ViewResolver 解析。
+	// 将覆盖任何预先存在的视图名称或视图
 	public void setViewName(@Nullable String viewName) {
 		this.view = viewName;
 	}
@@ -65,6 +70,7 @@ public class ParameterizableViewController extends AbstractController {
 	 * Return the name of the view to delegate to, or {@code null} if using a
 	 * View instance.
 	 */
+	// 返回要委托给的视图的名称，如果使用 View 实例，则返回null
 	@Nullable
 	public String getViewName() {
 		if (this.view instanceof String) {
@@ -84,6 +90,7 @@ public class ParameterizableViewController extends AbstractController {
 	 * Will override any pre-existing view name or View.
 	 * @since 4.1
 	 */
+	// 为要返回的 ModelAndView 设置一个 View 对象。将覆盖任何预先存在的视图名称或视图
 	public void setView(View view) {
 		this.view = view;
 	}
@@ -93,6 +100,7 @@ public class ParameterizableViewController extends AbstractController {
 	 * to be resolved by the DispatcherServlet via a ViewResolver.
 	 * @since 4.1
 	 */
+	//返回 View 对象，如果我们使用由 DispatcherServlet 通过 ViewResolver 解析的视图名称，则返回null
 	@Nullable
 	public View getView() {
 		return (this.view instanceof View ? (View) this.view : null);
@@ -109,6 +117,12 @@ public class ParameterizableViewController extends AbstractController {
 	 * fully handled within the controller.
 	 * @since 4.1
 	 */
+	// 配置此控制器应在响应上设置的 HTTP 状态代码。
+	//
+	// 当配置了“redirect:”前缀视图名称时，无需设置此属性，因为 RedirectView 会这样做。
+	// 但是，此属性仍可用于覆盖RedirectView的 3xx 状态代码。要完全控制重定向，请提供 RedirectView 实例。
+	//
+	// 如果状态码为 204 且未配置视图，则请求在控制器内完全处理
 	public void setStatusCode(@Nullable HttpStatus statusCode) {
 		this.statusCode = statusCode;
 	}
@@ -117,6 +131,7 @@ public class ParameterizableViewController extends AbstractController {
 	 * Return the configured HTTP status code or {@code null}.
 	 * @since 4.1
 	 */
+	// 返回配置的 HTTP 状态码或null
 	@Nullable
 	public HttpStatus getStatusCode() {
 		return this.statusCode;
@@ -130,6 +145,9 @@ public class ParameterizableViewController extends AbstractController {
 	 * <p>By default this is set to {@code false}.
 	 * @since 4.1
 	 */
+	// 该属性可用于指示请求被视为在控制器内完全处理，并且不应使用视图进行渲染。与 setStatusCode 结合使用很有用。
+	//
+	// 默认情况下，这设置为 false
 	public void setStatusOnly(boolean statusOnly) {
 		this.statusOnly = statusOnly;
 	}
@@ -137,6 +155,7 @@ public class ParameterizableViewController extends AbstractController {
 	/**
 	 * Whether the request is fully handled within the controller.
 	 */
+	// 请求是否在控制器内得到完全处理
 	public boolean isStatusOnly() {
 		return this.statusOnly;
 	}

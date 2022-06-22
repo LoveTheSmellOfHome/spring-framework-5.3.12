@@ -42,6 +42,19 @@ import javax.annotation.Nullable;
  *
  * @author Rod Johnson
  */
+// 在到达目标的途中拦截对接口的调用。 这些嵌套在目标的“顶部”。
+//
+// 用户应实现invoke(MethodInvocation)方法来修改原始行为。 例如，下面的类实现了一个跟踪
+// 拦截器（跟踪对被拦截方法的所有调用）：
+//   class TracingInterceptor implements MethodInterceptor {
+//     Object invoke(MethodInvocation i) throws Throwable {
+//       System.out.println("method "+i.getMethod()+" is called on "+
+//                          i.getThis()+" with args "+i.getArguments());
+//       Object ret=i.proceed();
+//       System.out.println("method "+i.getMethod()+" returns "+ret);
+//       return ret;
+//     }
+//   }
 @FunctionalInterface
 public interface MethodInterceptor extends Interceptor {
 
@@ -55,6 +68,13 @@ public interface MethodInterceptor extends Interceptor {
 	 * @throws Throwable if the interceptors or the target object
 	 * throws an exception
 	 */
+	// 实现此方法以在调用前后执行额外的处理。 礼貌的实现当然想调用Joinpoint.proceed() 。
+	// 参形：
+	//			invocation – 方法调用连接点
+	// 返回值：
+	//			调用 Joinpoint.proceed() 的结果； 可能被拦截器拦截
+	// 抛出：
+	//			Throwable – 如果拦截器或目标对象抛出异常
 	@Nullable
 	Object invoke(@Nonnull MethodInvocation invocation) throws Throwable;
 

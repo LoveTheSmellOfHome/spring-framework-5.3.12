@@ -39,9 +39,14 @@ package org.springframework.asm;
  * @author Eugene Kuleshov
  */
 // DontCheck(InterfaceIsType): can't be fixed (for backward binary compatibility).
+// JVM 操作码、访问标志和数组类型代码。这个接口没有定义所有的 JVM 操作码，因为一些操作码是自动处理的。
+// 例如，在可能的情况下，xLOAD 和 xSTORE 操作码会自动替换为 xLOAD_n 和 xSTORE_n 操作码。
+// xLOAD_n 和 xSTORE_n 操作码因此未在此接口中定义。同样对于 LDC，必要时自动替换为 LDC_W 或 LDC2_W、WIDE、
+// GOTO_W 和 JSR_W。
 public interface Opcodes {
 
   // ASM API versions.
+  // ASM API 版本
 
   int ASM4 = 4 << 16 | 0 << 8;
   int ASM5 = 5 << 16 | 0 << 8;
@@ -55,6 +60,10 @@ public interface Opcodes {
    * will break existing code using it. Only code compiled with --enable-preview can use this.</i>
    * <p>SPRING PATCH: no preview mode check for ASM 10 experimental, enabling it by default.
    */
+  // 实验性的，使用风险自负。当它稳定时，这个字段将被重命名，这将破坏使用它的现有代码。
+  // 只有使用 --enable-preview 编译的代码才能使用它。
+  //
+  // SPRING PATCH：ASM 10 实验版没有预览模式检查，默认情况下启用它。
   int ASM10_EXPERIMENTAL = 1 << 24 | 10 << 16 | 0 << 8;
 
   /*

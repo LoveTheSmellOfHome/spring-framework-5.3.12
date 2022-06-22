@@ -32,6 +32,12 @@ import org.springframework.util.Assert;
  * @see ApplicationEventPublisher#publishEvent(Object)
  * @see ApplicationListener#forPayload(Consumer)
  */
+// 携带任意负载的 {@link ApplicationEvent}。携带一个主体，主体就是我们所需要传递的对象
+// 在 ApplicationEventPublisher#publishEvent(Object) 时会返回本事件
+//
+// 使用常景：简化 Spring 事件发送，不需要 new ApplicationEvent(),关注事件源主题，Payload 有效载荷,
+// 同时我们可以拦截 PayloadApplicationEvent 来进行处理，我们更加关注数据本身
+// 发送方法：ApplicationEventPublisher#publishEvent(Object)
 @SuppressWarnings("serial")
 public class PayloadApplicationEvent<T> extends ApplicationEvent implements ResolvableTypeProvider {
 
@@ -43,13 +49,17 @@ public class PayloadApplicationEvent<T> extends ApplicationEvent implements Reso
 	 * @param source the object on which the event initially occurred (never {@code null})
 	 * @param payload the payload object (never {@code null})
 	 */
+	// 创建一个新的 PayloadApplicationEvent。
+	// 参形：
+	//			source – 最初发生事件的对象（从不为null ）
+	//			payload - 有效负载对象（从不为null
 	public PayloadApplicationEvent(Object source, T payload) {
 		super(source);
 		Assert.notNull(payload, "Payload must not be null");
 		this.payload = payload;
 	}
 
-
+	// 返回带泛型的类型
 	@Override
 	public ResolvableType getResolvableType() {
 		return ResolvableType.forClassWithGenerics(getClass(), ResolvableType.forInstance(getPayload()));
@@ -58,6 +68,7 @@ public class PayloadApplicationEvent<T> extends ApplicationEvent implements Reso
 	/**
 	 * Return the payload of the event.
 	 */
+	// 返回事件的负载
 	public T getPayload() {
 		return this.payload;
 	}

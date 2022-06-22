@@ -36,6 +36,9 @@ import org.springframework.beans.BeansException;
  * @param <T> the object type
  * @see FactoryBean
  */
+// 定义一个工厂，它可以在调用时返回一个 Object 对象实例（可能是共享的或独立的）
+//
+// 此接口通常用于封装通用工厂，该工厂在每次调用时返回某个目标对象的新实例（原型）
 @FunctionalInterface
 public interface ObjectFactory<T> {
 
@@ -45,6 +48,7 @@ public interface ObjectFactory<T> {
 	 * @return the resulting instance
 	 * @throws BeansException in case of creation errors
 	 */
+	// 获取实例对象
 	T getObject() throws BeansException;
 
 }

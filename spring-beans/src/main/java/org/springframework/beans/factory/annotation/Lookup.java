@@ -52,6 +52,18 @@ import java.lang.annotation.Target;
  * @see org.springframework.beans.factory.BeanFactory#getBean(Class, Object...)
  * @see org.springframework.beans.factory.BeanFactory#getBean(String, Object...)
  */
+// 指示“查找”方法的注释，由容器覆盖以将它们重定向回 {@link org.springframework.beans.factory.BeanFactory} 以进行
+// {@code getBean} 调用。这本质上是 XML {@code lookup-method} 属性的基于注释的版本，二者运行时功能完全相同
+//
+// <p>目标 bean 的解析可以基于返回类型 ({@code getBean(Class)}) 或建议的 bean 名称 ({@code getBean(String)})，
+// 在这两种情况下都传递方法的{@code getBean} 调用的参数，用于将它们应用为目标工厂方法参数或构造函数参数。
+//
+// <p>此类查找方法可以具有默认（存根）实现，这些实现将简单地由容器替换，或者它们可以声明为抽象 - 以便容器在运行时填充它们
+// 在这两种情况下，容器都会通过 CGLIB 生成方法包含类的运行时子类，这就是为什么此类查找方法只能在容器通过常规构造函数实例化的 bean 上工作的原因：
+// 例如，查找方法不能在从工厂方法返回的 bean 上被替换，我们不能为它们动态提供子类。
+//
+// <p><b>对典型 Spring 配置场景的建议：<b>当某些场景中可能需要具体类时，请考虑提供查找方法的存根实现。请记住，查找方法不适用于从配置
+// 类中的 {@code @Bean} 方法返回的 bean；你将不得不求助于 {@code @Inject Provider<TargetBean>} 或类似的东西
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -62,6 +74,7 @@ public @interface Lookup {
 	 * If not specified, the target bean will be resolved based on the
 	 * annotated method's return type declaration.
 	 */
+	// 此注释属性可能会暗示要查找的目标 bean 名称。如果未指定，则目标 bean 将根据带注释的方法的返回类型声明进行解析
 	String value() default "";
 
 }

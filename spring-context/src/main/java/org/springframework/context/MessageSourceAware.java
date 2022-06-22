@@ -31,6 +31,9 @@ import org.springframework.beans.factory.Aware;
  * @since 1.1.1
  * @see ApplicationContextAware
  */
+// 任何希望被通知它运行的 MessageSource（通常是 ApplicationContext）的对象要实现的接口。
+// 请注意， MessageSource 通常也可以作为 bean 引用传递（到任意 bean 属性或构造函数参数），
+// 因为它在应用程序上下文中被定义为名为“messageSource”的 bean
 public interface MessageSourceAware extends Aware {
 
 	/**
@@ -40,6 +43,9 @@ public interface MessageSourceAware extends Aware {
 	 * Invoked before ApplicationContextAware's setApplicationContext.
 	 * @param messageSource message source to be used by this object
 	 */
+	// 设置该对象运行所在的 MessageSource。
+	// 在填充普通 bean 属性之后但在初始化回调（如 InitializingBean 的 afterPropertiesSet 或自定义初始化方法）之前调用。
+	// 在 ApplicationContextAware 的 setApplicationContext 之前调用。
 	void setMessageSource(MessageSource messageSource);
 
 }

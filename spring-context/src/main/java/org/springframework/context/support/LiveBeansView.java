@@ -16,15 +16,6 @@
 
 package org.springframework.context.support;
 
-import java.lang.management.ManagementFactory;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -35,6 +26,14 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import java.lang.management.ManagementFactory;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Adapter for live beans view exposure, building a snapshot of current beans
@@ -49,6 +48,11 @@ import org.springframework.util.StringUtils;
  * @see org.springframework.web.context.support.LiveBeansViewServlet
  * @deprecated as of 5.3, in favor of using Spring Boot actuators for such needs
  */
+// 用于实时 bean 视图公开的适配器，从本地 {@code ApplicationContext}（具有本地 {@code LiveBeansView} bean 定义）
+// 或所有注册的 ApplicationContexts（由 {@value MBEAN_DOMAIN_PROPERTY_NAME} 驱动）构建当前 bean 及其依赖项的快照环境属性）
+// 实时Bean快照
+//
+// LiveBeansView 在 Spring Boot 中有个 EndPoint,EndPoint 名字叫 Beans.
 @Deprecated
 public class LiveBeansView implements LiveBeansViewMBean, ApplicationContextAware {
 
@@ -69,13 +73,16 @@ public class LiveBeansView implements LiveBeansViewMBean, ApplicationContextAwar
 
 
 	static void registerApplicationContext(ConfigurableApplicationContext applicationContext) {
+		// 通过外部化配置找到 mbeanDomain
 		String mbeanDomain = applicationContext.getEnvironment().getProperty(MBEAN_DOMAIN_PROPERTY_NAME);
 		if (mbeanDomain != null) {
 			synchronized (applicationContexts) {
 				if (applicationContexts.isEmpty()) {
 					try {
+						// 利用 JMX(Java Management Extension) API:Java 管理扩展,创建 MBeanServer
 						MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 						applicationName = applicationContext.getApplicationName();
+						// 向 MBeanServer 注册 bean
 						server.registerMBean(new LiveBeansView(),
 								new ObjectName(mbeanDomain, MBEAN_APPLICATION_KEY, applicationName));
 					}
@@ -126,6 +133,8 @@ public class LiveBeansView implements LiveBeansViewMBean, ApplicationContextAwar
 	 * finding all active ApplicationContexts through {@link #findApplicationContexts()},
 	 * then delegating to {@link #generateJson(java.util.Set)}.
 	 */
+	// 生成当前 bean 及其依赖项的 JSON 快照，通过 {@link findApplicationContexts()} 查找所有活动的 ApplicationContext，
+	// 然后委托给 {@link generateJson(java.util.Set)}。
 	@Override
 	public String getSnapshotAsJson() {
 		Set<ConfigurableApplicationContext> contexts;
@@ -143,6 +152,7 @@ public class LiveBeansView implements LiveBeansViewMBean, ApplicationContextAwar
 	 * <p>Called if no specific ApplicationContext has been set for this LiveBeansView.
 	 * @return the set of ApplicationContexts
 	 */
+	// 如果当前bean的实时快照没有特点应用程序上下文，则调用查找当前应用的所有上下文
 	protected Set<ConfigurableApplicationContext> findApplicationContexts() {
 		synchronized (applicationContexts) {
 			return new LinkedHashSet<>(applicationContexts);
@@ -160,6 +170,12 @@ public class LiveBeansView implements LiveBeansViewMBean, ApplicationContextAwar
 	 * @param contexts the set of ApplicationContexts
 	 * @return the JSON document
 	 */
+	// 实际上在给定的 ApplicationContexts 中生成 bean 的 JSON 快照。
+	// 该实现不使用任何 JSON 解析库，以避免第三方库依赖。
+	// 它生成一个上下文描述对象数组，每个对象包含一个上下文和父属性以及一个带有嵌套 bean 描述对象的 beans 属性。
+	// 每个 bean 对象都包含一个 bean、范围、类型和资源属性，以及一个带有当前 bean 依赖的 bean 名称嵌套数组的依赖项属性
+	//
+	// 返回 Json 数据,把 Spring 应用上下文中(包括层次性应用上下文里的)所有的 Beans,做一个 Json 格式,然后进行相关操作
 	protected String generateJson(Set<ConfigurableApplicationContext> contexts) {
 		StringBuilder result = new StringBuilder("[\n");
 		for (Iterator<ConfigurableApplicationContext> it = contexts.iterator(); it.hasNext();) {
@@ -222,6 +238,7 @@ public class LiveBeansView implements LiveBeansViewMBean, ApplicationContextAwar
 	 * @param bf the containing bean factory
 	 * @return {@code true} if the bean is to be included; {@code false} otherwise
 	 */
+	// 确定指定的 bean 是否有资格包含在 LiveBeansView JSON 快照中
 	protected boolean isBeanEligible(String beanName, BeanDefinition bd, ConfigurableBeanFactory bf) {
 		return (bd.getRole() != BeanDefinition.ROLE_INFRASTRUCTURE &&
 				(!bd.isLazyInit() || bf.containsSingleton(beanName)));

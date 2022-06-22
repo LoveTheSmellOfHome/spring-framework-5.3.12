@@ -16,13 +16,13 @@
 
 package org.springframework.beans.factory.config;
 
-import java.io.Serializable;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import java.io.Serializable;
 
 /**
  * A {@link org.springframework.beans.factory.FactoryBean} implementation that
@@ -95,6 +95,51 @@ import org.springframework.util.Assert;
  * @see org.springframework.beans.factory.ObjectFactory
  * @see ServiceLocatorFactoryBean
  */
+// 一个 org.springframework.beans.factory.FactoryBean 实现，它返回一个 ObjectFactory 值，该值又返回一个来自 BeanFactory 的 bean。
+//
+// 因此，这可以用来避免让客户端对象直接调用BeanFactory.getBean(String)从BeanFactory获取（通常是原型）bean，这将违反控制反转原则。相反，通过使用这个类，可以为客户端对象提供一个ObjectFactory实例作为一个属性，该属性直接返回一个目标 bean（同样，它通常是一个原型 bean）。
+//
+// 基于 XML 的BeanFactory中的示例配置可能如下所示：
+//
+// <beans>
+//
+//     <!-- Prototype bean since we have state -->
+//     <bean id="myService" class="a.b.c.MyService" scope="prototype"/>
+//
+//     <bean id="myServiceFactory"
+//         class="org.springframework.beans.factory.config.ObjectFactoryCreatingFactoryBean">
+//       <property name="targetBeanName"><idref local="myService"/></property>
+//     </bean>
+//
+//     <bean id="clientBean" class="a.b.c.MyClientBean">
+//       <property name="myServiceFactory" ref="myServiceFactory"/>
+//     </bean>
+//
+//  </beans>
+// 随之而来的 MyClientBean 类实现可能如下所示：
+//package a.b.c;
+//
+//   import org.springframework.beans.factory.ObjectFactory;
+//
+//   public class MyClientBean {
+//
+//     private ObjectFactory<MyService> myServiceFactory;
+//
+//     public void setMyServiceFactory(ObjectFactory<MyService> myServiceFactory) {
+//       this.myServiceFactory = myServiceFactory;
+//     }
+//
+//     public void someBusinessMethod() {
+//       // get a 'fresh', brand new MyService instance
+//       MyService service = this.myServiceFactory.getObject();
+//       // use the service object to effect the business logic...
+//     }
+//   }
+// 对象创建模式的这种应用的另一种方法是使用 ServiceLocatorFactoryBean 来获取（原型）bean。 ServiceLocatorFactoryBean方法的
+// 优点是不必依赖任何特定于 Spring 的接口，例如 ObjectFactory ，但缺点是需要生成运行时类。请查阅
+// ServiceLocatorFactoryBean JavaDoc以更全面地讨论此问题。
+//自：
+//1.0.2
 public class ObjectFactoryCreatingFactoryBean extends AbstractFactoryBean<ObjectFactory<Object>> {
 
 	@Nullable
@@ -108,6 +153,9 @@ public class ObjectFactoryCreatingFactoryBean extends AbstractFactoryBean<Object
 	 * bean could simply be injected straight into the dependent object, thus obviating
 	 * the need for the extra level of indirection afforded by this factory approach).
 	 */
+	// 设置目标bean的名称。
+	// 目标不必是非单例 bean，但实际上总是会是（因为如果目标 bean 是单例，那么可以简单地将所述单例 bean 直接注入到依赖对象中，
+	// 从而消除对额外级别的需要这种工厂方法提供的间接性）
 	public void setTargetBeanName(String targetBeanName) {
 		this.targetBeanName = targetBeanName;
 	}
@@ -124,6 +172,7 @@ public class ObjectFactoryCreatingFactoryBean extends AbstractFactoryBean<Object
 		return ObjectFactory.class;
 	}
 
+	// 创建实例
 	@Override
 	protected ObjectFactory<Object> createInstance() {
 		BeanFactory beanFactory = getBeanFactory();
@@ -136,6 +185,7 @@ public class ObjectFactoryCreatingFactoryBean extends AbstractFactoryBean<Object
 	/**
 	 * Independent inner class - for serialization purposes.
 	 */
+	// 独立的内部类 - 用于序列化目的。
 	@SuppressWarnings("serial")
 	private static class TargetBeanObjectFactory implements ObjectFactory<Object>, Serializable {
 

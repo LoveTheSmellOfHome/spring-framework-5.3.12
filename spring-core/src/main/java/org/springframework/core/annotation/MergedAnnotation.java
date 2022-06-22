@@ -89,6 +89,7 @@ public interface MergedAnnotation<A extends Annotation> {
 	 * or {@link Inherited @Inherited}.
 	 * @return {@code true} if the annotation is directly present
 	 */
+	// 确定注释是否直接存在于源上。直接存在的注解是用户明确声明的注释，而不是元注解或 @Inherited 的注解
 	boolean isDirectlyPresent();
 
 	/**

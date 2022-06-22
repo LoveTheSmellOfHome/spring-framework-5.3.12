@@ -16,6 +16,9 @@
 
 package org.springframework.core.annotation;
 
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Inherited;
 import java.lang.reflect.AnnotatedElement;
@@ -23,9 +26,6 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
 
 /**
  * Provides access to a collection of merged annotations, usually obtained
@@ -135,6 +135,58 @@ import org.springframework.util.Assert;
  * @see MergedAnnotationPredicates
  * @see MergedAnnotationSelectors
  */
+// 提供对合并注解集合的访问，通常从诸如 Class 或 Method Class 的来源获得。
+// 每个合并的注解代表一个Map，其中属性值可以从不同的源值“合并”，通常：
+// 。对注解中的一个或多个属性的显式和隐式@AliasFor声明
+// 。元注解的显式@AliasFor声明
+// 。元注解的基于约定的属性别名
+// 。从元注解声明
+// 例如， @PostMapping注解可能定义如下：
+//   @Retention(RetentionPolicy.RUNTIME)
+//   @RequestMapping(method = RequestMethod.POST)
+//   public @interface PostMapping {
+//  
+//       @AliasFor(attribute = "path")
+//       String[] value() default {};
+//  
+//       @AliasFor(attribute = "value")
+//       String[] path() default {};
+//   }
+//   
+// 如果一个方法用 @PostMapping("/home") 注解，它将包含 @PostMapping 和元注解 @RequestMapping 合并注解。 
+// @RequestMapping 注解的合并 Map 将包含以下属性：
+//
+// Name 		Value		Source
+// value		"/home"		Declared in @PostMapping
+// path			"/home"		Explicit @AliasFor
+// RequestMethod.POST 在元注解中声明
+// MergedAnnotations可以从任何 Java AnnotatedElement 获得。 它们也可用于不使用反射的源（例如直接解析字节码的源）。
+// 可以使用不同的搜索策略来定位包含要聚合的注解的相关源元素。 例如， MergedAnnotations.SearchStrategy.TYPE_HIERARCHY
+// 将搜索超类和实现的接口。
+// 
+// 从 MergedAnnotations 实例中，您可以获取单个注解，也可以流式传输所有注解，或者仅流式传输与特定类型匹配的注解。 
+// 你也可以很快告诉我们，如果一个注解存在。
+//
+// 下面是一些典型的例子：
+//   // is an annotation present or meta-present?是注解存在还是元存在？
+//   mergedAnnotations.isPresent(ExampleAnnotation.class);
+//  
+//   // get the merged "value" attribute of ExampleAnnotation (either directly or
+//   // meta-present) 获取 ExampleAnnotation 的合并"value"属性（直接或元存在）
+//   mergedAnnotations.get(ExampleAnnotation.class).getString("value");
+//  
+//   // get all meta-annotations but no directly present annotations
+//   // 获取所有元注解但没有直接呈现的注解
+//   mergedAnnotations.stream().filter(MergedAnnotation::isMetaPresent);
+//  
+//   // get all ExampleAnnotation declarations (including any meta-annotations) and
+//   // print the merged "value" attributes
+//   // 获取所有 ExampleAnnotation 声明（包括任何元注解）并打印合并的"value"属性
+//   mergedAnnotations.stream(ExampleAnnotation.class)
+//       .map(mergedAnnotation -> mergedAnnotation.getString("value"))
+//       .forEach(System.out::println);
+//   
+// 注意： MergedAnnotations API 及其底层模型是为 Spring 通用组件模型中的可组合注解而设计的，重点是属性别名和元注解关系。 不支持使用此 API 检索纯 Java 注解； 请使用标准 Java 反射或 Spring 的AnnotationUtils来实现简单的注解检索目的。
 public interface MergedAnnotations extends Iterable<MergedAnnotation<Annotation>> {
 
 	/**
@@ -144,6 +196,12 @@ public interface MergedAnnotations extends Iterable<MergedAnnotation<Annotation>
 	 * @param annotationType the annotation type to check
 	 * @return {@code true} if the annotation is present
 	 */
+	// 确定指定的注解是直接存在还是元存在。
+	// 相当于调用get(annotationType).isPresent() 。
+	// 形参：
+	//			annotationType – 要检查的注解类型
+	// 返回值：
+	//			如果注解存在则为true
 	<A extends Annotation> boolean isPresent(Class<A> annotationType);
 
 	/**
@@ -154,6 +212,12 @@ public interface MergedAnnotations extends Iterable<MergedAnnotation<Annotation>
 	 * to check
 	 * @return {@code true} if the annotation is present
 	 */
+	// 确定指定的注解是直接存在还是元存在。
+	// 相当于调用get(annotationType).isPresent() 。
+	// 形参：
+	//			annotationType – 要检查的注解类型的完全限定类名
+	// 返回值：
+	// 			如果注解存在则为true
 	boolean isPresent(String annotationType);
 
 	/**
@@ -162,6 +226,12 @@ public interface MergedAnnotations extends Iterable<MergedAnnotation<Annotation>
 	 * @param annotationType the annotation type to check
 	 * @return {@code true} if the annotation is directly present
 	 */
+	// 确定指定的注解是否直接存在。
+	// 相当于调用get(annotationType).isDirectlyPresent() 。
+	// 形参：
+	//			annotationType – 要检查的注解类型
+	// 返回值：
+	//			如果注解直接存在，则为true
 	<A extends Annotation> boolean isDirectlyPresent(Class<A> annotationType);
 
 	/**
@@ -171,6 +241,12 @@ public interface MergedAnnotations extends Iterable<MergedAnnotation<Annotation>
 	 * to check
 	 * @return {@code true} if the annotation is directly present
 	 */
+	// 确定指定的注解是否直接存在。
+	// 相当于调用get(annotationType).isDirectlyPresent() 。
+	// 形参：
+	//			annotationType – 要检查的注解类型的完全限定类名
+	// 返回值：
+	//			如果注解直接存在，则为true
 	boolean isDirectlyPresent(String annotationType);
 
 	/**
@@ -180,6 +256,11 @@ public interface MergedAnnotations extends Iterable<MergedAnnotation<Annotation>
 	 * @param annotationType the annotation type to get
 	 * @return a {@link MergedAnnotation} instance
 	 */
+	// 获取指定类型的最接近的匹配注解或元注解，如果不存在，则MergedAnnotation.missing()
+	// 形参：
+	//			annotationType – 要获取的注解类型
+	// 返回值：
+	//			一个MergedAnnotation实例
 	<A extends Annotation> MergedAnnotation<A> get(Class<A> annotationType);
 
 	/**
@@ -208,6 +289,12 @@ public interface MergedAnnotations extends Iterable<MergedAnnotation<Annotation>
 	 * @see MergedAnnotationPredicates
 	 * @see MergedAnnotationSelectors
 	 */
+	// 获取指定类型的匹配注解或元注解，如果不存在，则获取 {@link MergedAnnotation#missing()}。
+	// @param annotationType 要获取的注解类型
+	// @param predicate 必须匹配的推断，如果只需要类型匹配，则为 {@code null}
+	// @param selector 用于选择聚合中最合适的注解的选择器，或 {@code null}
+	// 以选择 {@linkplain MergedAnnotationSelectorsnearest() 最近}
+	// 用于选择聚合中最合适的注解的选择器，或 {@code null} 以选择 {@linkplain MergedAnnotationSelectorsnearest() 最近}
 	<A extends Annotation> MergedAnnotation<A> get(Class<A> annotationType,
 			@Nullable Predicate<? super MergedAnnotation<A>> predicate,
 			@Nullable MergedAnnotationSelector<A> selector);
@@ -324,6 +411,8 @@ public interface MergedAnnotations extends Iterable<MergedAnnotation<Annotation>
 	 * @return a {@link MergedAnnotations} instance containing the merged
 	 * element annotations
 	 */
+	// 创建一个新的 {@link MergedAnnotations} 实例，其中包含来自指定元素的所有注解和元注解，以及相关的继承元素，具体取
+	// 决于 {@link SearchStrategy}。
 	static MergedAnnotations from(AnnotatedElement element, SearchStrategy searchStrategy,
 			RepeatableContainers repeatableContainers) {
 

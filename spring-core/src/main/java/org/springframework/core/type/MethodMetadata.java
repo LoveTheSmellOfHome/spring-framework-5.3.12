@@ -29,22 +29,26 @@ package org.springframework.core.type;
  * @see AnnotationMetadata#getAnnotatedMethods
  * @see AnnotatedTypeMetadata
  */
+// 定义对特定方法的注解的抽象访问的接口，其形式不需要加载该方法的类
 public interface MethodMetadata extends AnnotatedTypeMetadata {
 
 	/**
 	 * Get the name of the underlying method.
 	 */
+	// 获取底层方法的名称
 	String getMethodName();
 
 	/**
 	 * Get the fully-qualified name of the class that declares the underlying method.
 	 */
+	// 获取声明基础方法的类的完全限定名称
 	String getDeclaringClassName();
 
 	/**
 	 * Get the fully-qualified name of the underlying method's declared return type.
 	 * @since 4.2
 	 */
+	// 获取基础方法声明的返回类型的完全限定名称
 	String getReturnTypeName();
 
 	/**
@@ -53,22 +57,26 @@ public interface MethodMetadata extends AnnotatedTypeMetadata {
 	 * non-default method in an interface.
 	 * @since 4.2
 	 */
+	// 确定底层方法是否有效抽象：即在类中标记为抽象或在接口中声明为常规的非默认方法
 	boolean isAbstract();
 
 	/**
 	 * Determine whether the underlying method is declared as 'static'.
 	 */
+	// 确定底层方法是否声明为“静态”
 	boolean isStatic();
 
 	/**
 	 * Determine whether the underlying method is marked as 'final'.
 	 */
+	// 确定底层方法是否被标记为“final”
 	boolean isFinal();
 
 	/**
 	 * Determine whether the underlying method is overridable,
 	 * i.e. not marked as static, final, or private.
 	 */
+	// 确定底层方法是否可覆盖，即未标记为静态、最终或私有。
 	boolean isOverridable();
 
 }

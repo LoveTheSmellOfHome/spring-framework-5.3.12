@@ -98,6 +98,9 @@ public abstract class MessageSourceSupport {
 	 * @return the rendered default message (with resolved arguments)
 	 * @see #formatMessage(String, Object[], java.util.Locale)
 	 */
+	// 呈现给定的默认消息字符串。默认消息按照调用者的指定传入，并且可以呈现为显示给用户的完全格式化的默认消息。
+	// <p>默认实现将字符串传递给 {@code formatMessage}，解析其中找到的任何参数占位符。子类可以覆盖此方法以插入对默认消息的自定义处理。
+	// 呈现默认消息字符串
 	protected String renderDefaultMessage(String defaultMessage, @Nullable Object[] args, Locale locale) {
 		return formatMessage(defaultMessage, args, locale);
 	}

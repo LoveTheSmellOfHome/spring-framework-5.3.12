@@ -46,6 +46,15 @@ package org.springframework.asm;
  *
  * @author Eric Bruneton
  */
+// 访问者访问 Java 方法。 这个类的方法，必须调用按以下顺序：
+// （ visitParameter ）* [ visitAnnotationDefault （ visitAnnotation | visitAnnotableParameterCount |
+// visitParameterAnnotation visitTypeAnnotation | visitAttribute ）* [ visitCode （ visitFrame |
+// visit X Insn | visitLabel | visitInsnAnnotation | visitTryCatchBlock | visitTryCatchAnnotation |
+// visitLocalVariable | visitLocalVariableAnnotation | visitLineNumber )* visitMaxs ] visitEnd 。
+// 另外， visit X Insn和visitLabel方法必须按照被访问代码的字节码指令的顺序调用， visitInsnAnnotation必须在注释指令之后调用，
+// visitTryCatchBlock必须在作为参数传递的标签被访问之前调用， visitTryCatchBlockAnnotation
+// 必须在访问相应的 try catch 块后调用，
+// 并且必须在访问作为参数传递的标签后调用visitLocalVariable 、 visitLocalVariableAnnotation和visitLineNumber方法。
 public abstract class MethodVisitor {
 
   private static final String REQUIRES_ASM5 = "This feature requires ASM5";
@@ -54,11 +63,13 @@ public abstract class MethodVisitor {
    * The ASM API version implemented by this visitor. The value of this field must be one of the
    * {@code ASM}<i>x</i> values in {@link Opcodes}.
    */
+  // 此访问者实现的 ASM API 版本。 此字段的值必须是Opcodes中的ASM x值之一。
   protected final int api;
 
   /**
    * The method visitor to which this visitor must delegate method calls. May be {@literal null}.
    */
+  // 此访问者必须将方法调用委托给的方法访问者。可能为空。
   protected MethodVisitor mv;
 
   /**
@@ -67,6 +78,8 @@ public abstract class MethodVisitor {
    * @param api the ASM API version implemented by this visitor. Must be one of the {@code
    *     ASM}<i>x</i> values in {@link Opcodes}.
    */
+  // 构造一个新的MethodVisitor 。
+  // 形参：api – 此访问者实现的 ASM API 版本。 必须是Opcodes中的ASM x值之一。
   public MethodVisitor(final int api) {
     this(api, null);
   }
@@ -79,6 +92,10 @@ public abstract class MethodVisitor {
    * @param methodVisitor the method visitor to which this visitor must delegate method calls. May
    *     be null.
    */
+  // 构造一个新的MethodVisitor 。
+  // 形参：
+  //		api – 此访问者实现的 ASM API 版本。 必须是Opcodes中的ASM x值之一。
+  //		methodVisitor – 此访问者必须将方法调用委托给的方法访问者。 可能为空。
   public MethodVisitor(final int api, final MethodVisitor methodVisitor) {
     if (api != Opcodes.ASM9
         && api != Opcodes.ASM8

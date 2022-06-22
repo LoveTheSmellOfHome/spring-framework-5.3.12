@@ -23,6 +23,7 @@ package org.springframework.transaction.interceptor;
  * @author Rod Johnson
  * @since 09.04.2003
  */
+// {@link RollbackRuleAttribute} 的标记子类，其行为与 {@code RollbackRuleAttribute} 超类相反
 @SuppressWarnings("serial")
 public class NoRollbackRuleAttribute extends RollbackRuleAttribute {
 

@@ -26,6 +26,8 @@ import org.springframework.lang.Nullable;
  * @author Andy Clement
  * @since 3.0
  */
+// 默认情况下，数学运算符Operation支持简单类型，如数字。 通过提供 OperatorOverloader 的实现，
+// 表达式语言的用户可以支持对其他类型的这些操作
 public interface OperatorOverloader {
 
 	/**
@@ -38,6 +40,7 @@ public interface OperatorOverloader {
 	 * between the two operands
 	 * @throws EvaluationException if there is a problem performing the operation
 	 */
+	// 如果运算符重载器支持两个操作数之间的指定操作，则返回 true，因此应该调用它来处理它。
 	boolean overridesOperation(Operation operation, @Nullable Object leftOperand, @Nullable Object rightOperand)
 			throws EvaluationException;
 
@@ -50,6 +53,7 @@ public interface OperatorOverloader {
 	 * @return the result of performing the operation on the two operands
 	 * @throws EvaluationException if there is a problem performing the operation
 	 */
+	// 对两个操作数执行指定操作，返回结果。 见Operation为支持的操作。
 	Object operate(Operation operation, @Nullable Object leftOperand, @Nullable Object rightOperand)
 			throws EvaluationException;
 

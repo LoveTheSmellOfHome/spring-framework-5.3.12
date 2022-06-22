@@ -28,11 +28,15 @@ import org.springframework.util.Assert;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// 装饰器使 MetadataAwareAspectInstanceFactory 仅实例化一次。
+// 装饰器模式：一种动态地往一个类中添加新的行为的设计模式。就功能而言，修饰模式相比生成子类更为灵活，
+// 这样 可以给某个对象而不是整个类添加一些功能。
 @SuppressWarnings("serial")
 public class LazySingletonAspectInstanceFactoryDecorator implements MetadataAwareAspectInstanceFactory, Serializable {
 
 	private final MetadataAwareAspectInstanceFactory maaif;
 
+	// 物化
 	@Nullable
 	private volatile Object materialized;
 
@@ -41,16 +45,21 @@ public class LazySingletonAspectInstanceFactoryDecorator implements MetadataAwar
 	 * Create a new lazily initializing decorator for the given AspectInstanceFactory.
 	 * @param maaif the MetadataAwareAspectInstanceFactory to decorate
 	 */
+	// 为给定的 AspectInstanceFactory 创建一个新的延迟初始化装饰器。
+	// 参形：
+	//			maaif – 要装饰的 MetadataAwareAspectInstanceFactory
 	public LazySingletonAspectInstanceFactoryDecorator(MetadataAwareAspectInstanceFactory maaif) {
 		Assert.notNull(maaif, "AspectInstanceFactory must not be null");
 		this.maaif = maaif;
 	}
 
 
+	// 获取切面实例
 	@Override
 	public Object getAspectInstance() {
 		Object aspectInstance = this.materialized;
 		if (aspectInstance == null) {
+			// 获取锁
 			Object mutex = this.maaif.getAspectCreationMutex();
 			if (mutex == null) {
 				aspectInstance = this.maaif.getAspectInstance();

@@ -50,6 +50,24 @@ import java.lang.reflect.Method;
  * @see Pointcut
  * @see ClassFilter
  */
+// Pointcut ：检查目标方法是否有资格获得建议。
+//
+// MethodMatcher 可以静态评估或在运行时（动态）评估。 静态匹配涉及方法和（可能）方法属性。
+// 动态匹配还使特定调用的参数可用，并且运行先前建议的任何效果都适用于连接点。
+//
+// 如果实现从其isRuntime()方法返回false ，则可以静态执行评估，并且对于此方法的所有调用，无论其参数如何，
+// 结果都是相同的。 这意味着如果isRuntime()方法返回false ，则永远不会
+// 调用 3-arg matches(Method, Class, Object[])方法。
+//
+// 如果实现返回true从其2- ARG matches(Method, Class)方法及其isRuntime()方法返回true ，
+// 3-ARG matches(Method, Class, Object[])方法将被立即的每个电势执行之前调用相关的advice ，
+// 决定advice是否应该运行。 所有先前的通知，例如拦截器链中的早期拦截器，都将运行，因此它们在参数
+// 或 ThreadLocal 状态中产生的任何状态更改都将在评估时可用。
+//
+// 这个接口的具体实现通常应该提供Object.equals(Object)和Object.hashCode()正确实现，以便
+// 允许在缓存场景中使用匹配器——例如，在由 CGLIB 生成的代理中。
+//
+// 方法匹配器：判断当前方法是不是符合条件的
 public interface MethodMatcher {
 
 	/**
@@ -62,6 +80,17 @@ public interface MethodMatcher {
 	 * @param targetClass the target class
 	 * @return whether or not this method matches statically
 	 */
+	// 执行静态检查给定方法是否匹配。
+	// 如果这返回false或isRuntime()方法返回false ，则不会进行运行时检查（即没有
+	// matches(Method, Class, Object[])调用）。
+	//
+	// 方法和目标类是不是保持一致的
+	//
+	// 参形：
+	//			方法——候选方法
+	//			targetClass – 目标类
+	// 返回值：
+	//			此方法是否静态匹配
 	boolean matches(Method method, Class<?> targetClass);
 
 	/**
@@ -74,6 +103,16 @@ public interface MethodMatcher {
 	 * {@link #matches(java.lang.reflect.Method, Class, Object[])} method
 	 * is required if static matching passed
 	 */
+	// 这个 MethodMatcher 是否是动态的，也就是说，即使 2-arg 匹配方法返回true ，也必须在运行时
+	// 对matches(Method, Class, Object[])方法进行最终调用？
+	//
+	// 可以在创建 AOP 代理时调用，无需在每次方法调用之前再次调用，
+	// 判断当前方法是不是运行时的方法
+	//
+	// 返回值：
+	//			如果通过了静态匹配，则是否需要通过 3-arg matches(Method, Class, Object[])方法进行运行时匹配
+	//
+	// 用 isRuntime() 来控制 matches(args),这两个方法是二选一的。
 	boolean isRuntime();
 
 	/**
@@ -90,12 +129,24 @@ public interface MethodMatcher {
 	 * @return whether there's a runtime match
 	 * @see MethodMatcher#matches(Method, Class)
 	 */
+	// 检查此方法是否存在运行时（动态）匹配，该匹配必须是静态匹配的。
+	//
+	// 调用此方法只有在2-ARG方法返回匹配true对于给定的方法和目标类，并且如果isRuntime()方法返回true 。
+	// 在建议链中较早的任何建议运行之后，在建议可能运行之前立即调用。
+	//
+	// 参形：
+	//			方法——候选方法
+	//			targetClass – 目标类
+	//			args – 方法的参数
+	// 返回值：
+	//			是否存在运行时匹配
 	boolean matches(Method method, Class<?> targetClass, Object... args);
 
 
 	/**
 	 * Canonical instance that matches all methods.
 	 */
+	// 匹配所有方法的规范实例。
 	MethodMatcher TRUE = TrueMethodMatcher.INSTANCE;
 
 }

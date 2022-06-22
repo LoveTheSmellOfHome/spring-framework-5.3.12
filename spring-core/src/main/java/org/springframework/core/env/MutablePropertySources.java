@@ -39,8 +39,17 @@ import org.springframework.lang.Nullable;
  * @since 3.1
  * @see PropertySourcesPropertyResolver
  */
+// {@link PropertySources} 接口的默认实现。允许操作包含的属性源并提供用于复制现有 {@code PropertySources} 实例的构造函数。
+//
+// <p>在 {@link addFirst} 和 {@link addLast} 等方法中提到 <em>precedence 优先级<em> 时，
+// 这是关于在解析给定属性时搜索属性源的顺序{@link PropertyResolver}。
+//
+// 是 {@link PropertySources} 和 {@ Environment} 关联存储的可变属性源对象
+// 关联方法 - org.springframework.core.env.ConfigurableEnvironment#getPropertySources()
+// 组合模式：
 public class MutablePropertySources implements PropertySources {
 
+	// 线程安全的，在 Environment 中没有线程安全保护机制，因此需要从数据结构上保证线程安全，适用于读多写少的情况
 	private final List<PropertySource<?>> propertySourceList = new CopyOnWriteArrayList<>();
 
 
@@ -54,6 +63,8 @@ public class MutablePropertySources implements PropertySources {
 	 * Create a new {@code MutablePropertySources} from the given propertySources
 	 * object, preserving the original order of contained {@code PropertySource} objects.
 	 */
+	// 从给定的 propertySources 对象创建一个新的 {@code MutablePropertySources}，
+	// 保留包含的 {@code PropertySource} 对象的原始顺序。
 	public MutablePropertySources(PropertySources propertySources) {
 		this();
 		for (PropertySource<?> propertySource : propertySources) {
@@ -102,6 +113,7 @@ public class MutablePropertySources implements PropertySources {
 	/**
 	 * Add the given property source object with highest precedence.
 	 */
+	// 添加具有最高优先级的给定属性源对象,添加到最前边
 	public void addFirst(PropertySource<?> propertySource) {
 		synchronized (this.propertySourceList) {
 			removeIfPresent(propertySource);
@@ -112,6 +124,7 @@ public class MutablePropertySources implements PropertySources {
 	/**
 	 * Add the given property source object with lowest precedence.
 	 */
+	// 添加具有最低优先级的给定属性源对象。
 	public void addLast(PropertySource<?> propertySource) {
 		synchronized (this.propertySourceList) {
 			removeIfPresent(propertySource);
@@ -123,6 +136,7 @@ public class MutablePropertySources implements PropertySources {
 	 * Add the given property source object with precedence immediately higher
 	 * than the named relative property source.
 	 */
+	// 添加给定的属性源对象，其优先级高于指定的相关属性源
 	public void addBefore(String relativePropertySourceName, PropertySource<?> propertySource) {
 		assertLegalRelativeAddition(relativePropertySourceName, propertySource);
 		synchronized (this.propertySourceList) {
@@ -136,6 +150,7 @@ public class MutablePropertySources implements PropertySources {
 	 * Add the given property source object with precedence immediately lower
 	 * than the named relative property source.
 	 */
+	// 加给定的属性源对象，其优先级低于指定的相关属性源。
 	public void addAfter(String relativePropertySourceName, PropertySource<?> propertySource) {
 		assertLegalRelativeAddition(relativePropertySourceName, propertySource);
 		synchronized (this.propertySourceList) {
@@ -148,6 +163,7 @@ public class MutablePropertySources implements PropertySources {
 	/**
 	 * Return the precedence of the given property source, {@code -1} if not found.
 	 */
+	// 返回给定属性源的优先级，如果未找到，则返回 {@code -1}
 	public int precedenceOf(PropertySource<?> propertySource) {
 		return this.propertySourceList.indexOf(propertySource);
 	}
@@ -156,6 +172,7 @@ public class MutablePropertySources implements PropertySources {
 	 * Remove and return the property source with the given name, {@code null} if not found.
 	 * @param name the name of the property source to find and remove
 	 */
+	// 删除并返回具有给定名称的属性源，如果未找到 {@code null}。
 	@Nullable
 	public PropertySource<?> remove(String name) {
 		synchronized (this.propertySourceList) {
@@ -171,6 +188,7 @@ public class MutablePropertySources implements PropertySources {
 	 * @throws IllegalArgumentException if no property source with the given name is present
 	 * @see #contains
 	 */
+	// 用给定的属性源对象替换给定名称的属性源
 	public void replace(String name, PropertySource<?> propertySource) {
 		synchronized (this.propertySourceList) {
 			int index = assertPresentAndGetIndex(name);
@@ -181,6 +199,7 @@ public class MutablePropertySources implements PropertySources {
 	/**
 	 * Return the number of {@link PropertySource} objects contained.
 	 */
+	// 返回包含的 {@link PropertySource} 对象的数量
 	public int size() {
 		return this.propertySourceList.size();
 	}
@@ -194,6 +213,7 @@ public class MutablePropertySources implements PropertySources {
 	/**
 	 * Ensure that the given property source is not being added relative to itself.
 	 */
+	// 确保给定的属性源不是相对于自身添加的
 	protected void assertLegalRelativeAddition(String relativePropertySourceName, PropertySource<?> propertySource) {
 		String newPropertySourceName = propertySource.getName();
 		if (relativePropertySourceName.equals(newPropertySourceName)) {
@@ -205,6 +225,7 @@ public class MutablePropertySources implements PropertySources {
 	/**
 	 * Remove the given property source if it is present.
 	 */
+	// 如果存在，则删除给定的属性源
 	protected void removeIfPresent(PropertySource<?> propertySource) {
 		this.propertySourceList.remove(propertySource);
 	}
@@ -212,6 +233,7 @@ public class MutablePropertySources implements PropertySources {
 	/**
 	 * Add the given property source at a particular index in the list.
 	 */
+	// 在列表中的特定索引处添加给定的属性源
 	private void addAtIndex(int index, PropertySource<?> propertySource) {
 		removeIfPresent(propertySource);
 		this.propertySourceList.add(index, propertySource);
@@ -222,6 +244,7 @@ public class MutablePropertySources implements PropertySources {
 	 * @param name {@linkplain PropertySource#getName() name of the property source} to find
 	 * @throws IllegalArgumentException if the named property source is not present
 	 */
+	// 断言指定的属性源存在并返回其索引
 	private int assertPresentAndGetIndex(String name) {
 		int index = this.propertySourceList.indexOf(PropertySource.named(name));
 		if (index == -1) {

@@ -29,6 +29,8 @@ import org.springframework.lang.Nullable;
  * @author Andy Clement
  * @since 3.0
  */
+// 方法解析器尝试定位方法并返回可用于调用该方法的命令执行器。
+// 命令执行器将被缓存，但如果它“过时”，将再次调用解析器。
 public interface MethodResolver {
 
 	/**
@@ -40,6 +42,12 @@ public interface MethodResolver {
 	 * @param argumentTypes the arguments that the constructor must be able to handle
 	 * @return a MethodExecutor that can invoke the method, or null if the method cannot be found
 	 */
+	// 在提供的上下文中，在提供的对象上确定可以处理指定参数的合适方法。 返回可用于调用该方法的MethodExecutor ，如果找不到方法，则返回null 。
+	// 形参：
+	// context - 当前的评估上下文
+	// targetObject – 调用方法的对象
+	// argumentTypes – 构造函数必须能够处理的参数
+	// 返回值：可以调用该方法的 MethodExecutor，如果找不到该方法，则为 null
 	@Nullable
 	MethodExecutor resolve(EvaluationContext context, Object targetObject, String name,
 			List<TypeDescriptor> argumentTypes) throws AccessException;

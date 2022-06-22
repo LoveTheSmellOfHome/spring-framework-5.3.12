@@ -25,6 +25,8 @@ package org.springframework.core;
  * @author Sebastien Deleuze
  * @since 5.3.4
  */
+// 用于检测 GraalVM 本机图像环境的通用委托。
+// <p>需要使用 {@code -H:+InlineBeforeAnalysis} 本机图像编译器标志，以便在构建时删除代码。
 public abstract class NativeDetector {
 
 	// See https://github.com/oracle/graal/blob/master/sdk/src/org.graalvm.nativeimage/src/org/graalvm/nativeimage/ImageInfo.java
@@ -33,6 +35,7 @@ public abstract class NativeDetector {
 	/**
 	 * Returns {@code true} if invoked in the context of image building or during image runtime, else {@code false}.
 	 */
+	// 如果在图像构建的上下文中或在图像运行时调用，则返回 {@code true}，否则返回 {@code false}。
 	public static boolean inNativeImage() {
 		return imageCode;
 	}
