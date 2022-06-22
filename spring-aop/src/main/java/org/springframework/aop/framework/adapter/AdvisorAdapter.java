@@ -34,6 +34,13 @@ import org.springframework.aop.Advisor;
  *
  * @author Rod Johnson
  */
+// 接口允许扩展 Spring AOP 框架以允许处理新的顾问和建议类型。
+// 实现对象可以从自定义通知类型创建 AOP 联盟拦截器，使这些通知类型能够在 Spring AOP 框架中使用，该框架在后台使用拦截。
+// 大多数 Spring 用户不需要实现这个接口； 仅当您需要向 Spring 引入更多 Advisor 或 Advice 类型时才这样做。
+//
+// Spring AOP 的适配，基于 Advisor 的适配，将 Advisor 转换成 MethodInterceptor
+//
+// 适配器模式
 public interface AdvisorAdapter {
 
 	/**
@@ -45,6 +52,11 @@ public interface AdvisorAdapter {
 	 * @see #getInterceptor(org.springframework.aop.Advisor)
 	 * @see org.springframework.aop.BeforeAdvice
 	 */
+	// 这个适配器是否理解这个建议对象？ 使用包含此建议作为参数的 Advisor 调用 getInterceptors 方法是否有效？
+	// 参形：
+	//			advice – 建议，例如 BeforeAdvice
+	// 返回值：
+	//			此适配器是否理解给定的建议对象
 	boolean supportsAdvice(Advice advice);
 
 	/**
@@ -58,6 +70,12 @@ public interface AdvisorAdapter {
 	 * no need to cache instances for efficiency, as the AOP framework
 	 * caches advice chains.
 	 */
+	// 返回一个 AOP Alliance MethodInterceptor，将给定通知的行为暴露给基于拦截的 AOP 框架。
+	// 不要担心顾问中包含的任何切入点； AOP 框架将负责检查切入点。
+	// 参形：
+	//			advisor - 顾问。 supportsAdvice() 方法必须在此对象上返回 true，适配对象
+	// 返回值：
+	//			此顾问的 AOP 联盟拦截器。 无需缓存实例以提高效率，因为 AOP 框架缓存了建议链。目标对象
 	MethodInterceptor getInterceptor(Advisor advisor);
 
 }

@@ -33,6 +33,7 @@ import org.springframework.util.Assert;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// org.springframework.beans.factory.parsing.ComponentDefinition 桥接了由标签和组件定义基础设施。
 public class AdvisorComponentDefinition extends AbstractComponentDefinition {
 
 	private final String advisorBeanName;

@@ -26,6 +26,7 @@ import org.aopalliance.aop.Advice;
  * @since 2.0.3
  * @see BeforeAdvice
  */
+// 后通知的通用标记接口，例如 AfterReturningAdvice 和 ThrowsAdvice 。
 public interface AfterAdvice extends Advice {
 
 }

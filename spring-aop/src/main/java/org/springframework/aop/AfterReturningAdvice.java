@@ -16,9 +16,9 @@
 
 package org.springframework.aop;
 
-import java.lang.reflect.Method;
-
 import org.springframework.lang.Nullable;
+
+import java.lang.reflect.Method;
 
 /**
  * After returning advice is invoked only on normal method return, not if an
@@ -28,6 +28,7 @@ import org.springframework.lang.Nullable;
  * @see MethodBeforeAdvice
  * @see ThrowsAdvice
  */
+// 返回后通知仅在正常方法返回时调用，而不是在抛出异常时调用。这样的通知可以看到返回值，但不能改变它
 public interface AfterReturningAdvice extends AfterAdvice {
 
 	/**
@@ -41,6 +42,15 @@ public interface AfterReturningAdvice extends AfterAdvice {
 	 * allowed by the method signature. Otherwise the exception
 	 * will be wrapped as a runtime exception.
 	 */
+	// 给定方法成功返回后的回调。
+	// 形参：
+	//			returnValue – 方法返回的值，如果有的话
+	//			method- 被调用的方法
+	//			args – 方法的参数
+	//			target – 方法调用的目标。 可能为null 。
+	// 异常：
+	//			Throwable - 如果此对象希望中止调用。 如果方法签名允许，任何抛出的异常都将返回给调用者。
+	//			否则异常将被包装为运行时异常。
 	void afterReturning(@Nullable Object returnValue, Method method, Object[] args, @Nullable Object target) throws Throwable;
 
 }
