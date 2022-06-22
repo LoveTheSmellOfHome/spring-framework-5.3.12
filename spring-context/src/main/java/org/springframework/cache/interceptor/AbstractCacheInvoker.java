@@ -95,12 +95,14 @@ public abstract class AbstractCacheInvoker {
 	 * Execute {@link Cache#evict(Object)}/{@link Cache#evictIfPresent(Object)} on the
 	 * specified {@link Cache} and invoke the error handler if an exception occurs.
 	 */
+	// 在指定的 Cache 上执行 Cache.evict(Object) / Cache.evictIfPresent(Object) 并在发生异常时调用错误处理程序。
 	protected void doEvict(Cache cache, Object key, boolean immediate) {
 		try {
 			if (immediate) {
 				cache.evictIfPresent(key);
 			}
 			else {
+				// 淘汰
 				cache.evict(key);
 			}
 		}
@@ -113,6 +115,7 @@ public abstract class AbstractCacheInvoker {
 	 * Execute {@link Cache#clear()} on the specified {@link Cache} and
 	 * invoke the error handler if an exception occurs.
 	 */
+	// 在指定的 Cache 上执行 Cache.clear() 并在发生异常时调用错误处理程序。
 	protected void doClear(Cache cache, boolean immediate) {
 		try {
 			if (immediate) {

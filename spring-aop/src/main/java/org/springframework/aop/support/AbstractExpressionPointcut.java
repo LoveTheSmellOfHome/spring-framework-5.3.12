@@ -30,6 +30,7 @@ import org.springframework.lang.Nullable;
  * @see #setLocation
  * @see #setExpression
  */
+// 表达式切入点的抽象超类，提供位置和表达式属性
 @SuppressWarnings("serial")
 public abstract class AbstractExpressionPointcut implements ExpressionPointcut, Serializable {
 
@@ -43,6 +44,7 @@ public abstract class AbstractExpressionPointcut implements ExpressionPointcut, 
 	/**
 	 * Set the location for debugging.
 	 */
+	// 设置调试位置
 	public void setLocation(@Nullable String location) {
 		this.location = location;
 	}
@@ -53,6 +55,8 @@ public abstract class AbstractExpressionPointcut implements ExpressionPointcut, 
 	 * @return location information as a human-readable String,
 	 * or {@code null} if none is available
 	 */
+	// 如果可用，返回有关切入点表达式的位置信息。 这在调试中很有用。
+	// 返回值：位置信息作为人类可读的字符串，如果没有可用，则返回null
 	@Nullable
 	public String getLocation() {
 		return this.location;
@@ -61,10 +65,12 @@ public abstract class AbstractExpressionPointcut implements ExpressionPointcut, 
 	public void setExpression(@Nullable String expression) {
 		this.expression = expression;
 		try {
+			// 解析表达式
 			onSetExpression(expression);
 		}
 		catch (IllegalArgumentException ex) {
 			// Fill in location information if possible.
+			// 如果可能，请填写位置信息
 			if (this.location != null) {
 				throw new IllegalArgumentException("Invalid expression at location [" + this.location + "]: " + ex);
 			}
@@ -82,12 +88,19 @@ public abstract class AbstractExpressionPointcut implements ExpressionPointcut, 
 	 * @throws IllegalArgumentException if the expression is invalid
 	 * @see #setExpression
 	 */
+	// 在设置新的切入点表达式时调用。 如果可能，此时应解析表达式。
+	// 这个实现是空的。
+	// 参形：
+	//			表达式- 要设置的表达式
+	// 抛出：
+	//			IllegalArgumentException – 如果表达式无效
 	protected void onSetExpression(@Nullable String expression) throws IllegalArgumentException {
 	}
 
 	/**
 	 * Return this pointcut's expression.
 	 */
+	// 返回此切入点的表达式
 	@Override
 	@Nullable
 	public String getExpression() {
