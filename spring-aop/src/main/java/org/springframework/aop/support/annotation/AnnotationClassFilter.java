@@ -31,10 +31,13 @@ import org.springframework.util.Assert;
  * @since 2.0
  * @see AnnotationMatchingPointcut
  */
+// 简单的 ClassFilter，用于查找类中存在的特定 Java 5 注解。
 public class AnnotationClassFilter implements ClassFilter {
 
+	// 注解类型
 	private final Class<? extends Annotation> annotationType;
 
+	// 是否检查父类
 	private final boolean checkInherited;
 
 
@@ -42,6 +45,9 @@ public class AnnotationClassFilter implements ClassFilter {
 	 * Create a new AnnotationClassFilter for the given annotation type.
 	 * @param annotationType the annotation type to look for
 	 */
+	// 为给定的注解类型创建一个新的 AnnotationClassFilter。
+	// 参形：
+	//			annotationType - 要查找的注解类型
 	public AnnotationClassFilter(Class<? extends Annotation> annotationType) {
 		this(annotationType, false);
 	}
@@ -54,6 +60,11 @@ public class AnnotationClassFilter implements ClassFilter {
 	 * (i.e. whether to use {@link AnnotatedElementUtils#hasAnnotation}
 	 * semantics instead of standard Java {@link Class#isAnnotationPresent})
 	 */
+	// 为给定的注解类型创建一个新的 AnnotationClassFilter。
+	// 参形：
+	//			annotationType - 要查找的注解类型
+	//			checkInherited – 是否还检查注解类型的超类和接口以及元注解（即是否使用 AnnotatedElementUtils.hasAnnotation
+	//			语义而不是标准 Java Class.isAnnotationPresent ）
 	public AnnotationClassFilter(Class<? extends Annotation> annotationType, boolean checkInherited) {
 		Assert.notNull(annotationType, "Annotation type must not be null");
 		this.annotationType = annotationType;

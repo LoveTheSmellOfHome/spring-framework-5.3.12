@@ -36,10 +36,13 @@ import org.springframework.util.Assert;
  * @see AnnotationClassFilter
  * @see AnnotationMethodMatcher
  */
+// 简单的切入点，用于查找存在于 class 或 method上的特定 Java 5 注解。
 public class AnnotationMatchingPointcut implements Pointcut {
 
+	// 类过滤器
 	private final ClassFilter classFilter;
 
+	// 方法匹配器
 	private final MethodMatcher methodMatcher;
 
 
@@ -47,6 +50,9 @@ public class AnnotationMatchingPointcut implements Pointcut {
 	 * Create a new AnnotationMatchingPointcut for the given annotation type.
 	 * @param classAnnotationType the annotation type to look for at the class level
 	 */
+	// 为给定的注解类型创建一个新的 AnnotationMatchingPointcut。
+	// 参形：
+	//			classAnnotationType – 在类级别查找的注解类型
 	public AnnotationMatchingPointcut(Class<? extends Annotation> classAnnotationType) {
 		this(classAnnotationType, false);
 	}
@@ -58,6 +64,10 @@ public class AnnotationMatchingPointcut implements Pointcut {
 	 * as well as meta-annotations for the annotation type
 	 * @see AnnotationClassFilter#AnnotationClassFilter(Class, boolean)
 	 */
+	// 为给定的注解类型创建一个新的 AnnotationMatchingPointcut。
+	// 参形：
+	//			classAnnotationType – 在类级别查找的注解类型
+	//			checkInherited – 是否还检查注解类型的超类和接口以及元注解
 	public AnnotationMatchingPointcut(Class<? extends Annotation> classAnnotationType, boolean checkInherited) {
 		this.classFilter = new AnnotationClassFilter(classAnnotationType, checkInherited);
 		this.methodMatcher = MethodMatcher.TRUE;
@@ -70,6 +80,10 @@ public class AnnotationMatchingPointcut implements Pointcut {
 	 * @param methodAnnotationType the annotation type to look for at the method level
 	 * (can be {@code null})
 	 */
+	// 为给定的注解类型创建一个新的 AnnotationMatchingPointcut。
+	// 参形：
+	//			classAnnotationType – 在类级别查找的注解类型（可以是null ）
+	//			methodAnnotationType – 在方法级别查找的注解类型（可以是null ）
 	public AnnotationMatchingPointcut(@Nullable Class<? extends Annotation> classAnnotationType,
 			@Nullable Class<? extends Annotation> methodAnnotationType) {
 
@@ -88,6 +102,11 @@ public class AnnotationMatchingPointcut implements Pointcut {
 	 * @see AnnotationClassFilter#AnnotationClassFilter(Class, boolean)
 	 * @see AnnotationMethodMatcher#AnnotationMethodMatcher(Class, boolean)
 	 */
+	// 为给定的注解类型创建一个新的 AnnotationMatchingPointcut。
+	// 参形：
+	//			classAnnotationType – 在类级别查找的注解类型（可以是null ）
+	//			methodAnnotationType – 在方法级别查找的注解类型（可以是null ）
+	//			checkInherited – 是否还检查注解类型的超类和接口以及元注解
 	public AnnotationMatchingPointcut(@Nullable Class<? extends Annotation> classAnnotationType,
 			@Nullable Class<? extends Annotation> methodAnnotationType, boolean checkInherited) {
 
@@ -149,6 +168,11 @@ public class AnnotationMatchingPointcut implements Pointcut {
 	 * @param annotationType the annotation type to look for at the class level
 	 * @return the corresponding AnnotationMatchingPointcut
 	 */
+	// AnnotationMatchingPointcut 的工厂方法与类级别的指定注解匹配。
+	// 参形：
+	//			annotationType - 要在类级别查找的注解类型
+	// 返回值：
+	//			对应的 AnnotationMatchingPointcut
 	public static AnnotationMatchingPointcut forClassAnnotation(Class<? extends Annotation> annotationType) {
 		Assert.notNull(annotationType, "Annotation type must not be null");
 		return new AnnotationMatchingPointcut(annotationType);
@@ -160,6 +184,11 @@ public class AnnotationMatchingPointcut implements Pointcut {
 	 * @param annotationType the annotation type to look for at the method level
 	 * @return the corresponding AnnotationMatchingPointcut
 	 */
+	// AnnotationMatchingPointcut 的工厂方法与方法级别的指定注解匹配。
+	// 参形：
+	//			annotationType - 要在方法级别查找的注解类型
+	// 返回值：
+	//			对应的 AnnotationMatchingPointcut
 	public static AnnotationMatchingPointcut forMethodAnnotation(Class<? extends Annotation> annotationType) {
 		Assert.notNull(annotationType, "Annotation type must not be null");
 		return new AnnotationMatchingPointcut(null, annotationType);
@@ -171,8 +200,10 @@ public class AnnotationMatchingPointcut implements Pointcut {
 	 * for filtering classes whose methods are not worth searching to begin with.
 	 * @since 5.2
 	 */
+	// ClassFilter 委托给 AnnotationUtils.isCandidateClass 用于过滤其方法不值得一开始搜索的类。
 	private static class AnnotationCandidateClassFilter implements ClassFilter {
 
+		// 注解类型
 		private final Class<? extends Annotation> annotationType;
 
 		AnnotationCandidateClassFilter(Class<? extends Annotation> annotationType) {

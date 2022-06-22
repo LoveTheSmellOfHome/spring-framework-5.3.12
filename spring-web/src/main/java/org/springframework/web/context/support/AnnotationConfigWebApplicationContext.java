@@ -83,6 +83,28 @@ import org.springframework.web.context.ContextLoader;
  * @since 3.0
  * @see org.springframework.context.annotation.AnnotationConfigApplicationContext
  */
+// WebApplicationContext实现，它接受组件类作为输入——特别是@Configuration注释的类，还有普通
+// @Component类和使用javax.inject注释的 JSR-330 兼容类
+//
+// 允许一一注册类（将类名指定为配置位置）以及类路径扫描（将基本包指定为配置位置）
+// 这本质上等同于 Web 环境的AnnotationConfigApplicationContext
+//
+// 要使用此应用程序上下文，必须将 ContextLoader 的“contextClass”上下文参数和/或
+// FrameworkServlet 的“contextClass”初始化参数设置为此类的完全限定名称。
+//
+// 从 Spring 3.1 开始，当使用基于代码的WebApplicationInitializer替代web.xml时，此类也可以直接实例化
+// 并注入 Spring 的DispatcherServlet或ContextLoaderListener 。 有关详细信息和使用示例，请参阅其 Javadoc。
+//
+// 与XmlWebApplicationContext不同，不假定默认配置类位置。 相反，需要为ContextLoader设置“contextConfigLocation”
+// 上下文参数和/或为 FrameworkServlet 设置“contextConfigLocation”初始化参数。 param-value 可能包含完全限定的类名
+// 和基本包以扫描组件。 有关如何处理这些位置的确切详细信息，请参阅loadBeanDefinitions 。
+//
+// 作为设置“contextConfigLocation”参数的替代方法，用户可以实现一个ApplicationContextInitializer并设置
+// “contextInitializerClasses”上下文参数/初始化参数。 在这种情况下，用户应该更喜欢refresh()和scan(String...)方法
+// 而不是setConfigLocation(String)方法，后者主要供ContextLoader使用。
+//
+// 注意：在多个@Configuration类的情况下，稍后的@Bean定义将覆盖在先前加载的文件中定义的那些。
+// 这可以用来通过额外的@Configuration类故意覆盖某些 bean 定义。
 public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWebApplicationContext
 		implements AnnotationConfigRegistry {
 
@@ -124,6 +146,9 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 	 * @see AnnotatedBeanDefinitionReader#setScopeMetadataResolver
 	 * @see ClassPathBeanDefinitionScanner#setScopeMetadataResolver
 	 */
+	// 设置自定义 ScopeMetadataResolver 以与 AnnotatedBeanDefinitionReader 和/或
+	// ClassPathBeanDefinitionScanner 一起使用。默认是
+	// org.springframework.context.annotation.AnnotationScopeMetadataResolver。
 	public void setScopeMetadataResolver(@Nullable ScopeMetadataResolver scopeMetadataResolver) {
 		this.scopeMetadataResolver = scopeMetadataResolver;
 	}
@@ -132,6 +157,8 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 	 * Return the custom {@link ScopeMetadataResolver} for use with {@link AnnotatedBeanDefinitionReader}
 	 * and/or {@link ClassPathBeanDefinitionScanner}, if any.
 	 */
+	// 返回自定义 ScopeMetadataResolver 以与 AnnotatedBeanDefinitionReader 和/或
+	// ClassPathBeanDefinitionScanner （如果有）。
 	@Nullable
 	protected ScopeMetadataResolver getScopeMetadataResolver() {
 		return this.scopeMetadataResolver;
@@ -149,6 +176,8 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 	 * @see #setConfigLocation(String)
 	 * @see #refresh()
 	 */
+	// 注册一个或多个要处理的组件类
+	// 请注意，必须调用refresh()以使上下文完全处理新类。
 	@Override
 	public void register(Class<?>... componentClasses) {
 		Assert.notEmpty(componentClasses, "At least one component class must be specified");
@@ -165,6 +194,8 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 	 * @see #setConfigLocation(String)
 	 * @see #refresh()
 	 */
+	// 在指定的基本包内执行扫描。
+	// 请注意，必须调用 refresh() 以使上下文完全处理新类
 	@Override
 	public void scan(String... basePackages) {
 		Assert.notEmpty(basePackages, "At least one base package must be specified");
@@ -194,6 +225,15 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 	 * @see AnnotatedBeanDefinitionReader
 	 * @see ClassPathBeanDefinitionScanner
 	 */
+	// 为 register(Class...) 指定的任何类注册 org.springframework.beans.factory.config.BeanDefinition 并扫描
+	// scan(String...) 指定的任何包
+	//
+	// 对于 setConfigLocation(String) 或 setConfigLocations(String[]) 指定的任何值，首先尝试将每个位置加载为一个类，
+	// 如果类加载成功，则注册 BeanDefinition ，如果类加载失败（即引发ClassNotFoundException ），假设该值是一个包，
+	// 并尝试扫描它的组件类
+	//
+	// <p>启用默认的注解配置后处理器集，例如可以使用 {@code @Autowired}、{@code @Required} 和关联的注解。
+	// <p>使用自动生成的名称作为 BeanDefinition 名称，除非 使用了 @Value 模型注解指定了 BeanDefinition 名称
 	@Override
 	protected void loadBeanDefinitions(DefaultListableBeanFactory beanFactory) {
 		AnnotatedBeanDefinitionReader reader = getAnnotatedBeanDefinitionReader(beanFactory);

@@ -98,6 +98,8 @@ public abstract class AnnotatedElementUtils {
 	 * @param annotations the annotations to expose through the {@code AnnotatedElement}
 	 * @since 4.3
 	 */
+	// 为给定的注解构建一个适应性的 {@link AnnotatedElement}，通常与 {@link AnnotatedElementUtils} 上的其他方法一起使用。
+	// @param annotations 通过 {@code AnnotatedElement} 公开暴漏的注解
 	public static AnnotatedElement forAnnotations(Annotation... annotations) {
 		return new AnnotatedElementForAnnotations(annotations);
 	}
@@ -243,6 +245,10 @@ public abstract class AnnotatedElementUtils {
 	 * @see #getMergedAnnotation(AnnotatedElement, Class)
 	 * @see #findMergedAnnotation(AnnotatedElement, Class)
 	 */
+	// 获取注解层次结构中指定的 {@code annotationType} 的第一个注释<em>在提供的 {@code element} 之上，并将该注解的属性与
+	// 来自较低级别的注解的<em>匹配<em> 属性合并注解层次结构。
+	// <p>{@link AliasFor @AliasFor} 语义在单个注解和注释层次结构中都得到完全支持。
+	// <p>此方法委托给 {@link #getMergedAnnotationAttributes(AnnotatedElement, String)}。
 	@Nullable
 	public static AnnotationAttributes getMergedAnnotationAttributes(
 			AnnotatedElement element, Class<? extends Annotation> annotationType) {
@@ -621,6 +627,10 @@ public abstract class AnnotatedElementUtils {
 	 * @see #findMergedAnnotationAttributes(AnnotatedElement, String, boolean, boolean)
 	 * @see #getMergedAnnotationAttributes(AnnotatedElement, Class)
 	 */
+	// 在提供的元素上方的注释层次结构中查找指定 annotationType 的第一个注释，将该注释的属性与来自注释层
+	// 次结构较低级别的注释的匹配属性合并，并将结果合成回指定 annotationType 的注释
+	// @AliasFor 语义在单个注解和注解层次结构中都得到完全支持
+	// 此方法遵循类级 javadoc 中描述的 find 语义
 	@Nullable
 	public static <A extends Annotation> A findMergedAnnotation(AnnotatedElement element, Class<A> annotationType) {
 		// Shortcut: directly present on the element, with no merging needed?

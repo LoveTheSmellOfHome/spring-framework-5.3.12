@@ -40,11 +40,19 @@ import org.springframework.util.Assert;
  * @see AnnotatedBeanDefinition#getMetadata()
  * @see org.springframework.core.type.StandardAnnotationMetadata
  */
+// {@link org.springframework.beans.factory.support.GenericBeanDefinition} 类的扩展，
+// 添加了对通过 {@link AnnotatedBeanDefinition} 接口公开的注解元数据的支持。
+//
+// <p>这个 GenericBeanDefinition 变体主要用于测试期望在 AnnotatedBeanDefinition 上运行的代码，
+// 例如 Spring 组件扫描支持中的策略实现（其中默认定义类是 {@link org.springframework.context.annotation.
+// ScannedGenericBeanDefinition}，它也实现了 AnnotatedBeanDefinition 接口）
 @SuppressWarnings("serial")
 public class AnnotatedGenericBeanDefinition extends GenericBeanDefinition implements AnnotatedBeanDefinition {
 
+	// 定义了注解或引导类（配置类）
 	private final AnnotationMetadata metadata;
 
+	// 定义了方法
 	@Nullable
 	private MethodMetadata factoryMethodMetadata;
 
@@ -53,8 +61,11 @@ public class AnnotatedGenericBeanDefinition extends GenericBeanDefinition implem
 	 * Create a new AnnotatedGenericBeanDefinition for the given bean class.
 	 * @param beanClass the loaded bean class
 	 */
+	// 为给定的 bean 类创建一个新的 AnnotatedGenericBeanDefinition
+	// @param beanClass 加载的 bean 类
 	public AnnotatedGenericBeanDefinition(Class<?> beanClass) {
 		setBeanClass(beanClass);
+		// 自省（透视）操作，类似于 X 光扫描，检查内部有什么元素，然后进行返回
 		this.metadata = AnnotationMetadata.introspect(beanClass);
 	}
 
@@ -68,6 +79,11 @@ public class AnnotatedGenericBeanDefinition extends GenericBeanDefinition implem
 	 * @param metadata the annotation metadata for the bean class in question
 	 * @since 3.1.1
 	 */
+	// 为给定的注解元数据创建一个新的 AnnotatedGenericBeanDefinition，允许基于 ASM 的处理并避免过早加载 bean 类。
+	// 请注意，此构造函数在功能上等效于
+	// {@link org.springframework.context.annotation.ScannedGenericBeanDefinition ScannedGenericBeanDefinition}，
+	// 但是后者的语义表明 bean 是通过组件扫描而不是其他方式专门发现的。
+	// @param metadata 相关 bean 类的注解元数据
 	public AnnotatedGenericBeanDefinition(AnnotationMetadata metadata) {
 		Assert.notNull(metadata, "AnnotationMetadata must not be null");
 		if (metadata instanceof StandardAnnotationMetadata) {
@@ -86,6 +102,9 @@ public class AnnotatedGenericBeanDefinition extends GenericBeanDefinition implem
 	 * @param factoryMethodMetadata metadata for the selected factory method
 	 * @since 4.1.1
 	 */
+	// 根据带注解的类和该类的工厂方法，为给定的注解元数据创建一个新的 AnnotatedGenericBeanDefinition
+	// @param metadata 相关 bean 类的注解元数据
+	// 所选工厂方法的@param factoryMethodMetadata 元数据
 	public AnnotatedGenericBeanDefinition(AnnotationMetadata metadata, MethodMetadata factoryMethodMetadata) {
 		this(metadata);
 		Assert.notNull(factoryMethodMetadata, "MethodMetadata must not be null");
@@ -93,7 +112,7 @@ public class AnnotatedGenericBeanDefinition extends GenericBeanDefinition implem
 		this.factoryMethodMetadata = factoryMethodMetadata;
 	}
 
-
+	// 返回当前注解或引导类
 	@Override
 	public final AnnotationMetadata getMetadata() {
 		return this.metadata;

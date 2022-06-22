@@ -16,15 +16,15 @@
 
 package org.springframework.core.annotation;
 
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * {@link LinkedHashMap} subclass representing annotation attribute
@@ -43,15 +43,23 @@ import org.springframework.util.StringUtils;
  * @see AnnotationUtils#getAnnotationAttributes
  * @see AnnotatedElementUtils
  */
+// LinkedHashMap 子类表示由 AnnotationUtils、AnnotatedElementUtils 和 Spring 的基于反射和 ASM 的
+// org.springframework.core.type.AnnotationMetadata 实现读取的注解属性键值对
+//
+// 提供“伪具体化”以避免调用代码中出现嘈杂的 Map 泛型，以及以类型安全的方式查找注解属性的便捷方法。
+// AnnotationAttributes 将注解中的属性按照 Map<String,Object> 方式存储，
+// key 是注解属性名称，value 是注解属性对象，需要预知对象类型。
+//
+// 底层实际上是个 Map,将 Annotation 里边的属性方法变成属性
 @SuppressWarnings("serial")
 public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 
 	private static final String UNKNOWN = "unknown";
 
 	@Nullable
-	private final Class<? extends Annotation> annotationType;
+	private final Class<? extends Annotation> annotationType; // 注解类型
 
-	final String displayName;
+	final String displayName; // 注解属性名称
 
 	boolean validated = false;
 
@@ -59,6 +67,7 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	/**
 	 * Create a new, empty {@link AnnotationAttributes} instance.
 	 */
+	// 创建一个新的空AnnotationAttributes实例。
 	public AnnotationAttributes() {
 		this.annotationType = null;
 		this.displayName = UNKNOWN;
@@ -69,6 +78,9 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * given initial capacity to optimize performance.
 	 * @param initialCapacity initial size of the underlying map
 	 */
+	// 使用给定的初始容量创建一个新的空AnnotationAttributes实例以优化性能。
+	// 形参：
+	//			initialCapacity – 底层 Map 的初始大小
 	public AnnotationAttributes(int initialCapacity) {
 		super(initialCapacity);
 		this.annotationType = null;
@@ -81,6 +93,11 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * @param map original source of annotation attribute <em>key-value</em> pairs
 	 * @see #fromMap(Map)
 	 */
+	// 创建一个新的AnnotationAttributes实例，包装提供的地图及其所有键值对。
+	// 形参：
+	// 			map – 注解属性键值对的原始来源
+	// 请参阅：
+	//			fromMap(Map)
 	public AnnotationAttributes(Map<String, Object> map) {
 		super(map);
 		this.annotationType = null;
@@ -93,6 +110,11 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * @param other original source of annotation attribute <em>key-value</em> pairs
 	 * @see #fromMap(Map)
 	 */
+	// 创建一个新的AnnotationAttributes实例，包装提供的地图及其所有键值对。
+	// 形参：
+	//			other - 注解属性键值对的原始来源
+	// 请参阅：
+	//			fromMap(Map)
 	public AnnotationAttributes(AnnotationAttributes other) {
 		super(other);
 		this.annotationType = other.annotationType;
@@ -107,6 +129,9 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * {@code AnnotationAttributes} instance; never {@code null}
 	 * @since 4.2
 	 */
+	// 为指定的annotationType创建一个新的空 AnnotationAttributes 实例。
+	// 形参：
+	//			annotationType – 此 AnnotationAttributes 实例表示的注解类型； 从不为 null
 	public AnnotationAttributes(Class<? extends Annotation> annotationType) {
 		Assert.notNull(annotationType, "'annotationType' must not be null");
 		this.annotationType = annotationType;
@@ -122,6 +147,10 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * @param validated if the attributes are considered already validated
 	 * @since 5.2
 	 */
+	// 为指定的 annotationType 创建一个可能已经过验证的新的空 AnnotationAttributes 实例。
+	// 形参：
+	//			annotationType – 此 AnnotationAttributes 实例表示的注解类型； 从不为 null
+	//			validated - 如果属性被认为已经验证
 	AnnotationAttributes(Class<? extends Annotation> annotationType, boolean validated) {
 		Assert.notNull(annotationType, "'annotationType' must not be null");
 		this.annotationType = annotationType;
@@ -138,6 +167,10 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * or {@code null} to just store the annotation type name
 	 * @since 4.3.2
 	 */
+	// 为指定的annotationType创建一个新的空AnnotationAttributes实例。
+	// 形参：
+	//			annotationType – 此 AnnotationAttributes 实例表示的注解类型名称； 从不为 null
+	//			classLoader – 尝试加载注解类型的类加载器，或 null 仅存储注解类型名称
 	public AnnotationAttributes(String annotationType, @Nullable ClassLoader classLoader) {
 		Assert.notNull(annotationType, "'annotationType' must not be null");
 		this.annotationType = getAnnotationType(annotationType, classLoader);
@@ -153,6 +186,7 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 			}
 			catch (ClassNotFoundException ex) {
 				// Annotation Class not resolvable
+				// 注解类不可解析
 			}
 		}
 		return null;
@@ -164,6 +198,9 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * @return the annotation type, or {@code null} if unknown
 	 * @since 4.2
 	 */
+	// 获取由此AnnotationAttributes表示的AnnotationAttributes 。
+	// 返回值：
+	//			注解类型，如果未知，则为null
 	@Nullable
 	public Class<? extends Annotation> annotationType() {
 		return this.annotationType;
@@ -177,6 +214,12 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * @throws IllegalArgumentException if the attribute does not exist or
 	 * if it is not of the expected type
 	 */
+	// 获取存储在指定 attributeName 下的值作为字符串。
+	// 形参：
+	//			attributeName - 要获取的属性的名称； 从不为null或为空
+	// 返回值：
+	//			the value
+	// IllegalArgumentException – 如果属性不存在或不是预期类型
 	public String getString(String attributeName) {
 		return getRequiredAttribute(attributeName, String.class);
 	}
@@ -193,6 +236,13 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * @throws IllegalArgumentException if the attribute does not exist or
 	 * if it is not of the expected type
 	 */
+	// 获取存储在指定attributeName下的值作为字符串数组。
+	// 如果存储在指定attributeName下的值是字符串，则在返回之前将其包装在单元素数组中。
+	// 形参：
+	//			attributeName - 要获取的属性的名称； 从不为null或为空
+	// 返回值：
+	//			the value
+	// IllegalArgumentException – 如果属性不存在或不是预期类型
 	public String[] getStringArray(String attributeName) {
 		return getRequiredAttribute(attributeName, String[].class);
 	}
@@ -205,6 +255,12 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * @throws IllegalArgumentException if the attribute does not exist or
 	 * if it is not of the expected type
 	 */
+	// 获取存储在指定attributeName下的值作为布尔值。
+	// 形参：
+	//			attributeName - 要获取的属性的名称； 从不为null或为空
+	// 返回值：
+	//			the value
+	// IllegalArgumentException – 如果属性不存在或不是预期类型
 	public boolean getBoolean(String attributeName) {
 		return getRequiredAttribute(attributeName, Boolean.class);
 	}
@@ -217,6 +273,12 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * @throws IllegalArgumentException if the attribute does not exist or
 	 * if it is not of the expected type
 	 */
+	// 获取存储在指定attributeName下的值作为数字。
+	// 形参：
+	//			attributeName - 要获取的属性的名称； 从不为null或为空
+	// 返回值：
+	//			the value
+	// IllegalArgumentException – 如果属性不存在或不是预期类型
 	@SuppressWarnings("unchecked")
 	public <N extends Number> N getNumber(String attributeName) {
 		return (N) getRequiredAttribute(attributeName, Number.class);
@@ -230,6 +292,12 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * @throws IllegalArgumentException if the attribute does not exist or
 	 * if it is not of the expected type
 	 */
+	// 获取存储在指定attributeName下的值作为枚举。
+	// 形参：
+	//			attributeName - 要获取的属性的名称； 从不为null或为空
+	// 返回值：
+	//			the value
+	// IllegalArgumentException – 如果属性不存在或不是预期类型
 	@SuppressWarnings("unchecked")
 	public <E extends Enum<?>> E getEnum(String attributeName) {
 		return (E) getRequiredAttribute(attributeName, Enum.class);
@@ -243,6 +311,12 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * @throws IllegalArgumentException if the attribute does not exist or
 	 * if it is not of the expected type
 	 */
+	// 获取存储在指定attributeName下的值作为一个类。
+	// 形参：
+	//			attributeName - 要获取的属性的名称； 从不为null或为空
+	// 返回值：
+	//			the value
+	// IllegalArgumentException – 如果属性不存在或不是预期类型
 	@SuppressWarnings("unchecked")
 	public <T> Class<? extends T> getClass(String attributeName) {
 		return getRequiredAttribute(attributeName, Class.class);
@@ -259,6 +333,13 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * @throws IllegalArgumentException if the attribute does not exist or
 	 * if it is not of the expected type
 	 */
+	// 获取存储在指定attributeName下的值作为类数组。
+	// 如果存储在指定attributeName下的值是一个类，它将在返回之前包装在一个单元素数组中。
+	// 形参：
+	//			attributeName - 要获取的属性的名称； 从不为null或为空
+	// 返回值：
+	//			the value
+	// IllegalArgumentException – 如果属性不存在或不是预期类型
 	public Class<?>[] getClassArray(String attributeName) {
 		return getRequiredAttribute(attributeName, Class[].class);
 	}
@@ -274,6 +355,13 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * @throws IllegalArgumentException if the attribute does not exist or
 	 * if it is not of the expected type
 	 */
+	// 获取存储在指定attributeName下的AnnotationAttributes 。
+	// 注意：如果您需要实际的注解，请getAnnotation(String, Class)调用getAnnotation(String, Class) 。
+	// 形参：
+	//			attributeName - 要获取的属性的名称； 从不为null或为空
+	// 返回值：
+	//			AnnotationAttributes
+	// IllegalArgumentException – 如果属性不存在或不是预期类型
 	public AnnotationAttributes getAnnotation(String attributeName) {
 		return getRequiredAttribute(attributeName, AnnotationAttributes.class);
 	}
@@ -289,6 +377,13 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * if it is not of the expected type
 	 * @since 4.2
 	 */
+	// 获取存储在指定attributeName下的 annotationType 类型的annotationType 。
+	// 形参：
+	//			attributeName - 要获取的属性的名称； 从不为null或为空
+	//			annotationType – 预期的注解类型； 从不为null
+	// 返回值：
+	//			the annotation
+	// IllegalArgumentException – 如果属性不存在或不是预期类型
 	public <A extends Annotation> A getAnnotation(String attributeName, Class<A> annotationType) {
 		return getRequiredAttribute(attributeName, annotationType);
 	}
@@ -307,6 +402,14 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * @throws IllegalArgumentException if the attribute does not exist or
 	 * if it is not of the expected type
 	 */
+	// 获取存储在指定 attributeName 下的 AnnotationAttributes 数组。
+	// 如果存储在指定 attributeName 下的值是 AnnotationAttributes 一个实例，它将在返回之前包装在一个单元素数组中。
+	// 注意：如果您需要实际的注解数组，请 getAnnotationArray(String, Class) 调用 getAnnotationArray(String, Class) 。
+	// 形参：
+	//			attributeName - 要获取的属性的名称； 从不为null或为空
+	// 返回值：
+	//			AnnotationAttributes数组
+	// IllegalArgumentException – 如果属性不存在或不是预期类型
 	public AnnotationAttributes[] getAnnotationArray(String attributeName) {
 		return getRequiredAttribute(attributeName, AnnotationAttributes[].class);
 	}
@@ -325,6 +428,14 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * if it is not of the expected type
 	 * @since 4.2
 	 */
+	// 获取存储在指定 attributeName 下的类型为 annotationType 的数组。
+	// 如果存储在指定 attributeName下的值是 Annotation ，则在返回之前将其包装在一个单元素数组中。
+	// 形参：
+	//			attributeName - 要获取的属性的名称； 从不为null或为空
+	//			annotationType – 预期的注解类型； 从不为null
+	// 返回值：
+	//			注解数组
+	// IllegalArgumentException – 如果属性不存在或不是预期类型
 	@SuppressWarnings("unchecked")
 	public <A extends Annotation> A[] getAnnotationArray(String attributeName, Class<A> annotationType) {
 		Object array = Array.newInstance(annotationType, 0);
@@ -346,6 +457,15 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * @throws IllegalArgumentException if the attribute does not exist or
 	 * if it is not of the expected type
 	 */
+	// 获取存储在指定 attributeName 下的值，确保该值是 expectedType 。
+	// 如果 expectedType 是一个数组，并且存储在指定 attributeName 下的值是预期数组类型的组件类型的单个元素，
+	// 则该单个元素将在返回之前包装在适当类型的单元素数组中。
+	// 形参：
+	//			attributeName - 要获取的属性的名称； 从不为null或为空
+	//			expectedType - 预期类型; 从不为null
+	// 返回值：
+	// 			the value
+	// IllegalArgumentException – 如果属性不存在或不是预期类型
 	@SuppressWarnings("unchecked")
 	private <T> T getRequiredAttribute(String attributeName, Class<T> expectedType) {
 		Assert.hasText(attributeName, "'attributeName' must not be null or empty");
@@ -421,6 +541,11 @@ public class AnnotationAttributes extends LinkedHashMap<String, Object> {
 	 * to the {@link #AnnotationAttributes(Map)} constructor.
 	 * @param map original source of annotation attribute <em>key-value</em> pairs
 	 */
+	// 根据给定的地图返回 AnnotationAttributes 实例。
+	// 如果 Map 已经是 AnnotationAttributes 实例，它将被立即转换并返回，而无需创建新实例。 
+	// 否则，将通过将提供的映射传递给 AnnotationAttributes(Map) 构造函数来创建一个新实例。
+	// 形参：
+	//			map – 注解属性键值对的原始来源
 	@Nullable
 	public static AnnotationAttributes fromMap(@Nullable Map<String, Object> map) {
 		if (map == null) {

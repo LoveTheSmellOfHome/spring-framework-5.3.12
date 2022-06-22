@@ -16,14 +16,14 @@
 
 package org.springframework.core.annotation;
 
-import java.lang.reflect.AnnotatedElement;
-import java.util.Arrays;
-import java.util.List;
-
 import org.springframework.core.DecoratingProxy;
 import org.springframework.core.OrderComparator;
 import org.springframework.core.annotation.MergedAnnotations.SearchStrategy;
 import org.springframework.lang.Nullable;
+
+import java.lang.reflect.AnnotatedElement;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * {@code AnnotationAwareOrderComparator} is an extension of
@@ -44,11 +44,15 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.core.annotation.Order
  * @see javax.annotation.Priority
  */
+// AnnotationAwareOrderComparator 是 OrderComparator 的扩展，它支持 Spring 的 org.springframework.core.Ordered
+// 接口以及 @Order 和 @Priority 注解， Ordered 实例提供的顺序值覆盖静态定义的注解值（如果有）。
+// 有关无序对象的排序语义的详细信息，请参阅 OrderComparator的 Javadoc。
 public class AnnotationAwareOrderComparator extends OrderComparator {
 
 	/**
 	 * Shared default instance of {@code AnnotationAwareOrderComparator}.
 	 */
+	// AnnotationAwareOrderComparator的共享默认实例，注解感知顺序比较器
 	public static final AnnotationAwareOrderComparator INSTANCE = new AnnotationAwareOrderComparator();
 
 
@@ -58,6 +62,7 @@ public class AnnotationAwareOrderComparator extends OrderComparator {
 	 * elements, in addition to the {@link org.springframework.core.Ordered}
 	 * check in the superclass.
 	 */
+	// 除了超类中的 org.springframework.core.Ordered 检查之外，此实现还检查各种元素上的 @Order 或 @Priority
 	@Override
 	@Nullable
 	protected Integer findOrder(Object obj) {
@@ -68,6 +73,7 @@ public class AnnotationAwareOrderComparator extends OrderComparator {
 		return findOrderFromAnnotation(obj);
 	}
 
+	// 查找注解上的排序大小
 	@Nullable
 	private Integer findOrderFromAnnotation(Object obj) {
 		AnnotatedElement element = (obj instanceof AnnotatedElement ? (AnnotatedElement) obj : obj.getClass());
@@ -85,6 +91,8 @@ public class AnnotationAwareOrderComparator extends OrderComparator {
 	 * annotation: typically, selecting one object over another in case of
 	 * multiple matches but only one object to be returned.
 	 */
+	// 此实现检索 @javax.annotation.Priority 值，允许在常规 Order 注解上提供附加语义：
+	// 通常，在多个匹配但仅返回一个对象的情况下选择一个对象而不是另一个对象。
 	@Override
 	@Nullable
 	public Integer getPriority(Object obj) {
@@ -106,6 +114,10 @@ public class AnnotationAwareOrderComparator extends OrderComparator {
 	 * @param list the List to sort
 	 * @see java.util.List#sort(java.util.Comparator)
 	 */
+	// 使用默认 AnnotationAwareOrderComparator 对给定列表进行排序。
+	// 优化以跳过大小为 0 或 1 的列表的排序，以避免不必要的数组提取。
+	// 参形：
+	//			list – 要排序的列表
 	public static void sort(List<?> list) {
 		if (list.size() > 1) {
 			list.sort(INSTANCE);
@@ -119,6 +131,10 @@ public class AnnotationAwareOrderComparator extends OrderComparator {
 	 * @param array the array to sort
 	 * @see java.util.Arrays#sort(Object[], java.util.Comparator)
 	 */
+	// 使用默认 AnnotationAwareOrderComparator 对给定数组进行排序。
+	// 优化以跳过大小为 0 或 1 的列表的排序，以避免不必要的数组提取。
+	// 参形：
+	//			array - 要排序的数组
 	public static void sort(Object[] array) {
 		if (array.length > 1) {
 			Arrays.sort(array, INSTANCE);
@@ -133,6 +149,10 @@ public class AnnotationAwareOrderComparator extends OrderComparator {
 	 * @param value the array or List to sort
 	 * @see java.util.Arrays#sort(Object[], java.util.Comparator)
 	 */
+	// 如有必要，使用默认 AnnotationAwareOrderComparator 对给定数组或列表进行排序。当给定任何其他值时，只需跳过排序。
+	// 优化以跳过大小为 0 或 1 的列表的排序，以避免不必要的数组提取。
+	// 参形：
+	//			value – 要排序的数组或列表
 	public static void sortIfNecessary(Object value) {
 		if (value instanceof Object[]) {
 			sort((Object[]) value);

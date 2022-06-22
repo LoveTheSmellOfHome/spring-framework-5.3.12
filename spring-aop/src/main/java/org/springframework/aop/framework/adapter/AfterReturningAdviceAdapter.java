@@ -31,14 +31,17 @@ import org.springframework.aop.AfterReturningAdvice;
  * @author Rod Johnson
  * @author Juergen Hoeller
  */
+// 使AfterReturningAdvice能够在 Spring AOP 框架中使用的适配器，将 Advice 转换成拦截器
 @SuppressWarnings("serial")
 class AfterReturningAdviceAdapter implements AdvisorAdapter, Serializable {
 
+	// 判断是否是后置 advice
 	@Override
 	public boolean supportsAdvice(Advice advice) {
 		return (advice instanceof AfterReturningAdvice);
 	}
 
+	// 将后置 Advice 转换成 对应的 AfterReturningAdviceInterceptor 拦截器
 	@Override
 	public MethodInterceptor getInterceptor(Advisor advisor) {
 		AfterReturningAdvice advice = (AfterReturningAdvice) advisor.getAdvice();

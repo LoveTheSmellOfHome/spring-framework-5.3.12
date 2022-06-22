@@ -31,6 +31,9 @@ import org.springframework.lang.Nullable;
  * @see AnnotatedGenericBeanDefinition
  * @see org.springframework.core.type.AnnotationMetadata
  */
+// 扩展的 {@link org.springframework.beans.factory.config.BeanDefinition} 接口公开了关于其 bean 类的
+// {@link org.springframework.core.type.AnnotationMetadata} - 无需加载该类
+// 注解元信息
 public interface AnnotatedBeanDefinition extends BeanDefinition {
 
 	/**
@@ -38,6 +41,7 @@ public interface AnnotatedBeanDefinition extends BeanDefinition {
 	 * for this bean definition's bean class.
 	 * @return the annotation metadata object (never {@code null})
 	 */
+	// 获取注解元信息
 	AnnotationMetadata getMetadata();
 
 	/**
@@ -45,6 +49,7 @@ public interface AnnotatedBeanDefinition extends BeanDefinition {
 	 * @return the factory method metadata, or {@code null} if none
 	 * @since 4.1.1
 	 */
+	// 获取此 bean definition 的工厂方法的元数据（如果有）
 	@Nullable
 	MethodMetadata getFactoryMethodMetadata();
 
