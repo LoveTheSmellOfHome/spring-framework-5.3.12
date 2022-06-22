@@ -39,26 +39,36 @@ import org.springframework.util.ObjectUtils;
  * @see PropertyValues
  * @see BeanWrapper
  */
+// 用于保存单个 bean 属性的信息和值的对象。在这里使用对象，而不是仅仅将所有属性存储在以属性名称为键的映射中，可以提供更大的灵活性，
+// 并能够以优化的方式处理索引属性等。
+// <p>请注意，该值不需要是最终所需的类型：{@link BeanWrapper} 实现应处理任何必要的转换，因为此对象不知道将应用到的对象的任何信息。
 @SuppressWarnings("serial")
 public class PropertyValue extends BeanMetadataAttributeAccessor implements Serializable {
 
+	// 不变的名称，属性的名称
 	private final String name;
 
+	// 不变的值，指属性的原始值
 	@Nullable
 	private final Object value;
 
+	// 是否可选的，默认是不可选的
 	private boolean optional = false;
 
+	// 是否需要转换，默认不需要转换
 	private boolean converted = false;
 
+	// 转换后的值
 	@Nullable
 	private Object convertedValue;
 
 	/** Package-visible field that indicates whether conversion is necessary. */
+	// 指示是否需要转换，比如 String 类型就不需要转换
 	@Nullable
 	volatile Boolean conversionNecessary;
 
 	/** Package-visible field for caching the resolved property path tokens. */
+	// 用于缓存解析的属性路径标记的包可见字段
 	@Nullable
 	transient volatile Object resolvedTokens;
 
@@ -68,6 +78,9 @@ public class PropertyValue extends BeanMetadataAttributeAccessor implements Seri
 	 * @param name the name of the property (never {@code null})
 	 * @param value the value of the property (possibly before type conversion)
 	 */
+	// 创建一个新的 PropertyValue 实例
+	// @param name 属性的名称（从不{@code null}）
+	// @param value 属性的值（可能在类型转换之前）
 	public PropertyValue(String name, @Nullable Object value) {
 		Assert.notNull(name, "Name must not be null");
 		this.name = name;
@@ -78,6 +91,8 @@ public class PropertyValue extends BeanMetadataAttributeAccessor implements Seri
 	 * Copy constructor.
 	 * @param original the PropertyValue to copy (never {@code null})
 	 */
+	// 复制构造函数
+	// @param 原始要复制的 PropertyValue（从不{@code null}）
 	public PropertyValue(PropertyValue original) {
 		Assert.notNull(original, "Original must not be null");
 		this.name = original.getName();
@@ -97,6 +112,9 @@ public class PropertyValue extends BeanMetadataAttributeAccessor implements Seri
 	 * @param original the PropertyValue to link to (never {@code null})
 	 * @param newValue the new value to apply
 	 */
+	// 为原始值持有者公开新值的构造函数。原始持有人将作为新持有人的来源公开
+	// @param 原始要链接到的 PropertyValue（从不{@code null}）
+	// @param newValue 要应用的新值
 	public PropertyValue(PropertyValue original, @Nullable Object newValue) {
 		Assert.notNull(original, "Original must not be null");
 		this.name = original.getName();
@@ -112,6 +130,7 @@ public class PropertyValue extends BeanMetadataAttributeAccessor implements Seri
 	/**
 	 * Return the name of the property.
 	 */
+	// 返回属性的名称
 	public String getName() {
 		return this.name;
 	}
@@ -122,6 +141,7 @@ public class PropertyValue extends BeanMetadataAttributeAccessor implements Seri
 	 * It is the responsibility of the BeanWrapper implementation to
 	 * perform type conversion.
 	 */
+	// 返回属性的值。 <p>请注意，这里将<i>不会<i>发生类型转换。执行类型转换是 BeanWrapper 实现的责任。
 	@Nullable
 	public Object getValue() {
 		return this.value;
@@ -132,6 +152,8 @@ public class PropertyValue extends BeanMetadataAttributeAccessor implements Seri
 	 * @return the original PropertyValue (either a source of this
 	 * value holder or this value holder itself).
 	 */
+	// 返回此值持有者的原始 PropertyValue 实例。
+	// @return 原始 PropertyValue（此值持有者的来源或此值持有者本身
 	public PropertyValue getOriginalPropertyValue() {
 		PropertyValue original = this;
 		Object source = getSource();
@@ -147,6 +169,7 @@ public class PropertyValue extends BeanMetadataAttributeAccessor implements Seri
 	 * when no corresponding property exists on the target class.
 	 * @since 3.0
 	 */
+	// 设置是否为可选值，即目标类不存在对应属性时忽略。
 	public void setOptional(boolean optional) {
 		this.optional = optional;
 	}
@@ -156,6 +179,7 @@ public class PropertyValue extends BeanMetadataAttributeAccessor implements Seri
 	 * when no corresponding property exists on the target class.
 	 * @since 3.0
 	 */
+	// 返回是否为可选值，即当目标类不存在对应属性时忽略。
 	public boolean isOptional() {
 		return this.optional;
 	}
@@ -164,6 +188,7 @@ public class PropertyValue extends BeanMetadataAttributeAccessor implements Seri
 	 * Return whether this holder contains a converted value already ({@code true}),
 	 * or whether the value still needs to be converted ({@code false}).
 	 */
+	// 返回此持有者是否已包含转换值（{@code true}），或者该值是否仍需要转换（{@code false}）
 	public synchronized boolean isConverted() {
 		return this.converted;
 	}
@@ -172,6 +197,7 @@ public class PropertyValue extends BeanMetadataAttributeAccessor implements Seri
 	 * Set the converted value of this property value,
 	 * after processed type conversion.
 	 */
+	// 设置该属性值的转换值，经过类型转换
 	public synchronized void setConvertedValue(@Nullable Object value) {
 		this.converted = true;
 		this.convertedValue = value;
@@ -181,6 +207,7 @@ public class PropertyValue extends BeanMetadataAttributeAccessor implements Seri
 	 * Return the converted value of this property value,
 	 * after processed type conversion.
 	 */
+	// 处理类型转换后，返回该属性值的转换值
 	@Nullable
 	public synchronized Object getConvertedValue() {
 		return this.convertedValue;

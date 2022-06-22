@@ -34,6 +34,11 @@ import java.lang.annotation.Target;
  * @since 4.0
  * @see PropertySource
  */
+// 聚合多个 {@link PropertySource} 注解的容器注解
+//
+// <p>可以在本地使用，声明几个嵌套的 {@link PropertySource} 注释。也可以与 Java 8
+// 对<em>可重复注解<em>的支持结合使用，其中 {@link PropertySource} 可以简单地在
+// 同一个 {@linkplain ElementTypeTYPE type} 上声明多次，隐式生成此容器注解。
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

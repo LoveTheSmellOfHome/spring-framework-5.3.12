@@ -37,6 +37,15 @@ import org.springframework.lang.Nullable;
  * @author Andy Clement
  * @since 3.0
  */
+// 属性访问器能够读取（并可能写入）对象的属性
+//
+// 这个接口没有任何限制，因此实现者可以自由地直接作为字段或通过 getter 或以他们认为合适的任何其他方式访问属性
+//
+// 解析器可以选择性地指定应为其调用的目标类数组。 但是，如果它从 getSpecificTargetClasses() 返回null ，
+// 它将为所有属性引用调用，并有机会确定它是否可以读取或写入它们。
+//
+// 属性解析器被认为是有序的，每个解析器将被依次调用。 影响调用顺序的唯一规则是任何直接
+// 在 getSpecificTargetClasses() 命名目标类的解析器将在通用解析器之前首先被调用。
 public interface PropertyAccessor {
 
 	/**
@@ -46,6 +55,9 @@ public interface PropertyAccessor {
 	 * @return an array of classes that this resolver is suitable for
 	 * (or {@code null} if a general resolver)
 	 */
+	// 返回应为其调用此解析器的类数组
+	// 返回null表示这是一个通用解析器，可以在尝试解析任何类型的属性时调用它
+	// 返回值：此解析器适用的类数组（如果是通用解析器，则为null ）
 	@Nullable
 	Class<?>[] getSpecificTargetClasses();
 
@@ -58,6 +70,13 @@ public interface PropertyAccessor {
 	 * @return true if this resolver is able to read the property
 	 * @throws AccessException if there is any problem determining whether the property can be read
 	 */
+	// 调用以确定解析器实例是否能够访问指定目标对象上的指定属性。
+	// 形参：
+	// EvaluationContext- 尝试访问的评估上下文
+	// target – 访问属性的目标对象
+	// name - 正在访问的属性的名称
+	// 返回值：如果此解析器能够读取该属性，则为 true
+	// AccessException - 如果确定是否可以读取属性有任何问题
 	boolean canRead(EvaluationContext context, @Nullable Object target, String name) throws AccessException;
 
 	/**
@@ -69,6 +88,7 @@ public interface PropertyAccessor {
 	 * @return a TypedValue object wrapping the property value read and a type descriptor for it
 	 * @throws AccessException if there is any problem accessing the property value
 	 */
+	// 调用以从指定的目标对象读取属性。 只有 在canRead 也返回true时才应该成功。
 	TypedValue read(EvaluationContext context, @Nullable Object target, String name) throws AccessException;
 
 	/**
@@ -81,6 +101,7 @@ public interface PropertyAccessor {
 	 * @throws AccessException if there is any problem determining whether the
 	 * property can be written to
 	 */
+	// 调用以确定解析器实例是否能够写入指定目标对象上的指定属性
 	boolean canWrite(EvaluationContext context, @Nullable Object target, String name) throws AccessException;
 
 	/**
@@ -92,6 +113,7 @@ public interface PropertyAccessor {
 	 * @param newValue the new value for the property
 	 * @throws AccessException if there is any problem writing to the property value
 	 */
+	// 调用以写入指定目标对象上的属性。 只有在 canWrite 也返回true时才应该成功
 	void write(EvaluationContext context, @Nullable Object target, String name, @Nullable Object newValue)
 			throws AccessException;
 

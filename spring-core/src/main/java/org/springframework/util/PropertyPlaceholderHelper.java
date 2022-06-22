@@ -16,16 +16,15 @@
 
 package org.springframework.util;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.lang.Nullable;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import org.springframework.lang.Nullable;
 
 /**
  * Utility class for working with Strings that have placeholder values in them.
@@ -39,6 +38,10 @@ import org.springframework.lang.Nullable;
  * @author Rob Harrop
  * @since 3.0
  */
+// 用于处理包含占位符值的字符串的实用程序类。占位符采用 {@code {name}} 的形式。
+// 使用 {@code PropertyPlaceholderHelper} 这些占位符可以替换为用户提供的值。
+//
+// <p>可以使用 {@link Properties} 实例或使用 {@link PlaceholderResolver} 提供替换值。
 public class PropertyPlaceholderHelper {
 
 	private static final Log logger = LogFactory.getLog(PropertyPlaceholderHelper.class);
@@ -70,6 +73,7 @@ public class PropertyPlaceholderHelper {
 	 * @param placeholderPrefix the prefix that denotes the start of a placeholder
 	 * @param placeholderSuffix the suffix that denotes the end of a placeholder
 	 */
+	// 创建一个使用提供的前缀和后缀的新 {@code PropertyPlaceholderHelper}。无法解析的占位符将被忽略
 	public PropertyPlaceholderHelper(String placeholderPrefix, String placeholderSuffix) {
 		this(placeholderPrefix, placeholderSuffix, null, true);
 	}
@@ -83,6 +87,9 @@ public class PropertyPlaceholderHelper {
 	 * @param ignoreUnresolvablePlaceholders indicates whether unresolvable placeholders should
 	 * be ignored ({@code true}) or cause an exception ({@code false})
 	 */
+	// 创建一个使用提供的前缀和后缀的新 {@code PropertyPlaceholderHelper}
+	// @param valueSeparator 占位符变量和关联默认值之间的分隔符，如果有的话
+	// @param ignoreUnresolvablePlaceholders 指示是否应忽略无法解析的占位符 ({@code true}) 或导致异常 ({@code false})
 	public PropertyPlaceholderHelper(String placeholderPrefix, String placeholderSuffix,
 			@Nullable String valueSeparator, boolean ignoreUnresolvablePlaceholders) {
 
@@ -109,6 +116,10 @@ public class PropertyPlaceholderHelper {
 	 * @param properties the {@code Properties} to use for replacement
 	 * @return the supplied value with placeholders replaced inline
 	 */
+	// 用提供的 {@link Properties} 中的相应属性替换所有格式为 {@code {name}} 的占位符。
+	// @param value 包含要替换的占位符的值
+	// @param properties 用于替换的 {@code Properties}
+	// return 使用占位符替换内联提供的值
 	public String replacePlaceholders(String value, final Properties properties) {
 		Assert.notNull(properties, "'properties' must not be null");
 		return replacePlaceholders(value, properties::getProperty);
@@ -126,6 +137,7 @@ public class PropertyPlaceholderHelper {
 		return parseStringValue(value, placeholderResolver, null);
 	}
 
+	// 最终将 ${...} 占位符解析为真实值的方法
 	protected String parseStringValue(
 			String value, PlaceholderResolver placeholderResolver, @Nullable Set<String> visitedPlaceholders) {
 
@@ -148,8 +160,10 @@ public class PropertyPlaceholderHelper {
 							"Circular placeholder reference '" + originalPlaceholder + "' in property definitions");
 				}
 				// Recursive invocation, parsing placeholders contained in the placeholder key.
+				// 递归调用，解析占位符键中包含的占位符
 				placeholder = parseStringValue(placeholder, placeholderResolver, visitedPlaceholders);
 				// Now obtain the value for the fully resolved key...
+				// 现在获取完全解析键的值。
 				String propVal = placeholderResolver.resolvePlaceholder(placeholder);
 				if (propVal == null && this.valueSeparator != null) {
 					int separatorIndex = placeholder.indexOf(this.valueSeparator);
@@ -165,6 +179,7 @@ public class PropertyPlaceholderHelper {
 				if (propVal != null) {
 					// Recursive invocation, parsing placeholders contained in the
 					// previously resolved placeholder value.
+					// 递归调用，解析包含在先前解析的占位符值中的占位符
 					propVal = parseStringValue(propVal, placeholderResolver, visitedPlaceholders);
 					result.replace(startIndex, endIndex + this.placeholderSuffix.length(), propVal);
 					if (logger.isTraceEnabled()) {

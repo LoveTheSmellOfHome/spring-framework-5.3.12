@@ -31,12 +31,19 @@ import org.springframework.lang.Nullable;
  * @author Stephane Nicoll
  * @since 4.2
  */
+// 任何对象都可以实现此接口以提供其实际的 {@link ResolvableType}。
+//
+// <p>此类信息在确定实例是否与泛型签名匹配时非常有用，因为 Java 不会在运行时传达签名。
+//
+// <p>这个接口的用户在复杂的层次结构场景中应该小心，特别是当类的泛型类型签名在子类中发生变化时。
+// 始终可以返回 {@code null} 以回退默认行为。
 public interface ResolvableTypeProvider {
 
 	/**
 	 * Return the {@link ResolvableType} describing this instance
 	 * (or {@code null} if some sort of default should be applied instead).
 	 */
+	// 返回描述此实例的 {@link ResolvableType}（如果应改为应用某种默认值，则返回 {@code null}）。
 	@Nullable
 	ResolvableType getResolvableType();
 

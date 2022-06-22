@@ -16,13 +16,9 @@
 
 package org.springframework.web.bind.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 import org.springframework.core.annotation.AliasFor;
+
+import java.lang.annotation.*;
 
 /**
  * Annotation for mapping HTTP {@code PUT} requests onto specific handler
@@ -39,6 +35,8 @@ import org.springframework.core.annotation.AliasFor;
  * @see PatchMapping
  * @see RequestMapping
  */
+// 用于将 HTTP PUT请求映射到特定处理程序方法的注释。
+// 具体来说， @PutMapping是一个组合注释，它充当 @RequestMapping(method = RequestMethod.PUT) 的快捷方式
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

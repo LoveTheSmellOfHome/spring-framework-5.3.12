@@ -77,6 +77,24 @@ import org.springframework.util.ClassUtils;
  * @see java.util.ResourceBundle
  * @see java.text.MessageFormat
  */
+// {@link org.springframework.context.MessageSource} 实现，使用指定的基本名称访问资源包。
+// 此类依赖于底层 JDK 的 {@link java.util.ResourceBundle} 实现，并结合 {@link java.text.MessageFormat} 提供的
+// JDK 标准消息解析。
+//
+// <p>这个 MessageSource 缓存了访问的 ResourceBundle 实例和为每条消息生成的 MessageFormats。
+// 它还实现了在没有 MessageFormat 的情况下呈现无参数消息，如 AbstractMessageSource 基类所支持的那样。
+// 此 MessageSource 提供的缓存明显快于 {@code java.util.ResourceBundle} 类的内置缓存。
+//
+// <p>基本名称遵循 {@link java.util.ResourceBundle} 约定：本质上是一个完全限定的类路径位置。
+// 如果它不包含包限定符（例如 {@code org.mypackage}），它将从类路径根目录解析。
+// 请注意，JDK 的标准 ResourceBundle 将点视为包分隔符：这意味着“test.theme”实际上等同于“test/theme”。
+//
+// <p>在类路径上，将使用本地配置的 {@link setDefaultEncoding encoding} 读取包资源：默认为 ISO-8859-1；
+// 考虑将其切换为 UTF-8，或为平台默认编码切换为 {@code null}。在不支持本地提供的 {@code ResourceBundle.Control}
+// 句柄的 JDK 9+ 模块路径上，此 MessageSource 始终回退到具有平台默认编码的 {@link ResourceBundlegetBundle}
+// 检索：UTF-8 和 ISO-8859-1 JDK 9+ 的回退（可通过“java.util.PropertyResourceBundle.encoding”系统属性进行配置）。
+// 请注意，在这种情况下也不会调用 {@link loadBundle(Reader)}{@link loadBundle(InputStream)}，
+// 从而有效地忽略子类中的覆盖。考虑改为实现 JDK 9 {@code java.util.spi.ResourceBundleProvider}。
 public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSource implements BeanClassLoaderAware {
 
 	@Nullable
@@ -92,6 +110,9 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * This allows for very efficient hash lookups, significantly faster
 	 * than the ResourceBundle class's own cache.
 	 */
+	// 缓存以保存加载的 ResourceBundles。这个 Map 以 bundle basename 为键，
+	// 它包含一个以 Locale 为键的 Map，进而包含 ResourceBundle 实例。这允许非常有效的哈希查找，
+	// 比 ResourceBundle 类自己的缓存快得多。
 	private final Map<String, Map<Locale, ResourceBundle>> cachedResourceBundles =
 			new ConcurrentHashMap<>();
 
@@ -103,6 +124,8 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * very efficient hash lookups without concatenated keys.
 	 * @see #getMessageFormat
 	 */
+	// 缓存以保存已生成的 MessageFormats。此 Map 以 ResourceBundle 为键，ResourceBundle 保存一个以消息代码为键的 Map，
+	// 而后者又包含一个以 Locale 为键并保存 MessageFormat 值的 Map。这允许在没有连接键的情况下进行非常有效的哈希查找。
 	private final Map<ResourceBundle, Map<String, Map<Locale, MessageFormat>>> cachedBundleMessageFormats =
 			new ConcurrentHashMap<>();
 
@@ -123,6 +146,11 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * {@link org.springframework.util.ClassUtils#getDefaultClassLoader()}
 	 * if not running within a BeanFactory.
 	 */
+	// 设置 ClassLoader 以加载资源包。
+	// <p>默认是包含 BeanFactory 的
+	// {@link org.springframework.beans.factory.BeanClassLoaderAware bean ClassLoader}，
+	// 或者如果不在 BeanFactory 中运行，则由
+	// {@link org.springframework.util.ClassUtilsgetDefaultClassLoader()} 确定的默认 ClassLoader。
 	public void setBundleClassLoader(ClassLoader classLoader) {
 		this.bundleClassLoader = classLoader;
 	}
@@ -132,6 +160,8 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * <p>Default is the containing BeanFactory's bean ClassLoader.
 	 * @see #setBundleClassLoader
 	 */
+	// 返回 ClassLoader 以加载资源包。
+	// <p>默认是包含 BeanFactory 的 bean ClassLoader
 	@Nullable
 	protected ClassLoader getBundleClassLoader() {
 		return (this.bundleClassLoader != null ? this.bundleClassLoader : this.beanClassLoader);
@@ -147,6 +177,7 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * Resolves the given message code as key in the registered resource bundles,
 	 * returning the value found in the bundle as-is (without MessageFormat parsing).
 	 */
+	// 将给定的消息代码解析为注册资源包中的键，按原样返回在包中找到的值（没有 MessageFormat 解析）。
 	@Override
 	protected String resolveCodeWithoutArguments(String code, Locale locale) {
 		Set<String> basenames = getBasenameSet();
@@ -166,11 +197,14 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * Resolves the given message code as key in the registered resource bundles,
 	 * using a cached MessageFormat instance per message code.
 	 */
+	// 使用每个消息代码缓存的 MessageFormat 实例将给定的消息代码解析为注册资源包中的键。
 	@Override
 	@Nullable
 	protected MessageFormat resolveCode(String code, Locale locale) {
+		// 有序的 LinkedHashSet
 		Set<String> basenames = getBasenameSet();
 		for (String basename : basenames) {
+			// 从缓存中获取 ResourceBundle
 			ResourceBundle bundle = getResourceBundle(basename, locale);
 			if (bundle != null) {
 				MessageFormat messageFormat = getMessageFormat(bundle, code, locale);
@@ -191,15 +225,21 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * @return the resulting ResourceBundle, or {@code null} if none
 	 * found for the given basename and Locale
 	 */
+	// 为给定的 basename 和 Locale 返回一个 ResourceBundle，从缓存中获取已经生成的 ResourceBundle。
+	// @param basename ResourceBundle 的基本名称
+	// @param locale 用于查找 ResourceBundle 的 Locale
+	// @return 生成的 ResourceBundle，如果没有找到给定的 basename 和 Locale，则返回 {@code null}
 	@Nullable
 	protected ResourceBundle getResourceBundle(String basename, Locale locale) {
 		if (getCacheMillis() >= 0) {
 			// Fresh ResourceBundle.getBundle call in order to let ResourceBundle
 			// do its native caching, at the expense of more extensive lookup steps.
+			// 新鲜的 ResourceBundle.getBundle 调用是为了让 ResourceBundle 执行其本机缓存，代价是更广泛的查找步骤。
 			return doGetBundle(basename, locale);
 		}
 		else {
 			// Cache forever: prefer locale cache over repeated getBundle calls.
+			// 永远缓存：比重复的 getBundle 调用更喜欢区域设置缓存。
 			Map<Locale, ResourceBundle> localeMap = this.cachedResourceBundles.get(basename);
 			if (localeMap != null) {
 				ResourceBundle bundle = localeMap.get(locale);
@@ -221,6 +261,7 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 				}
 				// Assume bundle not found
 				// -> do NOT throw the exception to allow for checking parent message source.
+				// 假设未找到包 -> 不要抛出异常以允许检查父消息源。
 				return null;
 			}
 		}
@@ -235,6 +276,11 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * @see java.util.ResourceBundle#getBundle(String, Locale, ClassLoader)
 	 * @see #getBundleClassLoader()
 	 */
+	// 获取给定 basename 和 Locale 的资源包。
+	// @param basename 要查找的基本名称
+	// @param locale 要查找的语言环境
+	// @return 对应的ResourceBundle
+	// 如果找不到匹配的包，@throws MissingResourceException
 	protected ResourceBundle doGetBundle(String basename, Locale locale) throws MissingResourceException {
 		ClassLoader classLoader = getBundleClassLoader();
 		Assert.state(classLoader != null, "No bundle ClassLoader set");
@@ -246,6 +292,7 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 			}
 			catch (UnsupportedOperationException ex) {
 				// Probably in a Jigsaw environment on JDK 9+
+				// 可能在 JDK 9+ 的 Jigsaw 环境中
 				this.control = null;
 				String encoding = getDefaultEncoding();
 				if (encoding != null && logger.isInfoEnabled()) {
@@ -259,6 +306,7 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 		}
 
 		// Fallback: plain getBundle lookup without Control handle
+		// 回退：没有控制句柄的普通 getBundle 查找
 		return ResourceBundle.getBundle(basename, locale, classLoader);
 	}
 
@@ -277,6 +325,11 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * @see #loadBundle(InputStream)
 	 * @see PropertyResourceBundle#PropertyResourceBundle(Reader)
 	 */
+	// 从给定的读取器加载基于属性的资源包。
+	// <p>这将在 {@link setDefaultEncoding "defaultEncoding"} 的情况下调用，包括 {@link ResourceBundleMessageSource}
+	// 的默认 ISO-8859-1 编码。请注意，此方法只能使用 {@code ResourceBundle.Control} 调用：
+	// 在不支持此类控制句柄的 JDK 9+ 模块路径上运行时，自定义子类中的任何覆盖都将被有效地忽略。
+	// <p>默认实现返回一个 {@link PropertyResourceBundle}。
 	protected ResourceBundle loadBundle(Reader reader) throws IOException {
 		return new PropertyResourceBundle(reader);
 	}
@@ -299,6 +352,13 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * @see #loadBundle(Reader)
 	 * @see PropertyResourceBundle#PropertyResourceBundle(InputStream)
 	 */
+	// 从给定的输入流加载基于属性的资源包，选择 JDK 9+ 上的默认属性编码。
+	// <p>这只会在 {@link setDefaultEncoding "defaultEncoding"} 设置为 {@code null} 的情况下调用，
+	// 明确强制执行平台默认编码（它是 UTF-8，在 JDK 9+ 上具有 ISO-8859-1 回退，
+	// 但是可通过“java.util.PropertyResourceBundle.encoding”系统属性进行配置）。
+	// 请注意，此方法只能使用 {@code ResourceBundle.Control} 调用：在不支持此类控制句柄的 JDK 9+ 模块路径上运行时，
+	// 自定义子类中的任何覆盖都将被有效地忽略。
+	// <p>默认实现返回一个 {@link PropertyResourceBundle}。
 	protected ResourceBundle loadBundle(InputStream inputStream) throws IOException {
 		return new PropertyResourceBundle(inputStream);
 	}
@@ -313,10 +373,20 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * defined for the given code
 	 * @throws MissingResourceException if thrown by the ResourceBundle
 	 */
+	// 返回给定包和代码的 MessageFormat，从缓存中获取已生成的 MessageFormat
+	// @param bundle 要处理的 ResourceBundle
+	// @param code 要检索的消息代码,文案模板编码
+	// @param locale 用于构建 MessageFormat 的 Locale
+	// @return 生成的 MessageFormat，如果没有为给定代码定义消息，则为 {@code null}
+	// @throws MissingResourceException 如果由 ResourceBundle 抛出
 	@Nullable
 	protected MessageFormat getMessageFormat(ResourceBundle bundle, String code, Locale locale)
 			throws MissingResourceException {
 
+		// 在只读的情况下 MessageFormat 是线程安全的，
+		// 所谓线程不安全是指在相同数据结构中既有读操作又有写操作，造成了读写不一致的情况。当我们不小心将 MessageFormat 暴露出去
+		// messageFormat.applyPattern(messageFormatPattern) 这个方法来进行重置。在多线程下是可以被别人修改的，
+		// 如果不暴漏则是线程安全的
 		Map<String, Map<Locale, MessageFormat>> codeMap = this.cachedBundleMessageFormats.get(bundle);
 		Map<Locale, MessageFormat> localeMap = null;
 		if (codeMap != null) {
@@ -337,6 +407,7 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 			if (localeMap == null) {
 				localeMap = codeMap.computeIfAbsent(code, c -> new ConcurrentHashMap<>());
 			}
+			// 当 MessageFormat 不存在时候，创建一个 直接 new 一个新的
 			MessageFormat result = createMessageFormat(msg, locale);
 			localeMap.put(locale, result);
 			return result;
@@ -359,6 +430,10 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * @see ResourceBundle#getString(String)
 	 * @see ResourceBundle#containsKey(String)
 	 */
+	// 有效地检索指定键的字符串值，如果未找到则返回 {@code null}。
+	// <p>从 4.2 开始，默认实现会在尝试调用 {@code getString} 之前检查 {@code containsKey}
+	//（这将需要捕获 {@code MissingResourceException} 以获取未找到的键）。
+	// <p>可以在子类中覆盖。
 	@Nullable
 	protected String getStringOrNull(ResourceBundle bundle, String key) {
 		if (bundle.containsKey(key)) {
@@ -368,6 +443,7 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 			catch (MissingResourceException ex) {
 				// Assume key not found for some other reason
 				// -> do NOT throw the exception to allow for checking parent message source.
+				// 假设由于某些其他原因找不到 key -> 不要抛出异常以允许检查父消息源。
 			}
 		}
 		return null;
@@ -376,6 +452,7 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	/**
 	 * Show the configuration of this MessageSource.
 	 */
+	// 显示此 MessageSource 的配置。
 	@Override
 	public String toString() {
 		return getClass().getName() + ": basenames=" + getBasenameSet();
@@ -387,6 +464,8 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * for custom file encodings, deactivating the fallback to the system locale
 	 * and activating ResourceBundle's native cache, if desired.
 	 */
+	// {@code ResourceBundle.Control} 的自定义实现，添加对自定义文件编码的支持，
+	// 停用对系统区域设置的回退，并在需要时激活 ResourceBundle 的本机缓存
 	private class MessageSourceControl extends ResourceBundle.Control {
 
 		@Override
@@ -395,6 +474,7 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 				throws IllegalAccessException, InstantiationException, IOException {
 
 			// Special handling of default encoding
+			// 默认编码的特殊处理
 			if (format.equals("java.properties")) {
 				String bundleName = toBundleName(baseName, locale);
 				final String resourceName = toResourceName(bundleName, "properties");
@@ -442,6 +522,7 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 			}
 			else {
 				// Delegate handling of "java.class" format to standard Control
+				// 将“java.class”格式的处理委托给标准控件
 				return super.newBundle(baseName, locale, format, loader, reload);
 			}
 		}

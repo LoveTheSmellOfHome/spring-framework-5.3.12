@@ -37,21 +37,28 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.aop.target.ThreadLocalTargetSource
  * @see org.springframework.aop.target.PrototypeTargetSource
  */
+// 方便的 TargetSourceCreator 使用 bean 名称前缀创建三种众所周知的 TargetSource 类型之一：
+//	>: CommonsPool2TargetSource
+//	>% 线程本地目标源
+//	>！原型目标源
 public class QuickTargetSourceCreator extends AbstractBeanFactoryBasedTargetSourceCreator {
 
 	/**
 	 * The CommonsPool2TargetSource prefix.
 	 */
+	// CommonsPool2TargetSource 前缀
 	public static final String PREFIX_COMMONS_POOL = ":";
 
 	/**
 	 * The ThreadLocalTargetSource prefix.
 	 */
+	// ThreadLocalTargetSource 前缀
 	public static final String PREFIX_THREAD_LOCAL = "%";
 
 	/**
 	 * The PrototypeTargetSource prefix.
 	 */
+	// PrototypeTargetSource 前缀
 	public static final String PREFIX_PROTOTYPE = "!";
 
 	@Override

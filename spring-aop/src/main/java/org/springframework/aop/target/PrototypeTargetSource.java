@@ -31,6 +31,8 @@ import org.springframework.beans.BeansException;
  * @see #setBeanFactory
  * @see #setTargetBeanName
  */
+// org.springframework.aop.TargetSource实现，为每个请求创建一个新的目标 bean 实例，在发布时销毁每个实例（在每个请求之后）。
+// 从其包含的org.springframework.beans.factory.BeanFactory获取 bean 实例
 @SuppressWarnings("serial")
 public class PrototypeTargetSource extends AbstractPrototypeBasedTargetSource {
 
@@ -38,6 +40,7 @@ public class PrototypeTargetSource extends AbstractPrototypeBasedTargetSource {
 	 * Obtain a new prototype instance for every call.
 	 * @see #newPrototypeInstance()
 	 */
+	// 为每次调用获取一个新的原型实例。
 	@Override
 	public Object getTarget() throws BeansException {
 		return newPrototypeInstance();
@@ -47,6 +50,7 @@ public class PrototypeTargetSource extends AbstractPrototypeBasedTargetSource {
 	 * Destroy the given independent instance.
 	 * @see #destroyPrototypeInstance
 	 */
+	// 销毁给定的独立实例
 	@Override
 	public void releaseTarget(Object target) {
 		destroyPrototypeInstance(target);

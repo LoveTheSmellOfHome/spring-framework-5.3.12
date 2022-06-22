@@ -58,6 +58,10 @@ import org.springframework.core.io.support.ResourcePatternResolver;
  * @author Chris Beams
  * @since 2.0
  */
+// PropertyEditorRegistrar 实现填充给定的 {@link org.springframework.beans.PropertyEditorRegistry}
+// （通常是一个 {@link org.springframework.beans.BeanWrapper}，用于在
+// {@link org.springframework.context.ApplicationContext} 中创建 bean）资源编辑器。
+// 由 {@link org.springframework.context.support.AbstractApplicationContext} 使用
 public class ResourceEditorRegistrar implements PropertyEditorRegistrar {
 
 	private final PropertyResolver propertyResolver;
@@ -75,6 +79,9 @@ public class ResourceEditorRegistrar implements PropertyEditorRegistrar {
 	 * @see org.springframework.core.io.support.ResourcePatternResolver
 	 * @see org.springframework.context.ApplicationContext
 	 */
+	// 为给定的 {@link ResourceLoader} 和 {@link PropertyResolver} 创建一个新的 ResourceEditorRegistrar
+	// @param resourceLoader 为（通常是 ApplicationContext）创建编辑器的 ResourceLoader（或 ResourcePatternResolver）
+	// @param propertyResolver PropertyResolver（通常是环境）
 	public ResourceEditorRegistrar(ResourceLoader resourceLoader, PropertyResolver propertyResolver) {
 		this.resourceLoader = resourceLoader;
 		this.propertyResolver = propertyResolver;
@@ -97,6 +104,9 @@ public class ResourceEditorRegistrar implements PropertyEditorRegistrar {
 	 * @see org.springframework.beans.propertyeditors.ClassArrayEditor
 	 * @see org.springframework.core.io.support.ResourceArrayPropertyEditor
 	 */
+	// 使用以下资源编辑器填充给定的 {@code registry}：ResourceEditor、InputStreamEditor、InputSourceEditor、
+	// FileEditor、URLEditor、URIEditor、ClassEditor、ClassArrayEditor。
+	// <p>如果这个注册器已经配置了一个 {@link ResourcePatternResolver}，一个 ResourceArrayPropertyEditor 也会被注册。
 	@Override
 	public void registerCustomEditors(PropertyEditorRegistry registry) {
 		ResourceEditor baseEditor = new ResourceEditor(this.resourceLoader, this.propertyResolver);
@@ -124,6 +134,7 @@ public class ResourceEditorRegistrar implements PropertyEditorRegistrar {
 	 * Override default editor, if possible (since that's what we really mean to do here);
 	 * otherwise register as a custom editor.
 	 */
+	// 如果可能，覆盖默认编辑器（因为这就是我们在这里真正想要做的）；否则注册为自定义编辑器。
 	private void doRegisterEditor(PropertyEditorRegistry registry, Class<?> requiredType, PropertyEditor editor) {
 		if (registry instanceof PropertyEditorRegistrySupport) {
 			((PropertyEditorRegistrySupport) registry).overrideDefaultEditor(requiredType, editor);

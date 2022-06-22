@@ -38,6 +38,12 @@ import java.util.Properties;
  * @see org.springframework.core.io.support.ResourcePropertiesPersister
  * @see java.util.Properties
  */
+// 用于持久化 {@code java.util.Properties} 的策略接口，允许可插入的解析策略
+//
+// <p>默认实现是 DefaultPropertiesPersister，提供 {@code java.util.Properties} 的本机解析，
+// 但允许从任何 Reader 读取和写入任何 Writer（允许为属性文件指定编码）。
+//
+// Properties 存储器
 public interface PropertiesPersister {
 
 	/**
@@ -48,6 +54,9 @@ public interface PropertiesPersister {
 	 * @throws IOException in case of I/O errors
 	 * @see java.util.Properties#load
 	 */
+	// 将给定 InputStream 中的属性加载到给定的 Properties 对象中
+	// @param props 要加载到的 Properties 对象
+	// @param 是要从中加载的 InputStream
 	void load(Properties props, InputStream is) throws IOException;
 
 	/**
@@ -57,6 +66,7 @@ public interface PropertiesPersister {
 	 * @param reader the Reader to load from
 	 * @throws IOException in case of I/O errors
 	 */
+	// 将给定 Reader 中的属性加载到给定的 Properties 对象中。
 	void load(Properties props, Reader reader) throws IOException;
 
 	/**
@@ -68,6 +78,8 @@ public interface PropertiesPersister {
 	 * @throws IOException in case of I/O errors
 	 * @see java.util.Properties#store
 	 */
+	// 将给定 Properties 对象的内容写入给定的 OutputStream
+	// @param header 属性列表的描述
 	void store(Properties props, OutputStream os, String header) throws IOException;
 
 	/**
@@ -78,6 +90,7 @@ public interface PropertiesPersister {
 	 * @param header the description of the property list
 	 * @throws IOException in case of I/O errors
 	 */
+	// 将给定的 Properties 对象的内容写入给定的 Writer
 	void store(Properties props, Writer writer, String header) throws IOException;
 
 	/**
@@ -88,6 +101,7 @@ public interface PropertiesPersister {
 	 * @throws IOException in case of I/O errors
 	 * @see java.util.Properties#loadFromXML(java.io.InputStream)
 	 */
+	// 将给定 XML InputStream 中的属性加载到给定的 Properties 对象中
 	void loadFromXml(Properties props, InputStream is) throws IOException;
 
 	/**
@@ -99,6 +113,7 @@ public interface PropertiesPersister {
 	 * @throws IOException in case of I/O errors
 	 * @see java.util.Properties#storeToXML(java.io.OutputStream, String)
 	 */
+	// 将给定的 Properties 对象的内容写入给定的 XML OutputStream。
 	void storeToXml(Properties props, OutputStream os, String header) throws IOException;
 
 	/**
@@ -111,6 +126,7 @@ public interface PropertiesPersister {
 	 * @throws IOException in case of I/O errors
 	 * @see java.util.Properties#storeToXML(java.io.OutputStream, String, String)
 	 */
+	// 将给定的 Properties 对象的内容写入给定的 XML OutputStream。
 	void storeToXml(Properties props, OutputStream os, String header, String encoding) throws IOException;
 
 }

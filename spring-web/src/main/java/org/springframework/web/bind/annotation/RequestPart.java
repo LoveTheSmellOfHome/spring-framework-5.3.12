@@ -16,18 +16,14 @@
 
 package org.springframework.web.bind.annotation;
 
-import java.beans.PropertyEditor;
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartResolver;
+
+import java.beans.PropertyEditor;
+import java.lang.annotation.*;
 
 /**
  * Annotation that can be used to associate the part of a "multipart/form-data" request
@@ -59,6 +55,17 @@ import org.springframework.web.multipart.MultipartResolver;
  * @see RequestParam
  * @see org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter
  */
+// 可用于将“multipart/form-data”请求的一部分与方法参数相关联的注释。
+//
+// 支持的方法参数类型包括结合 Spring 的MultipartFile抽象的MultipartResolver ，结合 Servlet 3.0 多部分
+// 请求的javax.servlet.http.Part ，或者对于任何其他方法参数，部分的内容通过 HttpMessageConverter 考虑到请求
+// 部分的 “Content-Type” 标头。这类似于RequestBody根据非多部分常规请求的内容解析参数。
+//
+// 请注意，@RequestParam 注解也可用于将“multipart/form-data”请求的部分与支持相同方法参数类型的方法参数相关联。
+// 主要区别在于，当方法参数不是 String 或原始 MultipartFile / Part时， HttpMessageConverters RequestParam
+// 依赖于通过注册的Converter或PropertyEditor进行类型转换，而RequestPart依赖于@RequestParam考虑到请求
+// 部分的“Content-Type”标头. RequestParam可能与名称-值表单字段一起使用，
+// 而 RequestPart 可能与包含更复杂内容的部分（例如 JSON、XML）一起使用。
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

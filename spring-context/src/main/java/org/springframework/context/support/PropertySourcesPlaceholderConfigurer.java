@@ -62,6 +62,23 @@ import org.springframework.util.StringValueResolver;
  * @see org.springframework.beans.factory.config.PlaceholderConfigurerSupport
  * @see org.springframework.beans.factory.config.PropertyPlaceholderConfigurer
  */
+// {@link PlaceholderConfigurerSupport} 的专门化支持，它针对当前 Spring {@link Environment} 及其
+// {@link PropertySources} 解析 bean 定义属性值和 {@code @Value} 注解中的 ${...} 占位符
+//
+// <p>此类被设计为 {@code PropertyPlaceholderConfigurer} 的一般替代品。默认情况下，
+// 它用于支持 {@code property-placeholder} 元素以针对 spring-context-3.1 或更高版本的 XSD；
+// 而 spring-context 版本 <= 3.0 默认为 {@code PropertyPlaceholderConfigurer} 以确保向后兼容。
+// 有关完整的详细信息，请参阅 spring-context XSD 文档。
+//
+// <p>任何本地属性（例如通过 {@link #setProperties}、{@link #setLocations} 等添加的属性）都作为
+// {@code PropertySource} 添加。本地属性的搜索优先级基于 {@link #setLocalOverride localOverride} 属性的值，
+// 默认情况下为 {@code false} 意味着在所有环境属性源之后搜索本地属性。
+//
+// <p>有关操作环境属性源的详细信息，请参阅 {@link org.springframework.core.env.ConfigurableEnvironment} 和相关的 javadoc
+//
+// Spring 属性源占位符处理；Spring 3.1 后占位符处理组件，资源之间是有优先级概念的，系统资源的优先级高于用户配置的.利用数据源的动态性
+// 帮助我们来做更多事情。更具有弹性
+// 接口是{@link org.springframework.beans.factory.config.EmbeddedValueResolver}
 public class PropertySourcesPlaceholderConfigurer extends PlaceholderConfigurerSupport implements EnvironmentAware {
 
 	/**

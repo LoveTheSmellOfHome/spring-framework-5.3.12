@@ -51,6 +51,13 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.core.io.ResourceLoader
  * @see org.springframework.context.ApplicationContext
  */
+// {@code EntityResolver} 实现，它尝试通过 {@link org.springframework.core.io.ResourceLoader}
+// （通常相对于 ApplicationContext 的资源库）解析实体引用（如果适用）。扩展 DelegatingEntityResolver 以提供 DTD 和 XSD 查找。
+//
+// 允许使用标准 XML 实体将 XML 片段包含到应用程序上下文定义中，例如将大型 XML 文件拆分为各种模块。 包含路径可以像往常一样
+// 相对于应用程序上下文的资源库，而不是相对于 JVM 工作目录（XML 解析器的默认值）。
+//
+// 注意：除了相对路径之外，在当前系统根目录中指定文件的每个 URL，即 JVM 工作目录，也将相对于应用程序上下文进行解释
 public class ResourceEntityResolver extends DelegatingEntityResolver {
 
 	private static final Log logger = LogFactory.getLog(ResourceEntityResolver.class);
@@ -64,6 +71,7 @@ public class ResourceEntityResolver extends DelegatingEntityResolver {
 	 * @param resourceLoader the ResourceLoader (or ApplicationContext)
 	 * to load XML entity includes with
 	 */
+	// 为指定的 ResourceLoader（通常是 ApplicationContext）创建一个 ResourceEntityResolver
 	public ResourceEntityResolver(ResourceLoader resourceLoader) {
 		super(resourceLoader.getClassLoader());
 		this.resourceLoader = resourceLoader;

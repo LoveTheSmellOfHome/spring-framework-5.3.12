@@ -57,12 +57,25 @@ import org.springframework.util.ObjectUtils;
  * @see MutablePropertySources
  * @see org.springframework.context.annotation.PropertySource
  */
+// 表示名称/值的属性对来源的抽象基类。 底层源对象可以是封装属性的任何类型T 示例包括java.util.
+// Properties对象、 java.util.Map对象、 ServletContext和ServletConfig对象（用于访问初始化参
+// 数）。 探索PropertySource类型层次结构以查看提供的实现。
+// PropertySource对象通常不单独使用，而是通过PropertySources对象使用，该对象聚合属性源并与
+// PropertyResolver实现结合使用，该实现可以跨PropertySources集执行基于优先级的搜索。
+// PropertySource标识不是根据封装的属性的内容来确定的，而是仅根据PropertySource的name确定的。 这
+// 对于在集合上下文中操作PropertySource对象很有用。 有关详细信息，请参阅MutablePropertySources
+// 操作以及named(String)和toString()方法。
+// 需要注意的是有工作的时候@ Configuration类的@ PropertySource注解提供增加财产来源给封闭的方便和
+// 声明的方式Environment 。
 public abstract class PropertySource<T> {
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
+	// 每个配置都会有唯一的名称，来去重
 	protected final String name;
 
+	// 属性来源，并不关心一定是 value,其实不一定，有可能是个Map,
+	// 比如 MapPropertySource ，它的 source 就是一个 Map
 	protected final T source;
 
 
@@ -71,6 +84,9 @@ public abstract class PropertySource<T> {
 	 * @param name the associated name
 	 * @param source the source object
 	 */
+	// 使用给定的名称和源对象创建一个新的PropertySource
+	// @param name 关联名称
+	// @param source 源对象
 	public PropertySource(String name, T source) {
 		Assert.hasText(name, "Property source name must contain at least one character");
 		Assert.notNull(source, "Property source must not be null");
@@ -84,6 +100,8 @@ public abstract class PropertySource<T> {
 	 * <p>Often useful in testing scenarios when creating anonymous implementations
 	 * that never query an actual source but rather return hard-coded values.
 	 */
+	// 使用给定的名称创建一个新的 {@code PropertySource}，并使用一个新的 {@code Object} 实例作为基础源。
+	// <p>在创建从不查询实际源而是返回硬编码值的匿名实现时，通常在测试场景中很有用。
 	@SuppressWarnings("unchecked")
 	public PropertySource(String name) {
 		this(name, (T) new Object());
@@ -93,6 +111,7 @@ public abstract class PropertySource<T> {
 	/**
 	 * Return the name of this {@code PropertySource}.
 	 */
+	// 返回此 {@code PropertySource} 的名称。
 	public String getName() {
 		return this.name;
 	}
@@ -100,6 +119,7 @@ public abstract class PropertySource<T> {
 	/**
 	 * Return the underlying source object for this {@code PropertySource}.
 	 */
+	// 返回此 {@code PropertySource} 的基础源对象
 	public T getSource() {
 		return this.source;
 	}
@@ -111,6 +131,8 @@ public abstract class PropertySource<T> {
 	 * a more efficient algorithm if possible.
 	 * @param name the property name to find
 	 */
+	// 返回此 {@code PropertySource} 是否包含给定的名称。
+	// <p>这个实现只是检查来自 {@link getProperty(String)} 的 {@code null} 返回值。如果可能，子类可能希望实现更有效的算法
 	public boolean containsProperty(String name) {
 		return (getProperty(name) != null);
 	}
@@ -121,6 +143,7 @@ public abstract class PropertySource<T> {
 	 * @param name the property to find
 	 * @see PropertyResolver#getRequiredProperty(String)
 	 */
+	// 返回与给定名称关联的值，如果未找到，则返回 {@code null}。
 	@Nullable
 	public abstract Object getProperty(String name);
 
@@ -186,6 +209,7 @@ public abstract class PropertySource<T> {
 	 * are called.
 	 * @param name the name of the comparison {@code PropertySource} to be created and returned.
 	 */
+	// 返回仅用于集合比较目的的 {@code PropertySource} 实现
 	public static PropertySource<?> named(String name) {
 		return new ComparisonPropertySource(name);
 	}
@@ -203,6 +227,10 @@ public abstract class PropertySource<T> {
 	 * @see org.springframework.web.context.support.StandardServletEnvironment
 	 * @see org.springframework.web.context.support.ServletContextPropertySource
 	 */
+	// {@code PropertySource} 用作占位符，以防在创建应用程序上下文时无法急切地初始化实际属性源。
+	// 例如，基于 {@code ServletContext} 的属性源必须等待 {@code ServletContext} 对象可用
+	// 于其封闭的 {@code ApplicationContext}。在这种情况下，应使用存根来保存属性源的预期默认位置顺序，
+	// 然后在上下文刷新期间替换
 	public static class StubPropertySource extends PropertySource<Object> {
 
 		public StubPropertySource(String name) {
@@ -226,6 +254,7 @@ public abstract class PropertySource<T> {
 	 *
 	 * @see PropertySource#named(String)
 	 */
+	// 用于集合比较目的的 {@code PropertySource} 实现。
 	static class ComparisonPropertySource extends StubPropertySource {
 
 		private static final String USAGE_ERROR =

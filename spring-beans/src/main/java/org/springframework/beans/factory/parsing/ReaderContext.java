@@ -27,6 +27,7 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// 通过 bean 定义读取过程传递的上下文，封装了所有相关的配置以及状态
 public class ReaderContext {
 
 	private final Resource resource;
@@ -85,6 +86,7 @@ public class ReaderContext {
 	/**
 	 * Raise a fatal error.
 	 */
+	// 引发致命错误
 	public void fatal(String message, @Nullable Object source, @Nullable ParseState parseState, @Nullable Throwable cause) {
 		Location location = new Location(getResource(), source);
 		this.problemReporter.fatal(new Problem(message, location, parseState, cause));
@@ -93,6 +95,7 @@ public class ReaderContext {
 	/**
 	 * Raise a regular error.
 	 */
+	// 引发常规错误
 	public void error(String message, @Nullable Object source) {
 		error(message, source, null, null);
 	}
@@ -100,6 +103,7 @@ public class ReaderContext {
 	/**
 	 * Raise a regular error.
 	 */
+	// 引发常规错误
 	public void error(String message, @Nullable Object source, @Nullable Throwable cause) {
 		error(message, source, null, cause);
 	}
@@ -107,6 +111,7 @@ public class ReaderContext {
 	/**
 	 * Raise a regular error.
 	 */
+	// 引发常规错误
 	public void error(String message, @Nullable Object source, @Nullable ParseState parseState) {
 		error(message, source, parseState, null);
 	}
@@ -114,6 +119,7 @@ public class ReaderContext {
 	/**
 	 * Raise a regular error.
 	 */
+	// 引发常规错误
 	public void error(String message, @Nullable Object source, @Nullable ParseState parseState, @Nullable Throwable cause) {
 		Location location = new Location(getResource(), source);
 		this.problemReporter.error(new Problem(message, location, parseState, cause));
@@ -122,6 +128,7 @@ public class ReaderContext {
 	/**
 	 * Raise a non-critical warning.
 	 */
+	// 发出非严重警告
 	public void warning(String message, @Nullable Object source) {
 		warning(message, source, null, null);
 	}
@@ -129,6 +136,7 @@ public class ReaderContext {
 	/**
 	 * Raise a non-critical warning.
 	 */
+	// 发出非严重警告
 	public void warning(String message, @Nullable Object source, @Nullable Throwable cause) {
 		warning(message, source, null, cause);
 	}
@@ -136,6 +144,7 @@ public class ReaderContext {
 	/**
 	 * Raise a non-critical warning.
 	 */
+	// 发出非严重警告
 	public void warning(String message, @Nullable Object source, @Nullable ParseState parseState) {
 		warning(message, source, parseState, null);
 	}
@@ -143,6 +152,7 @@ public class ReaderContext {
 	/**
 	 * Raise a non-critical warning.
 	 */
+	// 发出非严重警告
 	public void warning(String message, @Nullable Object source, @Nullable ParseState parseState, @Nullable Throwable cause) {
 		Location location = new Location(getResource(), source);
 		this.problemReporter.warning(new Problem(message, location, parseState, cause));
@@ -154,6 +164,7 @@ public class ReaderContext {
 	/**
 	 * Fire a defaults-registered event.
 	 */
+	// 触发默认注册的事件
 	public void fireDefaultsRegistered(DefaultsDefinition defaultsDefinition) {
 		this.eventListener.defaultsRegistered(defaultsDefinition);
 	}
@@ -161,6 +172,7 @@ public class ReaderContext {
 	/**
 	 * Fire a component-registered event.
 	 */
+	// 触发组件注册事件
 	public void fireComponentRegistered(ComponentDefinition componentDefinition) {
 		this.eventListener.componentRegistered(componentDefinition);
 	}
@@ -168,6 +180,7 @@ public class ReaderContext {
 	/**
 	 * Fire an alias-registered event.
 	 */
+	// 触发别名注册的事件
 	public void fireAliasRegistered(String beanName, String alias, @Nullable Object source) {
 		this.eventListener.aliasRegistered(new AliasDefinition(beanName, alias, source));
 	}
@@ -175,6 +188,7 @@ public class ReaderContext {
 	/**
 	 * Fire an import-processed event.
 	 */
+	// 触发导入处理的事件。
 	public void fireImportProcessed(String importedResource, @Nullable Object source) {
 		this.eventListener.importProcessed(new ImportDefinition(importedResource, source));
 	}
@@ -182,6 +196,7 @@ public class ReaderContext {
 	/**
 	 * Fire an import-processed event.
 	 */
+	// 触发导入处理的事件
 	public void fireImportProcessed(String importedResource, Resource[] actualResources, @Nullable Object source) {
 		this.eventListener.importProcessed(new ImportDefinition(importedResource, actualResources, source));
 	}
@@ -192,6 +207,7 @@ public class ReaderContext {
 	/**
 	 * Return the source extractor in use.
 	 */
+	// 返回正在使用的源提取器
 	public SourceExtractor getSourceExtractor() {
 		return this.sourceExtractor;
 	}
@@ -203,6 +219,7 @@ public class ReaderContext {
 	 * @see #getSourceExtractor()
 	 * @see SourceExtractor#extractSource
 	 */
+	// 调用给定源对象的源提取器
 	@Nullable
 	public Object extractSource(Object sourceCandidate) {
 		return this.sourceExtractor.extractSource(sourceCandidate, this.resource);

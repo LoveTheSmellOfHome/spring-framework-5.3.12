@@ -36,6 +36,8 @@ import org.springframework.util.ObjectUtils;
  * @see AbstractAdvisingBeanPostProcessor
  * @see org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator
  */
+// 具有代理处理器通用功能的基类，特别是 ClassLoader 管理和 evaluateProxyInterfaces 算法。
+// Spring IoC 相关的特性，如 Ordered，BeanClassLoaderAware，AopInfrastructureBean
 @SuppressWarnings("serial")
 public class ProxyProcessorSupport extends ProxyConfig implements Ordered, BeanClassLoaderAware, AopInfrastructureBean {
 
@@ -43,8 +45,10 @@ public class ProxyProcessorSupport extends ProxyConfig implements Ordered, BeanC
 	 * This should run after all other processors, so that it can just add
 	 * an advisor to existing proxies rather than double-proxy.
 	 */
+	// 这应该在所有其他处理器之后运行，最低优先级，以便它可以只将顾问添加到现有代理而不是双重代理
 	private int order = Ordered.LOWEST_PRECEDENCE;
 
+	// 类加载器
 	@Nullable
 	private ClassLoader proxyClassLoader = ClassUtils.getDefaultClassLoader();
 
@@ -57,6 +61,10 @@ public class ProxyProcessorSupport extends ProxyConfig implements Ordered, BeanC
 	 * <p>The default value is {@code Ordered.LOWEST_PRECEDENCE}, meaning non-ordered.
 	 * @param order the ordering value
 	 */
+	// 设置将应用于此处理器的Ordered实现的排序，在应用多个处理器时使用。
+	// 默认值为Ordered.LOWEST_PRECEDENCE ，表示无序。
+	// 参形：
+	//			order – 排序值
 	public void setOrder(int order) {
 		this.order = order;
 	}
@@ -72,6 +80,9 @@ public class ProxyProcessorSupport extends ProxyConfig implements Ordered, BeanC
 	 * {@link org.springframework.beans.factory.BeanFactory} for loading all bean classes.
 	 * This can be overridden here for specific proxies.
 	 */
+	// 设置 ClassLoader 以在其中生成代理类。
+	// 默认为 bean ClassLoader，即包含 org.springframework.beans.factory.BeanFactory 用于加载
+	// 所有 bean 类的 ClassLoader。这可以在此处为特定代理覆盖。
 	public void setProxyClassLoader(@Nullable ClassLoader classLoader) {
 		this.proxyClassLoader = classLoader;
 		this.classLoaderConfigured = (classLoader != null);
@@ -80,6 +91,7 @@ public class ProxyProcessorSupport extends ProxyConfig implements Ordered, BeanC
 	/**
 	 * Return the configured proxy ClassLoader for this processor.
 	 */
+	// 返回为此处理器配置的代理类加载器
 	@Nullable
 	protected ClassLoader getProxyClassLoader() {
 		return this.proxyClassLoader;
@@ -101,6 +113,12 @@ public class ProxyProcessorSupport extends ProxyConfig implements Ordered, BeanC
 	 * @param beanClass the class of the bean
 	 * @param proxyFactory the ProxyFactory for the bean
 	 */
+	// 检查给定 bean 类的接口并将它们应用到ProxyFactory （如果合适）。
+	// 调用 isConfigurationCallbackInterface和isInternalLanguageInterface 来过滤合理的代理接口，否则回退到目标类代理。
+	// 参形：
+	//			beanClass – bean 的类
+	//			proxyFactory – bean 的 ProxyFactory
+	// 评估 bean 里边的代理接口
 	protected void evaluateProxyInterfaces(Class<?> beanClass, ProxyFactory proxyFactory) {
 		Class<?>[] targetInterfaces = ClassUtils.getAllInterfacesForClass(beanClass, getProxyClassLoader());
 		boolean hasReasonableProxyInterface = false;
@@ -130,6 +148,12 @@ public class ProxyProcessorSupport extends ProxyConfig implements Ordered, BeanC
 	 * @param ifc the interface to check
 	 * @return whether the given interface is just a container callback
 	 */
+	// 确定给定的接口是否只是一个容器回调，因此不被认为是一个合理的代理接口。
+	// 如果没有为给定的 bean 找到合理的代理接口，它将使用其完整的目标类进行代理，假设这是用户的意图。
+	// 参形：
+	//			ifc – 要检查的接口
+	// 返回值：
+	//			给定的接口是否只是一个容器回调
 	protected boolean isConfigurationCallbackInterface(Class<?> ifc) {
 		return (InitializingBean.class == ifc || DisposableBean.class == ifc || Closeable.class == ifc ||
 				AutoCloseable.class == ifc || ObjectUtils.containsElement(ifc.getInterfaces(), Aware.class));
@@ -143,6 +167,13 @@ public class ProxyProcessorSupport extends ProxyConfig implements Ordered, BeanC
 	 * @param ifc the interface to check
 	 * @return whether the given interface is an internal language interface
 	 */
+	// 确定给定接口是否是众所周知的内部语言接口，因此不被视为合理的代理接口。
+	// 如果没有为给定的 bean 找到合理的代理接口，它将使用其完整的目标类进行代理，假设这是用户的意图。
+	// 参形：
+	//			ifc – 要检查的接口
+	// 返回值：
+	//			给定的接口是否是内部语言接口
+	// 排除内部语言的接口
 	protected boolean isInternalLanguageInterface(Class<?> ifc) {
 		return (ifc.getName().equals("groovy.lang.GroovyObject") ||
 				ifc.getName().endsWith(".cglib.proxy.Factory") ||

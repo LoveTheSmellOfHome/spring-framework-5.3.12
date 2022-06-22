@@ -44,6 +44,9 @@ public abstract class PropertyAccessorUtils {
 	 * @param propertyPath the property path to check
 	 * @return whether the path indicates an indexed or nested property
 	 */
+	// 检查给定的属性路径是否指示索引或嵌套属性
+	// @param propertyPath 要检查的属性路径
+	// @return 路径是否指示索引或嵌套属性
 	public static boolean isNestedOrIndexedProperty(@Nullable String propertyPath) {
 		if (propertyPath == null) {
 			return false;
@@ -64,6 +67,7 @@ public abstract class PropertyAccessorUtils {
 	 * @param propertyPath the property path to check
 	 * @return the index of the nested property separator, or -1 if none
 	 */
+	// 确定给定属性路径中的第一个嵌套属性分隔符，忽略键中的点（如“map[my.key]”）。
 	public static int getFirstNestedPropertySeparatorIndex(String propertyPath) {
 		return getNestedPropertySeparatorIndex(propertyPath, false);
 	}
@@ -139,6 +143,8 @@ public abstract class PropertyAccessorUtils {
 	 * @param propertyName the bean property path
 	 * @return the canonical representation of the property path
 	 */
+	// 确定给定属性路径的规范名称。从地图键中删除周围的引号：
+	// <br> {@code map['key']} → {@code map[key]}<br> {@code map["key"]} → {@code map[key] }
 	public static String canonicalPropertyName(@Nullable String propertyName) {
 		if (propertyName == null) {
 			return "";

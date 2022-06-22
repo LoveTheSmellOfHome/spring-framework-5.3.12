@@ -35,17 +35,22 @@ import org.springframework.transaction.interceptor.TransactionInterceptor;
  * @see EnableTransactionManagement
  * @see TransactionManagementConfigurationSelector
  */
+// 标准的 @Configuration 类，它注册启用基于代理的注解驱动的事务管理所需的 Spring 基础设施 bean。
 @Configuration(proxyBeanMethods = false)
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class ProxyTransactionManagementConfiguration extends AbstractTransactionManagementConfiguration {
 
+	// BeanFactoryTransactionAttributeSourceAdvisor 定义 PointcutAdvisor，传入事务属性源，事务拦截器，
+	// 通过方法参数依赖注入，TransactionAttributeSource,TransactionInterceptor
 	@Bean(name = TransactionManagementConfigUtils.TRANSACTION_ADVISOR_BEAN_NAME)
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-	public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisor(
+	public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisor( // 定义 PointcutAdvisor
 			TransactionAttributeSource transactionAttributeSource, TransactionInterceptor transactionInterceptor) {
 
 		BeanFactoryTransactionAttributeSourceAdvisor advisor = new BeanFactoryTransactionAttributeSourceAdvisor();
+		// 设置事务属性源
 		advisor.setTransactionAttributeSource(transactionAttributeSource);
+		// 设置事务拦截器
 		advisor.setAdvice(transactionInterceptor);
 		if (this.enableTx != null) {
 			advisor.setOrder(this.enableTx.<Integer>getNumber("order"));
@@ -53,18 +58,23 @@ public class ProxyTransactionManagementConfiguration extends AbstractTransaction
 		return advisor;
 	}
 
+	// 定义事务属性源,设置角色为基础设施类
 	@Bean
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public TransactionAttributeSource transactionAttributeSource() {
+		//
 		return new AnnotationTransactionAttributeSource();
 	}
 
+	// 定义事务拦截器，关联 TransactionManager
 	@Bean
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public TransactionInterceptor transactionInterceptor(TransactionAttributeSource transactionAttributeSource) {
 		TransactionInterceptor interceptor = new TransactionInterceptor();
+		// 设置 TransactionAttributeSource
 		interceptor.setTransactionAttributeSource(transactionAttributeSource);
 		if (this.txManager != null) {
+			// 关联事务管理器
 			interceptor.setTransactionManager(this.txManager);
 		}
 		return interceptor;

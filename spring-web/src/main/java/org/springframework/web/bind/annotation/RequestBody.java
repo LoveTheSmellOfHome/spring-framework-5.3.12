@@ -16,13 +16,9 @@
 
 package org.springframework.web.bind.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 import org.springframework.http.converter.HttpMessageConverter;
+
+import java.lang.annotation.*;
 
 /**
  * Annotation indicating a method parameter should be bound to the body of the web request.
@@ -38,6 +34,10 @@ import org.springframework.http.converter.HttpMessageConverter;
  * @see ResponseBody
  * @see org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter
  */
+// 指示方法参数的注释应绑定到 Web 请求的主体。请求的主体通过 HttpMessageConverter 传递，以根据请求的内容类型解析方法参数。
+// 或者，可以通过使用 @Valid 注释参数来应用自动验证。
+//
+// 支持带注释的处理程序方法。
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -50,6 +50,8 @@ public @interface RequestBody {
 	 * {@code null} to be passed when the body content is {@code null}.
 	 * @since 3.2
 	 */
+	// 是否需要正文内容。
+	// 默认为true ，如果没有正文内容，则会引发异常。如果您希望在正文内容为null时传递null ，请将其切换为false
 	boolean required() default true;
 
 }

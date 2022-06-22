@@ -28,6 +28,9 @@ import org.springframework.lang.Nullable;
  * @since 4.3
  * @see DefaultPropertySourceFactory
  */
+// 用于创建基于资源的 {@link PropertySource} 包装器的策略接口,PropertyValues 也就是 PropertySourceFactory
+// 能不能扩充 Properties 文件以外的东西，比如 yaml 格式文件
+// 基于注解扩展 Spring 配置属性源
 public interface PropertySourceFactory {
 
 	/**
@@ -39,6 +42,11 @@ public interface PropertySourceFactory {
 	 * @return the new {@link PropertySource} (never {@code null})
 	 * @throws IOException if resource resolution failed
 	 */
+	// 创建一个给定资源的 {@link PropertySource}包装器
+	// @param name 属性源的名称（可以是 {@code null} 在这种情况下，工厂实现必须根据给定的资源生成一个名称）
+	// @param resource 要包装的资源（可能已编码）
+	// @return 新的 {@link PropertySource}（从不{@code null}）
+	// @throws IOException 如果资源解析失败
 	PropertySource<?> createPropertySource(@Nullable String name, EncodedResource resource) throws IOException;
 
 }

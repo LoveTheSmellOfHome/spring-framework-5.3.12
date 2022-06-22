@@ -16,31 +16,15 @@
 
 package org.springframework.core;
 
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.StringJoiner;
-
 import org.springframework.core.SerializableTypeWrapper.FieldTypeProvider;
 import org.springframework.core.SerializableTypeWrapper.MethodParameterTypeProvider;
 import org.springframework.core.SerializableTypeWrapper.TypeProvider;
 import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.util.*;
+
+import java.io.Serializable;
+import java.lang.reflect.*;
+import java.util.*;
 
 /**
  * Encapsulates a Java {@link java.lang.reflect.Type}, providing access to
@@ -80,6 +64,36 @@ import org.springframework.util.StringUtils;
  * @see #forInstance(Object)
  * @see ResolvableTypeProvider
  */
+// 封装 Java Type ，提供对supertypes 、 interfaces和generic parameters以及最终resolve为Class的能力
+//
+// ResolvableTypes可以从fields 、 method parameters 、 method returns或classes 。 此类上的大多数方法
+// 本身都会返回ResolvableTypes ，从而可以轻松导航。 例如：
+//		private HashMap<Integer, List<String>> myMap;
+//		public void example() {
+//			ResolvableType t = ResolvableType.forField(getClass().getDeclaredField("myMap"));
+//			t.getSuperType(); // AbstractMap<Integer, List<String>>
+//			t.asMap(); // Map<Integer, List<String>>
+//			t.getGeneric(0).resolve(); // Integer
+//			t.getGeneric(1).resolve(); // List
+//			t.getGeneric(1); // List<String>
+//			t.resolveGeneric(1, 0); // String
+//		}
+//
+//
+// 扮演角色：GenericTypeResolver 和 GenericCollectionTypeResolver 替代者
+// 设计模式：Immutable(不变的) 设计
+// 工厂方法：for* 方法
+// 转换方法：as* 方法
+// 处理方法：resolve* 方法
+// 是个非常强大的类
+// 局限性：1.ResolvableType 无法处理泛型擦写，泛型擦写是在运行时的操作，比如 Collection<E>，
+// 		 编译时可以骗过编译器，实际运行时底层全是Object,和没有泛型时处理方式是一摸一样的，运行时不会增加任何辅助信息，
+// 		 因此Java5 和 Java6 在运行时的数据状态一摸一样，没有增加新的开销。本质是 Java 语言特性限制的，和 Spring 无关
+//		 2.ResolvableType 无法处理非具体化的 ParameterizedType，如List<?>;当我们泛型参数类型具体化后，如List<E>它的泛型类型落到了我们
+//		 的字节码中去了，所以可以利用到 Java API 来操作，ResolvableType 就是 Spring 对 Java 反射及泛型相关 API 的
+//		 优化，并没有做强大扩展，只是简化复杂 API，屏蔽 Type 相关的子类型或子接口
+//
+// 包装类型
 @SuppressWarnings("serial")
 public class ResolvableType implements Serializable {
 
@@ -87,6 +101,7 @@ public class ResolvableType implements Serializable {
 	 * {@code ResolvableType} returned when no value is available. {@code NONE} is used
 	 * in preference to {@code null} so that multiple method calls can be safely chained.
 	 */
+	// {@code ResolvableType} 在没有可用值时返回。 {@code NONE} 优先于 {@code null} 使用，以便可以安全地链接多个方法调用。
 	public static final ResolvableType NONE = new ResolvableType(EmptyType.INSTANCE, null, null, 0);
 
 	private static final ResolvableType[] EMPTY_TYPES_ARRAY = new ResolvableType[0];
@@ -98,29 +113,34 @@ public class ResolvableType implements Serializable {
 	/**
 	 * The underlying Java type being managed.
 	 */
+	// 被管理的底层 Java 类型
 	private final Type type;
 
 	/**
 	 * Optional provider for the type.
 	 */
+	// 类型的可选提供程序
 	@Nullable
 	private final TypeProvider typeProvider;
 
 	/**
 	 * The {@code VariableResolver} to use or {@code null} if no resolver is available.
 	 */
+	// 如果没有可用的解析器要使用的 {@code VariableResolver} 或 {@code null}
 	@Nullable
 	private final VariableResolver variableResolver;
 
 	/**
 	 * The component type for an array or {@code null} if the type should be deduced.
 	 */
+	// 数组的组件类型或 {@code null}（如果能推导出类型）
 	@Nullable
 	private final ResolvableType componentType;
 
 	@Nullable
 	private final Integer hash;
 
+	// 解析的类
 	@Nullable
 	private Class<?> resolved;
 
@@ -138,6 +158,7 @@ public class ResolvableType implements Serializable {
 	 * Private constructor used to create a new {@link ResolvableType} for cache key purposes,
 	 * with no upfront resolution.
 	 */
+	// 用于创建一个新的 {@link ResolvableType} 用于缓存密钥目的，没有预先解决的私有构造函数
 	private ResolvableType(
 			Type type, @Nullable TypeProvider typeProvider, @Nullable VariableResolver variableResolver) {
 
@@ -154,6 +175,7 @@ public class ResolvableType implements Serializable {
 	 * with upfront resolution and a pre-calculated hash.
 	 * @since 4.2
 	 */
+	// 用于创建一个新的 {@link ResolvableType} 用于缓存值目的，具有预先解析和预先计算的哈希值的私有构造函数。
 	private ResolvableType(Type type, @Nullable TypeProvider typeProvider,
 			@Nullable VariableResolver variableResolver, @Nullable Integer hash) {
 
@@ -169,6 +191,7 @@ public class ResolvableType implements Serializable {
 	 * Private constructor used to create a new {@link ResolvableType} for uncached purposes,
 	 * with upfront resolution but lazily calculated hash.
 	 */
+	// 用于为未缓存的目的创建新的 {@link ResolvableType}，具有预先解析但延迟计算的哈希值的私有构造函数。
 	private ResolvableType(Type type, @Nullable TypeProvider typeProvider,
 			@Nullable VariableResolver variableResolver, @Nullable ResolvableType componentType) {
 
@@ -185,6 +208,8 @@ public class ResolvableType implements Serializable {
 	 * Avoids all {@code instanceof} checks in order to create a straight {@link Class} wrapper.
 	 * @since 4.2
 	 */
+	// 用于在 {@link Class} 基础上创建新的 {@link ResolvableType}。
+	// 避免所有 {@code instanceof} 检查以创建直接的 {@link Class} 包装器的私有构造函数。
 	private ResolvableType(@Nullable Class<?> clazz) {
 		this.resolved = (clazz != null ? clazz : Object.class);
 		this.type = this.resolved;
@@ -198,6 +223,7 @@ public class ResolvableType implements Serializable {
 	/**
 	 * Return the underling Java {@link Type} being managed.
 	 */
+	// 返回被管理的底层 Java {@link Type}
 	public Type getType() {
 		return SerializableTypeWrapper.unwrap(this.type);
 	}
@@ -206,6 +232,7 @@ public class ResolvableType implements Serializable {
 	 * Return the underlying Java {@link Class} being managed, if available;
 	 * otherwise {@code null}.
 	 */
+	// 返回被管理的底层 Java {@link Class}（如果可用）；否则 {@code null}
 	@Nullable
 	public Class<?> getRawClass() {
 		if (this.type == this.resolved) {
@@ -514,6 +541,7 @@ public class ResolvableType implements Serializable {
 	 * @see #getGeneric(int...)
 	 * @see #getGenerics()
 	 */
+	// 如果此类型包含泛型参数，则返回 {@code true}
 	public boolean hasGenerics() {
 		return (getGenerics().length > 0);
 	}
@@ -672,17 +700,25 @@ public class ResolvableType implements Serializable {
 	 * @see #resolveGeneric(int...)
 	 * @see #resolveGenerics()
 	 */
+	// 返回一个 {@link ResolvableType} 表示给定索引的通用参数。索引从零开始；例如给定类型
+	// {@code Map<Integer, List<String>>}，{@code getGeneric(0)} 将访问 {@code Integer}。
+	// 可以通过指定多个索引来访问嵌套泛型；例如 {@code getGeneric(1, 0)} 将从嵌套的 {@code List} 访问 {@code String}。
+	// 为方便起见，如果未指定索引，则返回第一个泛型
+	// <p>如果指定索引处没有可用的泛型，则返回 {@link NONE}。
+	// @param 索引引用泛型参数的索引（可以省略以返回第一个泛型）
+	// @return 指定泛型的 {@link ResolvableType}类型，或 {@link NONE}
 	public ResolvableType getGeneric(@Nullable int... indexes) {
 		ResolvableType[] generics = getGenerics();
 		if (indexes == null || indexes.length == 0) {
 			return (generics.length == 0 ? NONE : generics[0]);
 		}
-		ResolvableType generic = this;
+		ResolvableType generic = this; // this 指如：java.lang.Comparable<java.lang.String>
 		for (int index : indexes) {
-			generics = generic.getGenerics();
+			generics = generic.getGenerics(); // java.lang.String
 			if (index < 0 || index >= generics.length) {
 				return NONE;
 			}
+			// 获取索引位置的泛型
 			generic = generics[index];
 		}
 		return generic;
@@ -701,6 +737,10 @@ public class ResolvableType implements Serializable {
 	 * @see #resolveGeneric(int...)
 	 * @see #resolveGenerics()
 	 */
+	// 返回一个 {@link ResolvableType ResolvableTypes} 数组，表示该类型的泛型参数。
+	// 如果没有可用的泛型，则返回一个空数组。如果您需要访问特定泛型，请考虑使用 {@link getGeneric(int...)} 方法，
+	// 因为它允许访问嵌套泛型并防止 {@code IndexOutOfBoundsExceptions}。
+	// @return 表示泛型参数的 {@link ResolvableType ResolvableTypes} 数组（从不{@code null}）
 	public ResolvableType[] getGenerics() {
 		if (this == NONE) {
 			return EMPTY_TYPES_ARRAY;
@@ -714,7 +754,9 @@ public class ResolvableType implements Serializable {
 					generics[i] = ResolvableType.forType(typeParams[i], this);
 				}
 			}
+			// 判断 ParameterizedType 泛型参数类型
 			else if (this.type instanceof ParameterizedType) {
+				// ParameterizedType 泛型参数类型获取泛型数组
 				Type[] actualTypeArguments = ((ParameterizedType) this.type).getActualTypeArguments();
 				generics = new ResolvableType[actualTypeArguments.length];
 				for (int i = 0; i < actualTypeArguments.length; i++) {
@@ -1081,9 +1123,15 @@ public class ResolvableType implements Serializable {
 	 * @return a {@link ResolvableType} for the specific class and generics
 	 * @see #forClassWithGenerics(Class, Class...)
 	 */
+	// 使用预先声明的泛型为指定的 {@link Class} 返回一个 {@link ResolvableType}
+	// @param clazz 要内省的类（或接口）
+	// @param generics 类的泛型
+	// @return 特定类和泛型的 {@link ResolvableType}
 	public static ResolvableType forClassWithGenerics(Class<?> clazz, ResolvableType... generics) {
 		Assert.notNull(clazz, "Class must not be null");
 		Assert.notNull(generics, "Generics array must not be null");
+		// 获取当前类的泛型数组，若当前类没有泛型，继承了有泛型的类，则这里没有层次性查找父类的泛型。数组长度为0
+		// 若当前类显式声明了泛型，那么这里就有泛型
 		TypeVariable<?>[] variables = clazz.getTypeParameters();
 		Assert.isTrue(variables.length == generics.length, "Mismatched number of generics specified");
 
@@ -1094,6 +1142,7 @@ public class ResolvableType implements Serializable {
 			arguments[i] = (argument != null && !(argument instanceof TypeVariable) ? argument : variables[i]);
 		}
 
+		// 将原生类型和泛型重新组装成带泛型的 ParameterizedType，它的子类 SyntheticParameterizedType 负责组装过程
 		ParameterizedType syntheticType = new SyntheticParameterizedType(clazz, arguments);
 		return forType(syntheticType, new TypeVariablesVariableResolver(variables, generics));
 	}
@@ -1108,8 +1157,14 @@ public class ResolvableType implements Serializable {
 	 * @since 4.2
 	 * @see ResolvableTypeProvider
 	 */
+	// 为指定的实例返回一个 {@link ResolvableType}。该实例不传达通用信息，但如果它实现了
+	// {@link ResolvableTypeProvider}，则可以使用比基于 {@link forClass(Class) Class 实例}
+	// 的简单 {@link ResolvableType} 更精确的 {@link ResolvableType}。
 	public static ResolvableType forInstance(Object instance) {
 		Assert.notNull(instance, "Instance must not be null");
+		// 如果实例是 ResolvableTypeProvider，这个接口的用户在复杂的层次结构场景中应该小心，
+		// 特别是当类的泛型类型签名在子类中发生变化时。
+		//// 始终可以返回 {@code null} 以回退默认行为。
 		if (instance instanceof ResolvableTypeProvider) {
 			ResolvableType type = ((ResolvableTypeProvider) instance).getResolvableType();
 			if (type != null) {
@@ -1414,10 +1469,12 @@ public class ResolvableType implements Serializable {
 	 * @param variableResolver the variable resolver or {@code null}
 	 * @return a {@link ResolvableType} for the specified {@link Type} and {@link VariableResolver}
 	 */
+	// 返回由给定 {@link VariableResolver} 支持的指定 {@link Type} 的 {@link ResolvableType}。
 	static ResolvableType forType(
 			@Nullable Type type, @Nullable TypeProvider typeProvider, @Nullable VariableResolver variableResolver) {
 
 		if (type == null && typeProvider != null) {
+			// 拿到具体类型 java.util.List<E>
 			type = SerializableTypeWrapper.forTypeProvider(typeProvider);
 		}
 		if (type == null) {
@@ -1426,21 +1483,29 @@ public class ResolvableType implements Serializable {
 
 		// For simple Class references, build the wrapper right away -
 		// no expensive resolution necessary, so not worth caching...
+		// 对于简单的类引用，立即构建包装器 - 不需要昂贵的解析，所以不值得缓存......
 		if (type instanceof Class) {
 			return new ResolvableType(type, typeProvider, variableResolver, (ResolvableType) null);
 		}
 
 		// Purge empty entries on access since we don't have a clean-up thread or the like.
+		// 由于我们没有清理线程等，因此在访问时清除空条目。 删除任何已被垃圾收集且不再被引用的条目。
 		cache.purgeUnreferencedEntries();
 
 		// Check the cache - we may have a ResolvableType which has been resolved before...
+		// 检查缓存 - 我们可能有一个之前已经解析过的 ResolvableType...
+		// resultType:"?"
 		ResolvableType resultType = new ResolvableType(type, typeProvider, variableResolver);
 		ResolvableType cachedType = cache.get(resultType);
 		if (cachedType == null) {
+			// 构建泛型参数类型,如果泛型参数具体化则List<Object> cachedType 是具体化的 java.util.List<java.lang.Object>，
+			// 如果泛型参数是虚指 List<E>，则 cachedType 是 java.Util.List<?>
 			cachedType = new ResolvableType(type, typeProvider, variableResolver, resultType.hash);
 			cache.put(cachedType, cachedType);
 		}
+		// resultType.resolved：类型参数 ParameterizedType(如：List<Object>) 的泛型接口 List
 		resultType.resolved = cachedType.resolved;
+		// 泛型参数类型 java.lang.Comparable<java.lang.String>
 		return resultType;
 	}
 
@@ -1457,11 +1522,14 @@ public class ResolvableType implements Serializable {
 	/**
 	 * Strategy interface used to resolve {@link TypeVariable TypeVariables}.
 	 */
+	// 用于解析 {@link TypeVariable TypeVariables}
+	// （TypeVariables：泛型类型变量，如 Collection<E> 中的 E） 的策略接口
 	interface VariableResolver extends Serializable {
 
 		/**
 		 * Return the source of the resolver (used for hashCode and equals).
 		 */
+		// 返回解析器的来源（用于 hashCode 和 equals）
 		Object getSource();
 
 		/**
@@ -1469,11 +1537,14 @@ public class ResolvableType implements Serializable {
 		 * @param variable the variable to resolve
 		 * @return the resolved variable, or {@code null} if not found
 		 */
+		// 解析指定的变量。
+		// @param variable 要解析的泛型类型变量 <E>
 		@Nullable
 		ResolvableType resolveVariable(TypeVariable<?> variable);
 	}
 
 
+	// 泛型解析器
 	@SuppressWarnings("serial")
 	private static class DefaultVariableResolver implements VariableResolver {
 
@@ -1528,12 +1599,16 @@ public class ResolvableType implements Serializable {
 	}
 
 
+	// 合成带泛型类型的 Class ，本质上是 ParameterizedType 如List<E>
 	private static final class SyntheticParameterizedType implements ParameterizedType, Serializable {
 
+		// 原始类型如 List
 		private final Type rawType;
 
+		// 泛型数组 如数组中元素 E
 		private final Type[] typeArguments;
 
+		// 带泛型的类型也就是 ParameterizedType
 		public SyntheticParameterizedType(Type rawType, Type[] typeArguments) {
 			this.rawType = rawType;
 			this.typeArguments = typeArguments;
@@ -1682,6 +1757,7 @@ public class ResolvableType implements Serializable {
 	/**
 	 * Internal {@link Type} used to represent an empty value.
 	 */
+	// 内部 {@link Type} 用于表示空值
 	@SuppressWarnings("serial")
 	static class EmptyType implements Type, Serializable {
 

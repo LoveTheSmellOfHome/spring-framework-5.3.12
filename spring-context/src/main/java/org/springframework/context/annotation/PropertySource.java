@@ -16,14 +16,14 @@
 
 package org.springframework.context.annotation;
 
+import org.springframework.core.io.support.PropertySourceFactory;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import org.springframework.core.io.support.PropertySourceFactory;
 
 /**
  * Annotation providing a convenient and declarative mechanism for adding a
@@ -164,6 +164,10 @@ import org.springframework.core.io.support.PropertySourceFactory;
  * @see org.springframework.core.env.ConfigurableEnvironment#getPropertySources()
  * @see org.springframework.core.env.MutablePropertySources
  */
+// 注释提供了一种方便的声明机制，用于将 {@link org.springframework.core.env.PropertySource PropertySource}
+// 添加到 Spring 的 {@link org.springframework.core.env.Environment Environment}。与@{@link Configuration}
+// 类结合使用。
+// 外部化属性配置源,这里的资源不单单指本地资源文件，有可能是网络资源文件等
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -179,6 +183,9 @@ public @interface PropertySource {
 	 * @see org.springframework.core.env.PropertySource#getName()
 	 * @see org.springframework.core.io.Resource#getDescription()
 	 */
+	// 指明该属性源的名称。如果省略，{@link factory} 将根据底层资源生成名称
+	// （在 {@link org.springframework.core.io.support.DefaultPropertySourceFactory} 的情况下：
+	// 通过相应的 name-less {@link org.springframework.core.io.support.ResourcePropertySource} 构造函数）
 	String name() default "";
 
 	/**
@@ -195,6 +202,15 @@ public @interface PropertySource {
 	 * <p>Each location will be added to the enclosing {@code Environment} as its own
 	 * property source, and in the order declared.
 	 */
+	// 指示要加载的属性文件的资源位置。
+	// 支持传统 properties 和基于 XML 的属性文件格式 — 例如:"classpath:/com/myco/app.properties" or
+	// "file:/path/to/file.xml".
+	// 不允许使用资源位置通配符（例如 **/*.properties）；每个位置必须评估为恰好一个 .properties 或 .xml 资源
+	// ${...} 占位符将针对已在Environment注册的任何/所有属性源进行解析。 有关示例，请参见上文。
+	// 每个位置都将作为其自己的属性源并按照声明的顺序添加到封闭Environment中。
+	// 自定义 schema 可以确定自定义的资源文件路径，支持协议扩展。
+	//
+	// value 默认支持传统 properties 和基于 XML 的属性文件的路径，可扩展自定义文件路径，value 指资源文件所在的路径数组，有顺序性。
 	String[] value();
 
 	/**
@@ -204,12 +220,16 @@ public @interface PropertySource {
 	 * <p>Default is {@code false}.
 	 * @since 4.0
 	 */
+	// 指示是否应忽略找不到property resource的失败。
+	// 如果属性文件是完全可选的，则true是合适的。
+	// 默认值为false
 	boolean ignoreResourceNotFound() default false;
 
 	/**
 	 * A specific character encoding for the given resources, e.g. "UTF-8".
 	 * @since 4.3
 	 */
+	// 指定资源的特定字符编码，例如“UTF-8” 帮助 PropertySource 指定编码，Propertie 编码默认是 ISO-8859-1
 	String encoding() default "";
 
 	/**
@@ -219,6 +239,8 @@ public @interface PropertySource {
 	 * @see org.springframework.core.io.support.DefaultPropertySourceFactory
 	 * @see org.springframework.core.io.support.ResourcePropertySource
 	 */
+	// 指定自定义 PropertySourceFactory ，如果有的话。PropertySourceFactory 提供了可扩展其他资源文件格式，比如 yaml 格式等
+	// 默认情况下，将使用标准资源文件的默认工厂。
 	Class<? extends PropertySourceFactory> factory() default PropertySourceFactory.class;
 
 }

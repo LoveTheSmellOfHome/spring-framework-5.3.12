@@ -84,46 +84,54 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * Value of a T/F attribute that represents true.
 	 * Anything else represents false. Case seNsItive.
 	 */
+	// 代表 true 的 T/F 属性的值。其他任何东西都代表虚假。区分大小写。
 	public static final String TRUE_VALUE = "true";
 
 	/**
 	 * Separator between bean name and property name.
 	 * We follow normal Java conventions.
 	 */
+	// bean 名称和属性名称之间的分隔符。我们遵循正常的 Java 约定
 	public static final String SEPARATOR = ".";
 
 	/**
 	 * Special key to distinguish {@code owner.(class)=com.myapp.MyClass}.
 	 */
+	// 区分 {@code owner.(class)=com.myapp.MyClass} 的特殊键
 	public static final String CLASS_KEY = "(class)";
 
 	/**
 	 * Special key to distinguish {@code owner.(parent)=parentBeanName}.
 	 */
+	// 区分 {@code owner.(parent)=parentBeanName} 的特殊键
 	public static final String PARENT_KEY = "(parent)";
 
 	/**
 	 * Special key to distinguish {@code owner.(scope)=prototype}.
 	 * Default is "true".
 	 */
+	// 区分 {@code owner.(scope)=prototype} 的特殊键。默认值为“真”
 	public static final String SCOPE_KEY = "(scope)";
 
 	/**
 	 * Special key to distinguish {@code owner.(singleton)=false}.
 	 * Default is "true".
 	 */
+	// 区分 {@code owner.(singleton)=false} 的特殊键。默认值为“真”。
 	public static final String SINGLETON_KEY = "(singleton)";
 
 	/**
 	 * Special key to distinguish {@code owner.(abstract)=true}
 	 * Default is "false".
 	 */
+	// 区分{@code owner.(abstract)=true} 的特殊键默认为“false”。
 	public static final String ABSTRACT_KEY = "(abstract)";
 
 	/**
 	 * Special key to distinguish {@code owner.(lazy-init)=true}
 	 * Default is "false".
 	 */
+	// 区分{@code owner.(lazy-init)=true} 的特殊键默认为“false”
 	public static final String LAZY_INIT_KEY = "(lazy-init)";
 
 	/**
@@ -132,16 +140,20 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * Whether this is a reference to a singleton or a prototype
 	 * will depend on the definition of the target bean.
 	 */
+	// 引用当前 BeanFactory 中其他 bean 的属性后缀：例如{@code owner.dog(ref)=fido}。
+	// 这是对单例或原型的引用将取决于目标 bean 的定义。
 	public static final String REF_SUFFIX = "(ref)";
 
 	/**
 	 * Prefix before values referencing other beans.
 	 */
+	// 引用其他 bean 的值前的前缀。
 	public static final String REF_PREFIX = "*";
 
 	/**
 	 * Prefix used to denote a constructor argument definition.
 	 */
+	// 用于表示构造函数参数定义的前缀
 	public static final String CONSTRUCTOR_ARG_PREFIX = "$";
 
 
@@ -156,6 +168,8 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * @param registry the BeanFactory to load bean definitions into,
 	 * in the form of a BeanDefinitionRegistry
 	 */
+	// 为给定的 bean 工厂创建新的 PropertiesBeanDefinitionReader。
+	// @param registry 以 BeanDefinitionRegistry 的形式加载 bean 定义的 BeanFactory
 	public PropertiesBeanDefinitionReader(BeanDefinitionRegistry registry) {
 		super(registry);
 	}
@@ -173,6 +187,10 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * not apply to a bean definition that carries a class is there for
 	 * backwards compatibility reasons. It still matches the typical use case.
 	 */
+	// 为这个 bean 工厂设置默认的父 bean。如果此工厂处理的子 bean 定义既不提供父属性也不提供类属性，则使用此默认值。
+	// <p>可以使用例如对于视图定义文件，为所有视图定义具有默认视图类和通用属性的父级。
+	// 定义自己的父级或携带自己的类的视图定义仍然可以覆盖它。
+	// <p>严格来说，默认父设置不适用于带有类的 bean 定义的规则是出于向后兼容的原因。它仍然与典型用例相匹配。
 	public void setDefaultParentBean(@Nullable String defaultParentBean) {
 		this.defaultParentBean = defaultParentBean;
 	}
@@ -180,6 +198,7 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	/**
 	 * Return the default parent bean for this bean factory.
 	 */
+	// 返回此 bean 工厂的默认父 bean
 	@Nullable
 	public String getDefaultParentBean() {
 		return this.defaultParentBean;
@@ -190,6 +209,7 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * The default is ResourcePropertiesPersister.
 	 * @see ResourcePropertiesPersister#INSTANCE
 	 */
+	// 设置 PropertiesPersister 以用于解析属性文件。默认值为 ResourcePropertiesPersister。
 	public void setPropertiesPersister(@Nullable PropertiesPersister propertiesPersister) {
 		this.propertiesPersister =
 				(propertiesPersister != null ? propertiesPersister : ResourcePropertiesPersister.INSTANCE);
@@ -198,6 +218,7 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	/**
 	 * Return the PropertiesPersister to use for parsing properties files.
 	 */
+	// 返回 PropertiesPersister 以用于解析属性文件
 	public PropertiesPersister getPropertiesPersister() {
 		return this.propertiesPersister;
 	}
@@ -211,6 +232,10 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * @throws BeanDefinitionStoreException in case of loading or parsing errors
 	 * @see #loadBeanDefinitions(org.springframework.core.io.Resource, String)
 	 */
+	// 使用所有属性键（即不按前缀过滤）从指定的属性文件加载 bean 定义
+	// @param resource 属性文件的资源描述符
+	// @return 找到的 bean 定义数
+	// @throws BeanDefinitionStoreException 在加载或解析错误的情况下
 	@Override
 	public int loadBeanDefinitions(Resource resource) throws BeanDefinitionStoreException {
 		return loadBeanDefinitions(new EncodedResource(resource), null);
@@ -224,6 +249,9 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * @return the number of bean definitions found
 	 * @throws BeanDefinitionStoreException in case of loading or parsing errors
 	 */
+	// 从指定的属性文件加载 bean 定义
+	// @param resource 属性文件的资源描述符
+	// @param 在地图中的键中为过滤器添加前缀：例如'beans.' （可以为空或 {@code null}）
 	public int loadBeanDefinitions(Resource resource, @Nullable String prefix) throws BeanDefinitionStoreException {
 		return loadBeanDefinitions(new EncodedResource(resource), prefix);
 	}
@@ -235,6 +263,8 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * @return the number of bean definitions found
 	 * @throws BeanDefinitionStoreException in case of loading or parsing errors
 	 */
+	// 从指定的属性文件加载 bean 定义。
+	// @param encodingResource 属性文件的资源描述符，允许指定用于解析文件的编码
 	public int loadBeanDefinitions(EncodedResource encodedResource) throws BeanDefinitionStoreException {
 		return loadBeanDefinitions(encodedResource, null);
 	}
@@ -266,6 +296,7 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 				}
 			}
 
+			// 注册 beanDefinitions
 			int count = registerBeanDefinitions(props, prefix, encodedResource.getResource().getDescription());
 			if (logger.isDebugEnabled()) {
 				logger.debug("Loaded " + count + " bean definitions from " + encodedResource);
@@ -285,6 +316,7 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * @throws BeanDefinitionStoreException in case of loading or parsing errors
 	 * @see #registerBeanDefinitions(java.util.ResourceBundle, String)
 	 */
+	// 使用所有属性键（即不按前缀过滤）注册包含在资源包中的 bean 定义
 	public int registerBeanDefinitions(ResourceBundle rb) throws BeanDefinitionStoreException {
 		return registerBeanDefinitions(rb, null);
 	}
@@ -299,8 +331,11 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * @return the number of bean definitions found
 	 * @throws BeanDefinitionStoreException in case of loading or parsing errors
 	 */
+	// 注册包含在 ResourceBundle 中的 bean 定义。
+	// <p>类似于 Map 的语法。此方法对于启用标准 Java 国际化支持很有用
 	public int registerBeanDefinitions(ResourceBundle rb, @Nullable String prefix) throws BeanDefinitionStoreException {
 		// Simply create a map and call overloaded method.
+		// 只需创建一个map并调用重载方法。
 		Map<String, Object> map = new HashMap<>();
 		Enumeration<String> keys = rb.getKeys();
 		while (keys.hasMoreElements()) {
@@ -321,6 +356,7 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * @throws BeansException in case of loading or parsing errors
 	 * @see #registerBeanDefinitions(java.util.Map, String, String)
 	 */
+	// 使用所有属性键（即不按前缀过滤）注册包含在 Map 中的 bean 定义
 	public int registerBeanDefinitions(Map<?, ?> map) throws BeansException {
 		return registerBeanDefinitions(map, null);
 	}
@@ -336,6 +372,7 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * @return the number of bean definitions found
 	 * @throws BeansException in case of loading or parsing errors
 	 */
+	// 注册包含在 Map 中的 bean 定义。忽略不合格的属性
 	public int registerBeanDefinitions(Map<?, ?> map, @Nullable String prefix) throws BeansException {
 		return registerBeanDefinitions(map, prefix, "Map " + map);
 	}
@@ -354,6 +391,7 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * @throws BeansException in case of loading or parsing errors
 	 * @see #registerBeanDefinitions(Map, String)
 	 */
+	// 注册包含在 Map 中的 bean 定义。忽略不合格的属性。 Properties 本身继承 HashTable,HashTable 实现 Map 接口
 	public int registerBeanDefinitions(Map<?, ?> map, @Nullable String prefix, String resourceDescription)
 			throws BeansException {
 
@@ -362,15 +400,20 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 		}
 		int beanCount = 0;
 
+		// map 中包含了 user.properties 中定义的相关信息
 		for (Object key : map.keySet()) {
+			// 规定 map 中只能存储 String 类型
 			if (!(key instanceof String)) {
 				throw new IllegalArgumentException("Illegal key [" + key + "]: only Strings allowed");
 			}
+			// keyString 就是properties 中的 key
 			String keyString = (String) key;
 			if (keyString.startsWith(prefix)) {
 				// Key is of form: prefix<name>.property
+				// 键的格式为：prefix<name>.property 比如 user. 作为前缀
 				String nameAndProperty = keyString.substring(prefix.length());
 				// Find dot before property name, ignoring dots in property keys.
+				// 在属性名称之前查找点，忽略属性键中的点
 				int sepIdx ;
 				int propKeyIdx = nameAndProperty.indexOf(PropertyAccessor.PROPERTY_KEY_PREFIX);
 				if (propKeyIdx != -1) {
@@ -380,12 +423,14 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 					sepIdx = nameAndProperty.lastIndexOf(SEPARATOR);
 				}
 				if (sepIdx != -1) {
+					// beanName 类名的第一个字符变成小写
 					String beanName = nameAndProperty.substring(0, sepIdx);
 					if (logger.isTraceEnabled()) {
 						logger.trace("Found bean name '" + beanName + "'");
 					}
 					if (!getRegistry().containsBeanDefinition(beanName)) {
 						// If we haven't already registered it...
+						// 如果我们还没有注册...
 						registerBeanDefinition(beanName, map, prefix + beanName, resourceDescription);
 						++beanCount;
 					}
@@ -393,6 +438,7 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 				else {
 					// Ignore it: It wasn't a valid bean name and property,
 					// although it did start with the required prefix.
+					// 忽略它：它不是有效的 bean 名称和属性，尽管它确实以所需的前缀开头。
 					if (logger.isDebugEnabled()) {
 						logger.debug("Invalid bean name and property [" + nameAndProperty + "]");
 					}
@@ -413,6 +459,7 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * Map came from (for logging purposes)
 	 * @throws BeansException if the bean definition could not be parsed or registered
 	 */
+	// 获取所有属性值，给定一个前缀（将被剥离）并将它们定义的 bean 添加到具有给定名称的工厂中。
 	protected void registerBeanDefinition(String beanName, Map<?, ?> map, String prefix, String resourceDescription)
 			throws BeansException {
 
@@ -469,16 +516,19 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 				else if (property.endsWith(REF_SUFFIX)) {
 					// This isn't a real property, but a reference to another prototype
 					// Extract property name: property is of form dog(ref)
+					// 这不是真正的属性，而是对另一个原型的引用 Extract property name: property is of form dog(ref)
 					property = property.substring(0, property.length() - REF_SUFFIX.length());
 					String ref = StringUtils.trimWhitespace((String) entry.getValue());
 
 					// It doesn't matter if the referenced bean hasn't yet been registered:
 					// this will ensure that the reference is resolved at runtime.
+					// 引用的 bean 是否尚未注册并不重要：这将确保在运行时解析引用
 					Object val = new RuntimeBeanReference(ref);
 					pvs.add(property, val);
 				}
 				else {
 					// It's a normal bean property.
+					// 这是一个普通的 bean 属性
 					pvs.add(property, readValue(entry));
 				}
 			}
@@ -491,6 +541,7 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 		// Just use default parent if we're not dealing with the parent itself,
 		// and if there's no class name specified. The latter has to happen for
 		// backwards compatibility reasons.
+		// 如果我们不处理父级本身，并且没有指定类名，只需使用默认父级。出于向后兼容性的原因，后者必须发生
 		if (parent == null && className == null && !beanName.equals(this.defaultParentBean)) {
 			parent = this.defaultParentBean;
 		}
@@ -517,11 +568,13 @@ public class PropertiesBeanDefinitionReader extends AbstractBeanDefinitionReader
 	 * Reads the value of the entry. Correctly interprets bean references for
 	 * values that are prefixed with an asterisk.
 	 */
+	// 读取条目的值。正确解释以星号为前缀的值的 bean 引用
 	private Object readValue(Map.Entry<?, ?> entry) {
 		Object val = entry.getValue();
 		if (val instanceof String) {
 			String strVal = (String) val;
 			// If it starts with a reference prefix...
+			// 如果它以引用前缀开头
 			if (strVal.startsWith(REF_PREFIX)) {
 				// Expand the reference.
 				String targetName = strVal.substring(1);

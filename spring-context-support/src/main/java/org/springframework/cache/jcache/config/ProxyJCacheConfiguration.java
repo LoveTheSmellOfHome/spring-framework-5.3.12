@@ -37,10 +37,13 @@ import org.springframework.context.annotation.Role;
  * @see org.springframework.cache.annotation.EnableCaching
  * @see org.springframework.cache.annotation.CachingConfigurationSelector
  */
+// @Configuration类，用于注册启用基于代理的注解驱动的 JSR-107 缓存管理所需的 Spring 基础设施 bean。
+// 可以安全地与 Spring 的缓存支持一起使用。
 @Configuration(proxyBeanMethods = false)
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class ProxyJCacheConfiguration extends AbstractJCacheConfiguration {
 
+	// 定义 Advisor
 	@Bean(name = CacheManagementConfigUtils.JCACHE_ADVISOR_BEAN_NAME)
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public BeanFactoryJCacheOperationSourceAdvisor cacheAdvisor(
@@ -55,6 +58,7 @@ public class ProxyJCacheConfiguration extends AbstractJCacheConfiguration {
 		return advisor;
 	}
 
+	// 定义拦截器
 	@Bean(name = "jCacheInterceptor")
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public JCacheInterceptor cacheInterceptor(JCacheOperationSource jCacheOperationSource) {

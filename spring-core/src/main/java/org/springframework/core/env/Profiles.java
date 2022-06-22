@@ -29,6 +29,8 @@ import java.util.function.Predicate;
  * @author Sam Brannen
  * @since 5.1
  */
+// {@link Environment} 可能会接受的 {@linkplain Environment#acceptsProfiles(Profiles) }的profile 推断
+// <p>可以直接实现，或者更常见的是，使用 {@link of(String...) of(...)} 工厂方法创建。
 @FunctionalInterface
 public interface Profiles {
 
@@ -38,6 +40,7 @@ public interface Profiles {
 	 * @param activeProfiles a predicate that tests whether a given profile is
 	 * currently active
 	 */
+	// 测试此 {@code Profiles} 实例是否与给定的活动配置文件推断<em>匹配<em>。
 	boolean matches(Predicate<String> activeProfiles);
 
 
@@ -67,6 +70,17 @@ public interface Profiles {
 	 * @param profiles the <em>profile strings</em> to include
 	 * @return a new {@link Profiles} instance
 	 */
+	// 创建一个新的 Profiles 实例，用于根据给定的配置文件字符串检查匹配项。
+	// 如果给定的配置文件字符串中的任何一个匹配，则返回的实例将匹配。
+	// 配置文件字符串可能包含简单的配置文件名称（例如"production"）或配置文件表达式。
+	// 配置文件表达式允许表达更复杂的配置文件逻辑，例如"production & cloud".。
+	// 配置文件表达式支持以下运算符：
+	// ! - 配置文件或配置文件表达式的逻辑非
+	// & - 配置文件或配置文件表达式的逻辑与
+	// | - 配置文件或配置文件表达式的逻辑 OR
+	// 请注意 & 和 |不使用括号不能混合运算符。例如“a & b | c”不是一个有效的表达式；它必须表示为“(a & b) | c”或“a & (b | c)”。
+	// 从 Spring Framework 5.1.17 开始，如果此方法返回的两个 Profiles 实例是使用相同的配置文件字符串创建的，
+	// 则它们被视为彼此等效（就 equals() 和 hashCode() 语义而言）。
 	static Profiles of(String... profiles) {
 		return ProfilesParser.parse(profiles);
 	}

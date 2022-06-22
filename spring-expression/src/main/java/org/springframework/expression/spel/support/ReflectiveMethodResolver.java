@@ -51,6 +51,7 @@ import org.springframework.lang.Nullable;
  * @since 3.0
  * @see StandardEvaluationContext#addMethodResolver(MethodResolver)
  */
+// 基于反射的 {@link MethodResolver}。除非已指定显式方法解析器，否则默认使用 {@link StandardEvaluationContext}
 public class ReflectiveMethodResolver implements MethodResolver {
 
 	// Using distance will ensure a more accurate match is discovered,
@@ -75,6 +76,9 @@ public class ReflectiveMethodResolver implements MethodResolver {
 	 * @param useDistance {@code true} if distance computation should be used when
 	 * calculating matches; {@code false} otherwise
 	 */
+	// 此构造函数允许配置 ReflectiveMethodResolver，以便它将使用距离计算来检查两个接近匹配中哪个更好（当有多个匹配时）。
+	// 使用距离计算旨在确保匹配更能代表 Java 编译器在考虑装箱/拆箱以及是否声明候选方法来处理传入的（参数的）类型的超类型时所做的事情。
+	// 形参：useDistance – 如果在计算匹配时应使用距离计算，则为true ； 否则为false
 	public ReflectiveMethodResolver(boolean useDistance) {
 		this.useDistance = useDistance;
 	}
@@ -86,6 +90,9 @@ public class ReflectiveMethodResolver implements MethodResolver {
 	 * @param filter the corresponding method filter,
 	 * or {@code null} to clear any filter for the given type
 	 */
+	// 为给定类型的方法注册过滤器。
+	// 形参：type – 要过滤的类型
+	// filter – 相应的方法过滤器，或null以清除给定类型的任何过滤器
 	public void registerMethodFilter(Class<?> type, @Nullable MethodFilter filter) {
 		if (this.filters == null) {
 			this.filters = new HashMap<>();
@@ -107,6 +114,10 @@ public class ReflectiveMethodResolver implements MethodResolver {
 	 * according to the registered type converter
 	 * </ol>
 	 */
+	// 定位一个类型的方法。 可能发生三种匹配：
+	// 1.参数类型与构造函数类型匹配的精确匹配
+	// 2.不完全匹配，其中我们要查找的类型是构造函数中定义的类型的子类型
+	// 3.根据注册的类型转换器，我们能够将参数转换为构造函数期望的参数的匹配项
 	@Override
 	@Nullable
 	public MethodExecutor resolve(EvaluationContext context, Object targetObject, String name,
@@ -118,6 +129,7 @@ public class ReflectiveMethodResolver implements MethodResolver {
 			ArrayList<Method> methods = new ArrayList<>(getMethods(type, targetObject));
 
 			// If a filter is registered for this type, call it
+			// 如果为此类型注册了过滤器，则调用它
 			MethodFilter filter = (this.filters != null ? this.filters.get(type) : null);
 			if (filter != null) {
 				List<Method> filtered = filter.filter(methods);
@@ -125,11 +137,13 @@ public class ReflectiveMethodResolver implements MethodResolver {
 			}
 
 			// Sort methods into a sensible order
+			// 将方法排序为合理的顺序
 			if (methods.size() > 1) {
 				methods.sort((m1, m2) -> {
 					int m1pl = m1.getParameterCount();
 					int m2pl = m2.getParameterCount();
 					// vararg methods go last
+					// vararg 方法放在最后
 					if (m1pl == m2pl) {
 						if (!m1.isVarArgs() && m2.isVarArgs()) {
 							return -1;
@@ -146,11 +160,13 @@ public class ReflectiveMethodResolver implements MethodResolver {
 			}
 
 			// Resolve any bridge methods
+			// 解析任何桥接方法
 			for (int i = 0; i < methods.size(); i++) {
 				methods.set(i, BridgeMethodResolver.findBridgedMethod(methods.get(i)));
 			}
 
 			// Remove duplicate methods (possible due to resolved bridge methods)
+			// 删除重复的方法（可能由于已解决的桥接方法）
 			Set<Method> methodsToIterate = new LinkedHashSet<>(methods);
 
 			Method closeMatch = null;
@@ -268,6 +284,8 @@ public class ReflectiveMethodResolver implements MethodResolver {
 	 * @param type the class for which to return the methods
 	 * @since 3.1.1
 	 */
+	// 返回此类型的方法集。 默认实现为给定type返回Class.getMethods()的结果，但子类可能会覆盖以更改结果，例如指定在别处声明的静态方法。
+	// 形参：type – 返回方法的类
 	protected Method[] getMethods(Class<?> type) {
 		return type.getMethods();
 	}
@@ -281,6 +299,8 @@ public class ReflectiveMethodResolver implements MethodResolver {
 	 * @param targetClass the concrete target class that is being introspected
 	 * @since 4.3.15
 	 */
+	// 确定给定的 Method 是否是给定目标类实例的方法解析的候选者。
+	// 默认实现将任何方法视为候选方法，即使对于Object基类上的静态方法和非用户声明的方法也是如此。
 	protected boolean isCandidateForInvocation(Method method, Class<?> targetClass) {
 		return true;
 	}

@@ -38,6 +38,7 @@ import org.springframework.util.PropertiesPersister;
  * @author Juergen Hoeller
  * @since 1.2.2
  */
+// 需要从一个或多个资源加载属性的 JavaBean 样式组件的基类。也支持本地属性，具有可配置的覆盖
 public abstract class PropertiesLoaderSupport {
 
 	/** Logger available to subclasses. */
@@ -48,11 +49,13 @@ public abstract class PropertiesLoaderSupport {
 
 	protected boolean localOverride = false;
 
+	// 指定资源文件位置
 	@Nullable
 	private Resource[] locations;
 
 	private boolean ignoreResourceNotFound = false;
 
+	// 指定资源文件编码格式
 	@Nullable
 	private String fileEncoding;
 

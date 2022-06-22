@@ -33,12 +33,16 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.aop.framework.ReflectiveMethodInvocation
  * @see org.springframework.aop.support.DelegatingIntroductionInterceptor
  */
+// AOP Alliance MethodInvocation 接口的扩展，允许访问通过该方法调用的代理。
+// 如有必要，例如如果调用目标返回自身，则能够用代理替换返回值很有用
 public interface ProxyMethodInvocation extends MethodInvocation {
 
 	/**
 	 * Return the proxy that this method invocation was made through.
 	 * @return the original proxy object
 	 */
+	// 返回此方法调用所通过的代理。
+	// 返回值：原始代理对象
 	Object getProxy();
 
 	/**
@@ -48,6 +52,10 @@ public interface ProxyMethodInvocation extends MethodInvocation {
 	 * @return an invocable clone of this invocation.
 	 * {@code proceed()} can be called once per clone.
 	 */
+	// 创建此对象的克隆。 如果在此对象上调用proceed()之前完成克隆，则可以在每个克隆中调用一次proceed()
+	// 以多次调用连接点（和建议链的其余部分）。
+	//
+	// 返回值：此调用的可调用克隆。 每个克隆都可以调用一次 proceed()
 	MethodInvocation invocableClone();
 
 	/**
@@ -59,6 +67,11 @@ public interface ProxyMethodInvocation extends MethodInvocation {
 	 * @return an invocable clone of this invocation.
 	 * {@code proceed()} can be called once per clone.
 	 */
+	// 创建此对象的克隆。 如果在此对象上调用proceed()之前完成克隆，则可以在每个克隆中调用一次proceed()以多次调用连接点（和建议链的其余部分）。
+	// 参形：
+	//			arguments - 克隆调用应该使用的参数，覆盖原始参数
+	// 返回值：
+	//			此调用的可调用克隆。 每个克隆都可以调用一次proceed()
 	MethodInvocation invocableClone(Object... arguments);
 
 	/**
@@ -66,6 +79,8 @@ public interface ProxyMethodInvocation extends MethodInvocation {
 	 * in this chain.
 	 * @param arguments the argument array
 	 */
+	// 在此链中的任何建议中设置要在后续调用中使用的参数。
+	// 参形：arguments - 参数数组
 	void setArguments(Object... arguments);
 
 	/**
@@ -75,6 +90,11 @@ public interface ProxyMethodInvocation extends MethodInvocation {
 	 * @param key the name of the attribute
 	 * @param value the value of the attribute, or {@code null} to reset it
 	 */
+	// 将具有给定值的指定用户属性添加到此调用。
+	// AOP 框架本身不使用这些属性。 它们只是作为调用对象的一部分保存，用于特殊的拦截器。
+	// 参形：
+	//			key – 属性的名称
+	//			value - 属性的值，或null重置它
 	void setUserAttribute(String key, @Nullable Object value);
 
 	/**
@@ -83,6 +103,11 @@ public interface ProxyMethodInvocation extends MethodInvocation {
 	 * @return the value of the attribute, or {@code null} if not set
 	 * @see #setUserAttribute
 	 */
+	// 返回指定用户属性的值。
+	// 形参：
+	//			key – 属性的名称
+	// 返回值：
+	//			属性的值，如果未设置，则为null
 	@Nullable
 	Object getUserAttribute(String key);
 

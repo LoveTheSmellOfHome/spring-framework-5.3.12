@@ -29,6 +29,8 @@ import org.springframework.lang.Nullable;
  * @see PropertySources
  * @see AbstractEnvironment
  */
+// {@link PropertyResolver} 接口实现，根据一组基础 {@link PropertySources} 解析属性值
+// Spring 类型转换在 Environment 中的运用，属性配置源属性解析器
 public class PropertySourcesPropertyResolver extends AbstractPropertyResolver {
 
 	@Nullable

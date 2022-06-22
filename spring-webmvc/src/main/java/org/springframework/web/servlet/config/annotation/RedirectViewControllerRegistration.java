@@ -29,6 +29,7 @@ import org.springframework.web.servlet.view.RedirectView;
  * @author Rossen Stoyanchev
  * @since 4.1
  */
+// 协助注册单个重定向视图控制器
 public class RedirectViewControllerRegistration {
 
 	private final String urlPath;

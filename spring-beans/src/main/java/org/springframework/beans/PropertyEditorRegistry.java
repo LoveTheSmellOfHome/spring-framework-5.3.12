@@ -34,6 +34,11 @@ import org.springframework.lang.Nullable;
  * @see BeanWrapper
  * @see org.springframework.validation.DataBinder
  */
+// 封装用于注册 JavaBeans {@link PropertyEditor PropertyEditors} 的方法。
+// 这是 {@link PropertyEditorRegistrar} 操作的中央接口。
+//
+// <p>由 {@link BeanWrapper} 扩展；由 {@link BeanWrapperImpl} 和
+// {@link org.springframework.validation.DataBinder} 实现。
 public interface PropertyEditorRegistry {
 
 	/**
@@ -41,6 +46,9 @@ public interface PropertyEditorRegistry {
 	 * @param requiredType the type of the property
 	 * @param propertyEditor the editor to register
 	 */
+	// 为给定类型的所有属性注册给定的自定义属性编辑器。
+	// @param requiredType 属性的类型
+	// @param propertyEditor 要注册的编辑器
 	void registerCustomEditor(Class<?> requiredType, PropertyEditor propertyEditor);
 
 	/**
@@ -66,6 +74,16 @@ public interface PropertyEditorRegistry {
 	 * {@code null} if registering an editor for all properties of the given type
 	 * @param propertyEditor editor to register
 	 */
+	// 为给定的类型和属性或给定类型的所有属性注册给定的自定义属性编辑器
+	//
+	// <p>如果属性路径表示数组或集合属性，则编辑器将应用于数组集合本身（{@link PropertyEditor} 必须创建数组或集合值）
+	// 或应用于每个元素（{@code PropertyEditor } 必须创建元素类型），具体取决于指定的所需类型。
+	//
+	// <p>注意：每个属性路径仅支持一个注册的自定义编辑器。在 Collectionarray 的情况下，不要为 Collectionarray 和同一属性
+	// 上的每个元素注册编辑器。
+	//
+	// <p>例如，如果您想为“items[n].quantity”（对于所有值 n）注册一个编辑器，您可以使用“items.quantity”作为此方法的
+	// “propertyPath”参数的值。
 	void registerCustomEditor(@Nullable Class<?> requiredType, @Nullable String propertyPath, PropertyEditor propertyEditor);
 
 	/**
@@ -76,6 +94,7 @@ public interface PropertyEditorRegistry {
 	 * {@code null} if looking for an editor for all properties of the given type
 	 * @return the registered editor, or {@code null} if none
 	 */
+	// 查找给定类型和属性的自定义属性编辑器
 	@Nullable
 	PropertyEditor findCustomEditor(@Nullable Class<?> requiredType, @Nullable String propertyPath);
 

@@ -91,6 +91,7 @@ import org.springframework.util.ClassUtils;
  * @see java.beans.PropertyEditorSupport#setAsText
  * @see java.beans.PropertyEditorSupport#setValue
  */
+// 新老类型转换二合一的功能：既和 JavaBeans 中的 PropertyEditor 有关系，又和 ConversionService 有关。
 public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 
 	/**
@@ -101,6 +102,7 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 	private static final boolean shouldIgnoreXml = SpringProperties.getFlag("spring.xml.ignore");
 
 
+	// Spring 3.0 后的类型转换服务
 	@Nullable
 	private ConversionService conversionService;
 
@@ -108,6 +110,7 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 
 	private boolean configValueEditorsActive = false;
 
+	// Spring 3.0 前的类型转换
 	@Nullable
 	private Map<Class<?>, PropertyEditor> defaultEditors;
 
@@ -128,6 +131,7 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 	 * Specify a Spring 3.0 ConversionService to use for converting
 	 * property values, as an alternative to JavaBeans PropertyEditors.
 	 */
+	// 指定用于转换属性值的 Spring 3.0 ConversionService，作为 JavaBeans PropertyEditors 的替代。
 	public void setConversionService(@Nullable ConversionService conversionService) {
 		this.conversionService = conversionService;
 	}
@@ -149,6 +153,7 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 	 * Activate the default editors for this registry instance,
 	 * allowing for lazily registering default editors when needed.
 	 */
+	// 激活此注册表实例的默认编辑器，允许在需要时延迟注册默认编辑器
 	protected void registerDefaultEditors() {
 		this.defaultEditorsActive = true;
 	}

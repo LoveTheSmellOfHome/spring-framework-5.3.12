@@ -25,6 +25,7 @@ package org.springframework.beans.factory.parsing;
  * @since 2.0
  * @see Problem
  */
+// SPI 接口允许工具和其他外部进程处理 bean 定义解析期间报告的错误和警告
 public interface ProblemReporter {
 
 	/**

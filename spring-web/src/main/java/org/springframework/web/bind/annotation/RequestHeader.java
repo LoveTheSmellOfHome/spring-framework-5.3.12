@@ -16,13 +16,9 @@
 
 package org.springframework.web.bind.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 import org.springframework.core.annotation.AliasFor;
+
+import java.lang.annotation.*;
 
 /**
  * Annotation which indicates that a method parameter should be bound to a web request header.
@@ -41,6 +37,9 @@ import org.springframework.core.annotation.AliasFor;
  * @see RequestParam
  * @see CookieValue
  */
+// 指示方法参数应绑定到 Web 请求标头的注释。
+// 支持 Spring MVC 和 Spring WebFlux 中的带注释的处理程序方法。
+// 如果方法参数是Map<String, String> 、 MultiValueMap<String, String>或HttpHeaders ，则映射将填充所有标题名称和值。
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

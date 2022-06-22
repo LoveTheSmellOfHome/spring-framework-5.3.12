@@ -33,6 +33,13 @@ import java.util.Properties;
  * @author Juergen Hoeller
  * @since 3.1
  */
+// 从 {@link java.util.Properties} 对象中提取属性的 {@link PropertySource} 实现
+//
+// <p>请注意，由于 {@code Properties} 对象在技术上是 {@code <Object, Object>} {@link java.util.Hashtable Hashtable}，
+// 因此可能包含非 {@code String} 键或值。但是，此实现仅限于访问基于 {@code String} 的键和值，其方式与
+// {@link Properties#getProperty} 和 {@link Properties#setProperty} 相同
+//
+// Spring 內建的配置属性源 - Properties 配置属性源
 public class PropertiesPropertySource extends MapPropertySource {
 
 	@SuppressWarnings({"rawtypes", "unchecked"})

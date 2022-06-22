@@ -29,12 +29,16 @@ import org.springframework.lang.Nullable;
  * @since 3.1
  * @see PropertySource
  */
+// 包含一个或多个 {@link PropertySource} 对象的持有者,在实现上类似于 {@link PropertyValues}
+// PropertySources 有多个元素时，遍历直到找到第一个非 null 对象，立即返回。一般与环境中属性的优先级相关
+// {@link PropertySourcesPlaceholderConfigurer}
 public interface PropertySources extends Iterable<PropertySource<?>> {
 
 	/**
 	 * Return a sequential {@link Stream} containing the property sources.
 	 * @since 5.1
 	 */
+	// 返回包含属性源的顺序 {@link Stream}。
 	default Stream<PropertySource<?>> stream() {
 		return StreamSupport.stream(spliterator(), false);
 	}
@@ -43,12 +47,16 @@ public interface PropertySources extends Iterable<PropertySource<?>> {
 	 * Return whether a property source with the given name is contained.
 	 * @param name the {@linkplain PropertySource#getName() name of the property source} to find
 	 */
+	// 返回是否包含具有给定名称的属性源。
+	// @param name 要查找的 {@linkplain PropertySource#getName() 属性源名称}
 	boolean contains(String name);
 
 	/**
 	 * Return the property source with the given name, {@code null} if not found.
 	 * @param name the {@linkplain PropertySource#getName() name of the property source} to find
 	 */
+	// 返回具有给定名称的唯一属性源，如果未找到，则返回 {@code null}。采用层次性查找找到唯一对应的 PropertySource
+	// @param name 要查找的 {@linkplain PropertySource#getName() 属性源名称}
 	@Nullable
 	PropertySource<?> get(String name);
 

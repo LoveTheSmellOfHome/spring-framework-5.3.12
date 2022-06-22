@@ -34,6 +34,12 @@ import java.lang.annotation.Target;
  * @deprecated as of 5.1, in favor of using constructor injection for required settings
  * (or a custom {@link org.springframework.beans.factory.InitializingBean} implementation)
  */
+// 将方法（通常是 JavaBean setter 方法）标记为 'required'
+// 即“必需”：也就是说，为使用的值进行依赖注入 setter 方法必须配置。
+//
+// 请务必查阅有关 RequiredAnnotationBeanPostProcessor 类的 javadoc（默认情况下，该类检查是否存在此注释）。
+//已弃用
+//从 5.1 开始，赞成使用构造函数注入进行所需的设置（或自定义org.springframework.beans.factory.InitializingBean 实现）
 @Deprecated
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

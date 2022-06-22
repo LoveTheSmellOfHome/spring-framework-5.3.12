@@ -55,6 +55,16 @@ import org.springframework.core.annotation.AliasFor;
  * @see org.springframework.dao.DataAccessException
  * @see org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor
  */
+// 表示带注释的类是“数据仓储”，最初由领域驱动设计 (Evans, 2003) 定义为“一种用于封装存储、检索和搜索行为的机制，它模拟对象集合”。
+//
+// 实现传统 Java EE 模式（例如“数据访问对象”）的团队也可以将此模型应用于 DAO 类，但在执行此操作之前应注意理解数据访问对象
+// 和 DDD 样式存储库之间的区别。此注释是通用的范式注解，个别团队可能会缩小其语义范围并酌情使用。
+//
+// 当与 PersistenceExceptionTranslationPostProcessor 结合使用时，这样注释的类有资格进行 Spring DataAccessException 转换。
+// 出于工具、方面等的目的，还阐明了带注释的类在整个应用程序架构中的作用。
+//
+// 从 Spring 2.5 开始，这个注解也作为 @Component 的派生，允许通过类路径扫描自动检测实现类。
+// {@link SpringBootConfiguration}
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

@@ -29,13 +29,14 @@ import org.springframework.util.MultiValueMap;
  * @author Juergen Hoeller
  * @since 4.0
  */
+// 根据 {@link Profile @Profile} 注解的值匹配的 {@link Condition}
 class ProfileCondition implements Condition {
 
 	@Override
 	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
 		MultiValueMap<String, Object> attrs = metadata.getAllAnnotationAttributes(Profile.class.getName());
 		if (attrs != null) {
-			for (Object value : attrs.get("value")) {
+			for (Object value : attrs.get("value")) { // 获取 @Profile value属性值
 				if (context.getEnvironment().acceptsProfiles(Profiles.of((String[]) value))) {
 					return true;
 				}

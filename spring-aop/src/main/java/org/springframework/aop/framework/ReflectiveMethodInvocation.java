@@ -59,23 +59,39 @@ import org.springframework.lang.Nullable;
  * @see #setUserAttribute
  * @see #getUserAttribute
  */
+// Spring对AOP联盟MethodInvocation接口的实现，实现了扩展的ProxyMethodInvocation接口。
+//
+// 使用反射调用目标对象。 子类可以重写 invokeJoinpoint() 方法来改变这种行为，所以这对于
+// 更专业的 MethodInvocation 实现来说也是一个有用的基类。
+//
+// 可以使用 invocableClone() 方法克隆一个调用，重复调用 proceed() （每个克隆一次invocableClone() 。
+// 也可以使用 setUserAttribute / getUserAttribute 方法将自定义属性附加到调用。
+//
+// 注意：此类被认为是内部的，不应直接访问。 它公开的唯一原因是与现有框架集成（例如 Pitchfork）的兼容性。
+// 对于任何其他目的，请改用ProxyMethodInvocation接口。
 public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Cloneable {
 
+	// 代理对象
 	protected final Object proxy;
 
+	// 调用方法的目标对象
 	@Nullable
 	protected final Object target;
 
+	// 调用的目标方法
 	protected final Method method;
 
+	// 方法参数
 	protected Object[] arguments;
 
+	// 目标 Class
 	@Nullable
 	private final Class<?> targetClass;
 
 	/**
 	 * Lazily initialized map of user-specific attributes for this invocation.
 	 */
+	// 此调用的用户特定属性的延迟初始化映射
 	@Nullable
 	private Map<String, Object> userAttributes;
 
@@ -83,12 +99,15 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	 * List of MethodInterceptor and InterceptorAndDynamicMethodMatcher
 	 * that need dynamic checks.
 	 */
+	// 需要动态检查的 MethodInterceptor 和 InterceptorAndDynamicMethodMatcher 列表，责任链链表
 	protected final List<?> interceptorsAndDynamicMethodMatchers;
 
 	/**
 	 * Index from 0 of the current interceptor we're invoking.
 	 * -1 until we invoke: then the current interceptor.
 	 */
+	// 从我们正在调用的当前拦截器的 0 开始的索引。 -1 直到我们调用：然后是当前的拦截器
+	// 当前游标的起始位置
 	private int currentInterceptorIndex = -1;
 
 
@@ -105,6 +124,16 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	 * as far as was possibly statically. Passing an array might be about 10% faster,
 	 * but would complicate the code. And it would work only for static pointcuts.
 	 */
+	// 使用给定的参数构造一个新的 ReflectiveMethodInvocation。
+	// 参形：
+	//			proxy – 进行调用的代理对象
+	//			target - 要调用的目标对象
+	//			method - 调用的方法
+	//			arguments - 调用方法的参数
+	//			targetClass – 目标类，用于 MethodMatcher 调用
+	//			interceptorsAndDynamicMethodMatchers – 应该应用的拦截器，以及任何需要在运行时
+	//			评估的 InterceptorAndDynamicMethodMatchers。 必须已经发现此结构中包含的 MethodMatchers
+	//			已尽可能静态匹配。 传递一个数组可能会快 10%，但会使代码复杂化。 它只适用于静态切入点
 	protected ReflectiveMethodInvocation(
 			Object proxy, @Nullable Object target, Method method, @Nullable Object[] arguments,
 			@Nullable Class<?> targetClass, List<Object> interceptorsAndDynamicMethodMatchers) {
@@ -114,15 +143,17 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 		this.targetClass = targetClass;
 		this.method = BridgeMethodResolver.findBridgedMethod(method);
 		this.arguments = AopProxyUtils.adaptArgumentsIfNecessary(method, arguments);
-		this.interceptorsAndDynamicMethodMatchers = interceptorsAndDynamicMethodMatchers;
+		this.interceptorsAndDynamicMethodMatchers = interceptorsAndDynamicMethodMatchers; // 拦截器链
 	}
 
 
+	// 返回代理
 	@Override
 	public final Object getProxy() {
 		return this.proxy;
 	}
 
+	// 返回调用方法的目标对象
 	@Override
 	@Nullable
 	public final Object getThis() {
@@ -139,6 +170,7 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	 * May or may not correspond with a method invoked on an underlying
 	 * implementation of that interface.
 	 */
+	// 返回在代理接口上调用的方法。 可能与在该接口的底层实现上调用的方法对应，也可能不对应
 	@Override
 	public final Method getMethod() {
 		return this.method;
@@ -155,19 +187,26 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	}
 
 
+	// 责任链实现模式：采用游标的方式来递归调用
 	@Override
 	@Nullable
 	public Object proceed() throws Throwable {
 		// We start with an index of -1 and increment early.
+		// 我们从 -1 的索引开始并提前递增，当前游标会滚动，从 -1 开始
+		// 首先，分析当游标达到了责任链链表末端时候或者责任链链表为空，没有任何拦截器，直接调用目标方法
 		if (this.currentInterceptorIndex == this.interceptorsAndDynamicMethodMatchers.size() - 1) {
+			// 调用目标方法
 			return invokeJoinpoint();
 		}
 
+		// 从第一个拦截器开始
 		Object interceptorOrInterceptionAdvice =
 				this.interceptorsAndDynamicMethodMatchers.get(++this.currentInterceptorIndex);
+		// 如果条件匹配走这段逻辑(少数成立)
 		if (interceptorOrInterceptionAdvice instanceof InterceptorAndDynamicMethodMatcher) {
 			// Evaluate dynamic method matcher here: static part will already have
 			// been evaluated and found to match.
+			// 在这里评估动态方法匹配器：静态部分已经被评估并发现匹配
 			InterceptorAndDynamicMethodMatcher dm =
 					(InterceptorAndDynamicMethodMatcher) interceptorOrInterceptionAdvice;
 			Class<?> targetClass = (this.targetClass != null ? this.targetClass : this.method.getDeclaringClass());
@@ -177,12 +216,14 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 			else {
 				// Dynamic matching failed.
 				// Skip this interceptor and invoke the next in the chain.
+				// 动态匹配失败。跳过这个拦截器并调用链中的下一个
 				return proceed();
 			}
 		}
-		else {
+		else { // 大多直接走这段逻辑
 			// It's an interceptor, so we just invoke it: The pointcut will have
 			// been evaluated statically before this object was constructed.
+			// 它是一个 AOP 拦截器，所以我们只是调用它：在构造这个对象之前，切入点将被静态评估。
 			return ((MethodInterceptor) interceptorOrInterceptionAdvice).invoke(this);
 		}
 	}
@@ -193,6 +234,12 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	 * @return the return value of the joinpoint
 	 * @throws Throwable if invoking the joinpoint resulted in an exception
 	 */
+	// 使用反射调用连接点。 子类可以覆盖它以使用自定义调用。
+	// 返回值：
+	//			连接点的返回值
+	// 抛出：
+	//			Throwable – 如果调用连接点导致异常
+	// 调用匹配的目标方法
 	@Nullable
 	protected Object invokeJoinpoint() throws Throwable {
 		return AopUtils.invokeJoinpointUsingReflection(this.target, this.method, this.arguments);
@@ -207,11 +254,14 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	 * current interceptor index.
 	 * @see java.lang.Object#clone()
 	 */
+	// 此实现返回此调用对象的浅表副本，包括原始参数数组的独立副本。
+	// 在这种情况下，我们想要一个浅拷贝：我们想要使用相同的拦截器链和其他对象引用，但我们想要当前拦截器索引的独立值。
 	@Override
 	public MethodInvocation invocableClone() {
 		Object[] cloneArguments = this.arguments;
 		if (this.arguments.length > 0) {
 			// Build an independent copy of the arguments array.
+			// 构建参数数组的独立副本。
 			cloneArguments = this.arguments.clone();
 		}
 		return invocableClone(cloneArguments);
@@ -225,15 +275,19 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	 * current interceptor index.
 	 * @see java.lang.Object#clone()
 	 */
+	// 此实现返回此调用对象的浅表副本，使用克隆的给定参数数组。
+	// 在这种情况下，我们想要一个浅拷贝：我们想要使用相同的拦截器链和其他对象引用，但我们想要当前拦截器索引的独立值
 	@Override
 	public MethodInvocation invocableClone(Object... arguments) {
 		// Force initialization of the user attributes Map,
 		// for having a shared Map reference in the clone.
+		// 强制初始化用户属性 Map，以便在克隆中具有共享的 Map 引用
 		if (this.userAttributes == null) {
 			this.userAttributes = new HashMap<>();
 		}
 
 		// Create the MethodInvocation clone.
+		// 创建 MethodInvocation 克隆
 		try {
 			ReflectiveMethodInvocation clone = (ReflectiveMethodInvocation) clone();
 			clone.arguments = arguments;
@@ -274,6 +328,10 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	 * @return any user attributes associated with this invocation
 	 * (never {@code null})
 	 */
+	// 返回与此调用关联的用户属性。 此方法提供了 ThreadLocal 的调用绑定替代方案。
+	// 此映射是延迟初始化的，在 AOP 框架本身中不使用。
+	// 返回值：
+	//			与此调用关联的任何用户属性（从不为null ）
 	public Map<String, Object> getUserAttributes() {
 		if (this.userAttributes == null) {
 			this.userAttributes = new HashMap<>();
@@ -285,6 +343,7 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	@Override
 	public String toString() {
 		// Don't do toString on target, it may be proxied.
+		// 不要在目标上执行 toString，它可能会被代理
 		StringBuilder sb = new StringBuilder("ReflectiveMethodInvocation: ");
 		sb.append(this.method).append("; ");
 		if (this.target == null) {

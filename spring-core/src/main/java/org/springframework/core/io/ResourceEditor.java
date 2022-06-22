@@ -47,6 +47,14 @@ import org.springframework.util.StringUtils;
  * @see DefaultResourceLoader
  * @see PropertyResolver#resolvePlaceholders
  */
+// {@link java.beans.PropertyEditor Editor} 用于 {@link Resource} 描述符，自动转换 {@code String} 位置，
+// 例如{@code file:C:/myfile.txt} 或 {@code classpath:myfile.txt} 到 {@code Resource} 属性，
+// 而不是使用 {@code String} 位置属性
+//
+// <p>路径可能包含 {@code ${...}} 占位符，解析为 {@link org.springframework.core.env.Environment} 属性：
+// 例如{@code ${user.dir}}。默认情况下会忽略无法解析的占位符。
+//
+// <p>委托给 {@link ResourceLoader} 来完成繁重的工作，默认情况下使用 {@link DefaultResourceLoader}。
 public class ResourceEditor extends PropertyEditorSupport {
 
 	private final ResourceLoader resourceLoader;
@@ -61,6 +69,7 @@ public class ResourceEditor extends PropertyEditorSupport {
 	 * Create a new instance of the {@link ResourceEditor} class
 	 * using a {@link DefaultResourceLoader} and {@link StandardEnvironment}.
 	 */
+	// 使用 {@link DefaultResourceLoader} 和 {@link StandardEnvironment} 创建 {@link ResourceEditor} 类的新实例
 	public ResourceEditor() {
 		this(new DefaultResourceLoader(), null);
 	}
@@ -71,6 +80,9 @@ public class ResourceEditor extends PropertyEditorSupport {
 	 * @param resourceLoader the {@code ResourceLoader} to use
 	 * @param propertyResolver the {@code PropertyResolver} to use
 	 */
+	// 使用给定的 {@link ResourceLoader} 和 {@link PropertyResolver} 创建 {@link ResourceEditor} 类的新实例。
+	// @param resourceLoader 要使用的 {@code ResourceLoader}
+	// @param propertyResolver 要使用的 {@code PropertyResolver}
 	public ResourceEditor(ResourceLoader resourceLoader, @Nullable PropertyResolver propertyResolver) {
 		this(resourceLoader, propertyResolver, true);
 	}
@@ -83,6 +95,11 @@ public class ResourceEditor extends PropertyEditorSupport {
 	 * @param ignoreUnresolvablePlaceholders whether to ignore unresolvable placeholders
 	 * if no corresponding property could be found in the given {@code propertyResolver}
 	 */
+	// 使用给定的 {@link ResourceLoader} 创建 {@link ResourceEditor} 类的新实例
+	// @param resourceLoader 要使用的 {@code ResourceLoader}
+	// @param propertyResolver 要使用的 {@code PropertyResolver}
+	// @param ignoreUnresolvablePlaceholders 如果在给定的 {@code propertyResolver}
+	// 中找不到相应的属性，是否忽略无法解析的占位符
 	public ResourceEditor(ResourceLoader resourceLoader, @Nullable PropertyResolver propertyResolver,
 			boolean ignoreUnresolvablePlaceholders) {
 
@@ -112,6 +129,9 @@ public class ResourceEditor extends PropertyEditorSupport {
 	 * @see PropertyResolver#resolvePlaceholders
 	 * @see PropertyResolver#resolveRequiredPlaceholders
 	 */
+	// 解析给定的路径，如有必要，用来自 {@code environment} 的相应属性值替换占位符。
+	// @param path 原始文件路径
+	// @return 解析的文件路径
 	protected String resolvePath(String path) {
 		if (this.propertyResolver == null) {
 			this.propertyResolver = new StandardEnvironment();

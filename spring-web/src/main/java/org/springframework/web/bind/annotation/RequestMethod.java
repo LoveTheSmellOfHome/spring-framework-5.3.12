@@ -32,6 +32,12 @@ package org.springframework.web.bind.annotation;
  * @see org.springframework.web.servlet.DispatcherServlet#setDispatchOptionsRequest
  * @see org.springframework.web.servlet.DispatcherServlet#setDispatchTraceRequest
  */
+// HTTP 请求方法的 Java 5 枚举。旨在与 RequestMapping 注释的 RequestMapping.method() 属性一起使用。
+//
+// 请注意，默认情况下， org.springframework.web.servlet.DispatcherServlet 仅支持
+// GET、HEAD、POST、PUT、PATCH 和 DELETE。 DispatcherServlet 将使用默认的 HttpServlet 行为
+// 处理 TRACE 和 OPTIONS，除非明确告知也分派这些请求类型：检查“dispatchOptionsRequest”
+// 和“dispatchTraceRequest”属性，如有必要，将它们切换为“true”。
 public enum RequestMethod {
 
 	GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, TRACE

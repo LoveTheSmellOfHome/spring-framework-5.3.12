@@ -16,13 +16,9 @@
 
 package org.springframework.web.bind.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 import org.springframework.core.annotation.AliasFor;
+
+import java.lang.annotation.*;
 
 /**
  * Annotation for mapping web requests onto methods in request-handling classes
@@ -68,6 +64,18 @@ import org.springframework.core.annotation.AliasFor;
  * @see DeleteMapping
  * @see PatchMapping
  */
+// 用于将 Web 请求映射到具有灵活方法签名的请求处理类中的方法的注释。
+//
+// Spring MVC 和 Spring WebFlux 都通过各自模块和包结构中的 RequestMappingHandlerMapping
+// 和 RequestMappingHandlerAdapter 支持此注解。有关每个支持的处理程序方法参数和返回类型的确切列表，请使用下面的参考文档链接：
+// - pring MVC 方法参数和返回值
+// - Spring WebFlux 方法参数和返回值
+//
+// 注意：这个注解可以在类和方法级别使用。在大多数情况下，在方法级别应用程序会更喜欢使用 HTTP 方法特定的变体
+// @GetMapping 、 @PostMapping 、 @PutMapping 、 @DeleteMapping 或 @PatchMapping 。
+//
+// 注意：当使用控制器接口（例如用于 AOP 代理）时，请确保始终将所有映射注释 - 例如 @RequestMapping
+// 和 @SessionAttributes - 放在控制器接口上而不是实现类上
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -82,6 +90,8 @@ public @interface RequestMapping {
 	 * @see org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder
 	 * @see org.springframework.web.servlet.handler.HandlerMethodMappingNamingStrategy
 	 */
+	// 为该映射分配一个名称。
+	// 在类型级别和方法级别都支持！当在两个级别上使用时，组合名称是通过以“#”作为分隔符的串联得出的。
 	String name() default "";
 
 	/**
@@ -95,6 +105,13 @@ public @interface RequestMapping {
 	 * <p><strong>NOTE</strong>: A handler method that is not mapped to any path
 	 * explicitly is effectively mapped to an empty path.
 	 */
+	// 此注释表示的主要映射。
+	//
+	// 这是path的别名。例如， @RequestMapping("/foo")等价于@RequestMapping(path="/foo") 。
+	//
+	// 在类型级别和方法级别都支持！当在类型级别使用时，所有方法级别的映射都继承此主映射，将其缩小到特定的处理程序方法。
+	//
+	// 注意：未显式映射到任何路径的处理程序方法有效地映射到空路径
 	@AliasFor("path")
 	String[] value() default {};
 
@@ -111,6 +128,14 @@ public @interface RequestMapping {
 	 * explicitly is effectively mapped to an empty path.
 	 * @since 4.2
 	 */
+	// 路径映射 URI（例如"/profile" ）。
+	//
+	// 还支持 Ant 样式的路径模式（例如"/profile/**" ）。在方法级别，在类型级别表示的主映射中支持相对路径（例如"edit" ）。
+	// 路径映射 URI 可能包含占位符（例如"/${profile_path}" ）。
+	//
+	// 在类型级别和方法级别都支持！当在类型级别使用时，所有方法级别的映射都继承此主映射，将其缩小到特定的处理程序方法。
+	//
+	// 注意：未显式映射到任何路径的处理程序方法有效地映射到空路径。
 	@AliasFor("value")
 	String[] path() default {};
 
@@ -121,6 +146,9 @@ public @interface RequestMapping {
 	 * When used at the type level, all method-level mappings inherit this
 	 * HTTP method restriction.
 	 */
+	// 要映射到的 HTTP 请求方法，缩小主映射：GET、POST、HEAD、OPTIONS、PUT、PATCH、DELETE、TRACE。
+	//
+	// 在类型级别和方法级别都支持！在类型级别使用时，所有方法级别的映射都会继承此 HTTP 方法限制。
 	RequestMethod[] method() default {};
 
 	/**
@@ -136,6 +164,13 @@ public @interface RequestMapping {
 	 * When used at the type level, all method-level mappings inherit this
 	 * parameter restriction.
 	 */
+	// 映射请求的参数，缩小主映射。
+	//
+	// 适用于任何环境的相同格式：一系列 “myParam=myValue”样式表达式，仅在发现每个此类参数具有给定值时才映射请求。
+	// 表达式可以通过使用“！=”运算符来否定，如“myParam！= myValue”。还支持“myParam”样式表达式，
+	// 此类参数必须存在于请求中（允许具有任何值）。最后，“！myParam”样式表达式表明指定的参数不应该出现在请求中。
+	//
+	// 在类型级别和方法级别都支持！在类型级别使用时，所有方法级别映射都继承此参数限制
 	String[] params() default {};
 
 	/**
@@ -158,6 +193,19 @@ public @interface RequestMapping {
 	 * header restriction.
 	 * @see org.springframework.http.MediaType
 	 */
+	// 映射请求的标头，缩小主映射。
+	//
+	// 适用于任何环境的相同格式：一系列 “My-Header=myValue”样式表达式，仅在发现每个此类标头具有给定值时才映射请求。
+	// 可以使用“！=”运算符来否定表达式，如“My-Header！= myValue”。还支持“My-Header”样式表达式，
+	// 此类标头必须出现在请求中（允许具有任何值）。最后，“!My-Header”样式表达式表明指定的标头不应该出现在请求中。
+	//
+	// 还支持媒体类型通配符 (*)，用于标头，例如 Accept 和 Content-Type。例如，
+	//	   @RequestMapping(value = "/something", headers = "content-type=text/*")
+	//
+	//
+	// 将匹配 Content-Type 为“text/html”、“text/plain”等的请求。
+	//
+	// 在类型级别和方法级别都支持！在类型级别使用时，所有方法级别映射都继承此标头限制。
 	String[] headers() default {};
 
 	/**
@@ -178,6 +226,13 @@ public @interface RequestMapping {
 	 * @see org.springframework.http.MediaType
 	 * @see javax.servlet.http.HttpServletRequest#getContentType()
 	 */
+	// 按映射处理程序可以使用的媒体类型缩小主映射。由一种或多种媒体类型组成，其中一种媒体类型必须与请求的Content-Type标头匹配。例子：
+	//	   consumes = "text/plain"
+	//	   consumes = {"text/plain", "application/*"}
+	//	   consumes = MediaType.TEXT_PLAIN_VALUE
+	//
+	// 可以使用“！”来否定表达式运算符，如 "!text/plain"，它匹配所有具有除 "text/plain" 以外的Content-Type的请求。
+	// 在类型级别和方法级别都支持！如果在两个级别都指定，则方法级别的使用条件会覆盖类型级别的条件。
 	String[] consumes() default {};
 
 	/**
@@ -204,6 +259,19 @@ public @interface RequestMapping {
 	 * the type level condition.
 	 * @see org.springframework.http.MediaType
 	 */
+	// 按可以由映射处理程序生成的媒体类型缩小主要映射。由一种或多种媒体类型组成，其中一种必须通过针对
+	// 请求的“可接受”媒体类型的内容协商来选择。通常，这些是从"Accept"标头中提取的，但可能来自查询参数或其他参数。例子：
+	//	   produces = "text/plain"
+	//	   produces = {"text/plain", "application/*"}
+	//	   produces = MediaType.TEXT_PLAIN_VALUE
+	//	   produces = "text/plain;charset=UTF-8"
+	//
+	// 如果声明的媒体类型包含参数（例如“charset=UTF-8”、“type=feed”、“type=entry”），并且请求中的兼容媒体类型
+	// 也具有该参数，则参数值必须匹配.否则，如果请求中的媒体类型不包含参数，则假定客户端接受任何值。
+	//
+	// 可以使用“！”来否定表达式运算符，如 "!text/plain"，它匹配所有带有Accept而非 "text/plain" 的请求。
+	//
+	// 在类型级别和方法级别都支持！如果在两个级别都指定，则方法级别生成的条件会覆盖类型级别的条件。
 	String[] produces() default {};
 
 }

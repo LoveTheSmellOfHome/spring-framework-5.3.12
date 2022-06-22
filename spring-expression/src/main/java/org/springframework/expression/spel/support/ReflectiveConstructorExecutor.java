@@ -33,6 +33,7 @@ import org.springframework.util.ReflectionUtils;
  * @author Juergen Hoeller
  * @since 3.0
  */
+// 一个简单的 ConstructorExecutor 实现，它使用反射调用运行构造函数。
 public class ReflectiveConstructorExecutor implements ConstructorExecutor {
 
 	private final Constructor<?> ctor;

@@ -16,14 +16,10 @@
 
 package org.springframework.web.bind.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.Map;
-
 import org.springframework.core.annotation.AliasFor;
+
+import java.lang.annotation.*;
+import java.util.Map;
 
 /**
  * Annotation which indicates that a method parameter should be bound to a web
@@ -58,6 +54,18 @@ import org.springframework.core.annotation.AliasFor;
  * @see RequestHeader
  * @see CookieValue
  */
+// 指示方法参数应绑定到 Web 请求参数的注解。
+// 支持 Spring MVC 和 Spring WebFlux 中带注解的处理程序方法，如下所示:
+// - 在 Spring MVC 中，“请求参数”映射到查询参数、表单数据和多部分请求中的部分。
+//   这是因为 Servlet API 将查询参数和表单数据组合到一个称为“参数”的映射中，其中包括请求正文的自动解析
+//
+// - 在 Spring WebFlux 中，“请求参数”仅映射到查询参数。要使用所有 3、查询、表单数据和多部分数据，
+//   您可以使用数据绑定到使用 ModelAttribute 注解的命令对象
+//
+// 如果方法参数类型是Map并且指定了请求参数名称，则假设适当的转换策略可用，则请求参数值将转换为 Map 。
+//
+// 如果方法参数是 Map<String, String> 或 MultiValueMap<String, String> 并且未指定参数名称，
+// 则使用所有请求参数名称和值填充 map 参数。
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -73,6 +81,12 @@ public @interface RequestParam {
 	 * The name of the request parameter to bind to.
 	 * @since 4.2
 	 */
+	// 要绑定到的请求参数的名称，一般是 h5 标签中 name 属性的值
+	// 这里的 value 可以不写的原因是:具体类上的方法名称是可以保留下来的，但在接口上面的方法名称保留不下来，
+	// 比如 Spring Cloud 的 Stream 接口上面，在定义那些注解的时候通常把相关的东西加上去，在Java 标准里边，
+	// jxrx 那种注解里边，它是必须把属性关联起来，因为它不能保证你所标注的接口一定是类，它要确认无论你是类或者接口，
+	// 它都要进行强绑定
+	// {@link MethodParameter} 中的属性 parameterName
 	@AliasFor("value")
 	String name() default "";
 
@@ -85,6 +99,11 @@ public @interface RequestParam {
 	 * <p>Alternatively, provide a {@link #defaultValue}, which implicitly
 	 * sets this flag to {@code false}.
 	 */
+	// 参数是否必填。
+	//
+	// 默认为true ，如果请求中缺少参数，则会引发异常。如果请求中不存在参数，则如果您更喜欢null值，请将其切换为false 。
+	//
+	// 或者，提供defaultValue ，隐式将此标志设置为false
 	boolean required() default true;
 
 	/**
@@ -93,6 +112,8 @@ public @interface RequestParam {
 	 * <p>Supplying a default value implicitly sets {@link #required} to
 	 * {@code false}.
 	 */
+	// 当请求参数未提供或具有空值时用作后备的默认值。
+	// 提供默认值会隐式地将 required 设置为 false
 	String defaultValue() default ValueConstants.DEFAULT_NONE;
 
 }

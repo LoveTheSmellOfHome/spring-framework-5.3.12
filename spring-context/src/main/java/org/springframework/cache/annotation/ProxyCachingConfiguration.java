@@ -35,17 +35,22 @@ import org.springframework.context.annotation.Role;
  * @see EnableCaching
  * @see CachingConfigurationSelector
  */
+// @Configuration 类，用于注册启用基于代理的注解驱动的缓存管理所需的 Spring 基础设施 bean。
 @Configuration(proxyBeanMethods = false)
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class ProxyCachingConfiguration extends AbstractCachingConfiguration {
 
+	// bean internalCacheAdvisor
 	@Bean(name = CacheManagementConfigUtils.CACHE_ADVISOR_BEAN_NAME)
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public BeanFactoryCacheOperationSourceAdvisor cacheAdvisor(
 			CacheOperationSource cacheOperationSource, CacheInterceptor cacheInterceptor) {
 
+		// PointcutAdvisor 操作链路
 		BeanFactoryCacheOperationSourceAdvisor advisor = new BeanFactoryCacheOperationSourceAdvisor();
+		// 设置缓存操作源
 		advisor.setCacheOperationSource(cacheOperationSource);
+		// 设置缓存拦截器
 		advisor.setAdvice(cacheInterceptor);
 		if (this.enableCaching != null) {
 			advisor.setOrder(this.enableCaching.<Integer>getNumber("order"));
@@ -53,12 +58,14 @@ public class ProxyCachingConfiguration extends AbstractCachingConfiguration {
 		return advisor;
 	}
 
+	// 返回 CacheOperationSource 基础组件
 	@Bean
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public CacheOperationSource cacheOperationSource() {
 		return new AnnotationCacheOperationSource();
 	}
 
+	// 拦截器
 	@Bean
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public CacheInterceptor cacheInterceptor(CacheOperationSource cacheOperationSource) {

@@ -32,42 +32,49 @@ import org.springframework.lang.Nullable;
  * @see PropertyAccessorFactory#forBeanPropertyAccess
  * @see PropertyAccessorFactory#forDirectFieldAccess
  */
+// 属性访问器:可以访问命名属性（例如对象的 bean 属性或对象中的字段）的类的通用接口用作 {@link BeanWrapper} 的基本接口。
 public interface PropertyAccessor {
 
 	/**
 	 * Path separator for nested properties.
 	 * Follows normal Java conventions: getFoo().getBar() would be "foo.bar".
 	 */
+	// 嵌套属性的路径分隔符。遵循正常的 Java 约定：getFoo().getBar() 将是“foo.bar”
 	String NESTED_PROPERTY_SEPARATOR = ".";
 
 	/**
 	 * Path separator for nested properties.
 	 * Follows normal Java conventions: getFoo().getBar() would be "foo.bar".
 	 */
+	// 嵌套属性的路径分隔符。遵循正常的 Java 约定：getFoo().getBar() 将是“foo.bar”。
 	char NESTED_PROPERTY_SEPARATOR_CHAR = '.';
 
 	/**
 	 * Marker that indicates the start of a property key for an
 	 * indexed or mapped property like "person.addresses[0]".
 	 */
+	// 指示索引或映射属性（如“person.addresses[0]”）的属性键开始的标记
 	String PROPERTY_KEY_PREFIX = "[";
 
 	/**
 	 * Marker that indicates the start of a property key for an
 	 * indexed or mapped property like "person.addresses[0]".
 	 */
+	// 指示索引或映射属性（如“person.addresses[0]”）的属性键开始的标记
 	char PROPERTY_KEY_PREFIX_CHAR = '[';
 
 	/**
 	 * Marker that indicates the end of a property key for an
 	 * indexed or mapped property like "person.addresses[0]".
 	 */
+	// 指示索引或映射属性（如“person.addresses[0]”）的属性键结束的标记。
 	String PROPERTY_KEY_SUFFIX = "]";
 
 	/**
 	 * Marker that indicates the end of a property key for an
 	 * indexed or mapped property like "person.addresses[0]".
 	 */
+	// 指示索引或映射属性的属性键结束的标记，例如“person.addresses[0]”
 	char PROPERTY_KEY_SUFFIX_CHAR = ']';
 
 
@@ -78,6 +85,9 @@ public interface PropertyAccessor {
 	 * (may be a nested path and/or an indexed/mapped property)
 	 * @return whether the property is readable
 	 */
+	// 确定指定的属性是否可读。
+	// <p>如果属性不存在，则返回 {@code false}。
+	// @param propertyName 要检查的属性（可能是嵌套路径和/或索引映射属性）
 	boolean isReadableProperty(String propertyName);
 
 	/**
@@ -87,6 +97,10 @@ public interface PropertyAccessor {
 	 * (may be a nested path and/or an indexed/mapped property)
 	 * @return whether the property is writable
 	 */
+	// 确定指定的属性是否可写。
+	// <p>如果属性不存在，则返回 {@code false}。
+	// @param propertyName 要检查的属性（可能是嵌套路径和索引映射属性）
+	// @return 该属性是否可写
 	boolean isWritableProperty(String propertyName);
 
 	/**
@@ -100,6 +114,9 @@ public interface PropertyAccessor {
 	 * @throws PropertyAccessException if the property was valid but the
 	 * accessor method failed
 	 */
+	// 确定指定属性的属性类型，检查属性描述符或检查索引或映射元素的值。
+	// @param propertyName 要检查的属性（可能是嵌套路径和索引映射属性）
+	// @return 特定属性的属性类型，如果无法确定，则为 {@code null}
 	@Nullable
 	Class<?> getPropertyType(String propertyName) throws BeansException;
 
@@ -113,6 +130,8 @@ public interface PropertyAccessor {
 	 * @throws PropertyAccessException if the property was valid but the
 	 * accessor method failed
 	 */
+	// 返回指定属性的类型描述符：最好从 read 方法返回到 write 方法。
+	// @param propertyName 要检查的属性
 	@Nullable
 	TypeDescriptor getPropertyTypeDescriptor(String propertyName) throws BeansException;
 

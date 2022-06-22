@@ -37,6 +37,9 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.web.filter.RequestContextFilter
  * @see org.springframework.web.servlet.DispatcherServlet
  */
+// 请求支持的org.springframework.beans.factory.config.Scope实现。
+// 依赖于线程绑定的 RequestAttributes 实例，可以通过 RequestContextListener 、
+// org.springframework.web.filter.RequestContextFilter 或 org.springframework.web.servlet.DispatcherServlet导出。
 public class RequestScope extends AbstractRequestAttributesScope {
 
 	@Override
@@ -48,6 +51,7 @@ public class RequestScope extends AbstractRequestAttributesScope {
 	 * There is no conversation id concept for a request, so this method
 	 * returns {@code null}.
 	 */
+	// 请求没有对话 id 概念，因此此方法返回null
 	@Override
 	@Nullable
 	public String getConversationId() {
