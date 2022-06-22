@@ -37,6 +37,13 @@ package org.springframework.core;
  * @see LocalVariableTableParameterNameDiscoverer
  * @see KotlinReflectionParameterNameDiscoverer
  */
+// {@link ParameterNameDiscoverer} 策略接口的默认实现，使用 Java 8 标准反射机制（如果可用），
+// 并回退到基于 ASM 的 {@link LocalVariableTableParameterNameDiscoverer} 用于检查类文件中的调试信息。
+//
+//	<p>如果存在 Kotlin 反射实现，{@link KotlinReflectionParameterNameDiscoverer} 将首先添加到列表中并用于 Kotlin 类和接口。
+//	作为 GraalVM 本机映像编译或运行时，不使用 {@code KotlinReflectionParameterNameDiscoverer}。
+//
+//	<p>可以通过 {@link addDiscoverer(ParameterNameDiscoverer)} 添加更多发现者。
 public class DefaultParameterNameDiscoverer extends PrioritizedParameterNameDiscoverer {
 
 	public DefaultParameterNameDiscoverer() {

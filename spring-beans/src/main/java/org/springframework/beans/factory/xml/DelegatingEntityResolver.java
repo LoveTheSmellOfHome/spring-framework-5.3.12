@@ -36,6 +36,7 @@ import org.springframework.util.Assert;
  * @see BeansDtdResolver
  * @see PluggableSchemaResolver
  */
+// EntityResolver实现，分别委托给 DTD 和 XML 模式的BeansDtdResolver和PluggableSchemaResolver 。
 public class DelegatingEntityResolver implements EntityResolver {
 
 	/** Suffix for DTD files. */
@@ -58,6 +59,9 @@ public class DelegatingEntityResolver implements EntityResolver {
 	 * @param classLoader the ClassLoader to use for loading
 	 * (can be {@code null}) to use the default ClassLoader)
 	 */
+	// 创建一个委托给默认BeansDtdResolver和默认PluggableSchemaResolver的新 DelegatingEntityResolver
+	// 使用提供的ClassLoader配置PluggableSchemaResolver 。
+	// @param classLoader – 用于加载的类加载器（可以为null以使用默认的类加载器）
 	public DelegatingEntityResolver(@Nullable ClassLoader classLoader) {
 		this.dtdResolver = new BeansDtdResolver();
 		this.schemaResolver = new PluggableSchemaResolver(classLoader);
@@ -69,6 +73,9 @@ public class DelegatingEntityResolver implements EntityResolver {
 	 * @param dtdResolver the EntityResolver to resolve DTDs with
 	 * @param schemaResolver the EntityResolver to resolve XML schemas with
 	 */
+	// 创建一个委托给给定EntityResolvers的新 DelegatingEntityResolver
+	// @param dtdResolver EntityResolver 用于解析 DTD
+	// @param schemaResolver EntityResolver 用于解析 XML 模式
 	public DelegatingEntityResolver(EntityResolver dtdResolver, EntityResolver schemaResolver) {
 		Assert.notNull(dtdResolver, "'dtdResolver' is required");
 		Assert.notNull(schemaResolver, "'schemaResolver' is required");

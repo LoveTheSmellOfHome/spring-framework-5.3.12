@@ -47,25 +47,32 @@ import org.springframework.util.CollectionUtils;
  * @see NamespaceHandler
  * @see DefaultBeanDefinitionDocumentReader
  */
+// NamespaceHandlerResolver接口的默认实现。根据映射文件中包含的映射，将命名空间 URI 解析为实现类。
+//
+// 默认情况下，此实现在 META-INF/spring.handlers 中查找映射文件，但这可以使用
+// DefaultNamespaceHandlerResolver(ClassLoader, String) 构造函数进行更改。
 public class DefaultNamespaceHandlerResolver implements NamespaceHandlerResolver {
 
 	/**
 	 * The location to look for the mapping files. Can be present in multiple JAR files.
 	 */
+	// 查找映射文件的位置。可以存在于多个 JAR 文件中。
 	public static final String DEFAULT_HANDLER_MAPPINGS_LOCATION = "META-INF/spring.handlers";
-
 
 	/** Logger available to subclasses. */
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	/** ClassLoader to use for NamespaceHandler classes. */
+	// 用于 NamespaceHandler 类的 ClassLoader
 	@Nullable
 	private final ClassLoader classLoader;
 
 	/** Resource location to search for. */
+	// 要搜索的资源位置
 	private final String handlerMappingsLocation;
 
 	/** Stores the mappings from namespace URI to NamespaceHandler class name / instance. */
+	// 存储从命名空间 URI 到 NamespaceHandler 类名/实例的映射
 	@Nullable
 	private volatile Map<String, Object> handlerMappings;
 
@@ -77,6 +84,8 @@ public class DefaultNamespaceHandlerResolver implements NamespaceHandlerResolver
 	 * to load resources.
 	 * @see #DEFAULT_HANDLER_MAPPINGS_LOCATION
 	 */
+	// 使用默认映射文件位置创建一个新的 DefaultNamespaceHandlerResolver
+	// 此构造函数将导致线程上下文 ClassLoader 用于加载资源。
 	public DefaultNamespaceHandlerResolver() {
 		this(null, DEFAULT_HANDLER_MAPPINGS_LOCATION);
 	}
@@ -88,6 +97,9 @@ public class DefaultNamespaceHandlerResolver implements NamespaceHandlerResolver
 	 * (may be {@code null}, in which case the thread context ClassLoader will be used)
 	 * @see #DEFAULT_HANDLER_MAPPINGS_LOCATION
 	 */
+	// 使用默认映射文件位置创建一个新的DefaultNamespaceHandlerResolver 。
+	// 参形：
+	//			classLoader – 用于加载映射资源的 ClassLoader 实例（可能为null ，在这种情况下将使用线程上下文 ClassLoader）
 	public DefaultNamespaceHandlerResolver(@Nullable ClassLoader classLoader) {
 		this(classLoader, DEFAULT_HANDLER_MAPPINGS_LOCATION);
 	}
@@ -99,6 +111,10 @@ public class DefaultNamespaceHandlerResolver implements NamespaceHandlerResolver
 	 * may be {@code null}, in which case the thread context ClassLoader will be used)
 	 * @param handlerMappingsLocation the mapping file location
 	 */
+	// 使用提供的映射文件位置创建一个新的DefaultNamespaceHandlerResolver 。
+	// 参形：
+	//			classLoader – 用于加载映射资源的 ClassLoader 实例可能为null ，在这种情况下将使用线程上下文 ClassLoader）
+	//			handlerMappingsLocation – 映射文件位置
 	public DefaultNamespaceHandlerResolver(@Nullable ClassLoader classLoader, String handlerMappingsLocation) {
 		Assert.notNull(handlerMappingsLocation, "Handler mappings location must not be null");
 		this.classLoader = (classLoader != null ? classLoader : ClassUtils.getDefaultClassLoader());
@@ -112,6 +128,11 @@ public class DefaultNamespaceHandlerResolver implements NamespaceHandlerResolver
 	 * @param namespaceUri the relevant namespace URI
 	 * @return the located {@link NamespaceHandler}, or {@code null} if none found
 	 */
+	// 从配置的映射中找到提供的命名空间 URI 的 NamespaceHandler 。
+	// 参形：
+	//			namespaceUri – 相关的命名空间 URI
+	// 返回值：
+	//			找到的 NamespaceHandler ，如果没有找到，则返回 null
 	@Override
 	@Nullable
 	public NamespaceHandler resolve(String namespaceUri) {
@@ -150,6 +171,7 @@ public class DefaultNamespaceHandlerResolver implements NamespaceHandlerResolver
 	/**
 	 * Load the specified NamespaceHandler mappings lazily.
 	 */
+	// 延迟加载指定的 NamespaceHandler 映射
 	private Map<String, Object> getHandlerMappings() {
 		Map<String, Object> handlerMappings = this.handlerMappings;
 		if (handlerMappings == null) {

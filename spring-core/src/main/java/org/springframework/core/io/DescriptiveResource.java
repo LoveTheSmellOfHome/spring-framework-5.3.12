@@ -16,11 +16,11 @@
 
 package org.springframework.core.io;
 
+import org.springframework.lang.Nullable;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-
-import org.springframework.lang.Nullable;
 
 /**
  * Simple {@link Resource} implementation that holds a resource description
@@ -32,6 +32,8 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 1.2.6
  */
+// 保存资源描述但不指向实际可读资源的简单 {@link Resource} 实现。
+// 如果 API 需要 Resource 参数但不一定用于实际读取，则用作占位符
 public class DescriptiveResource extends AbstractResource {
 
 	private final String description;
@@ -41,6 +43,7 @@ public class DescriptiveResource extends AbstractResource {
 	 * Create a new DescriptiveResource.
 	 * @param description the resource description
 	 */
+	// 创建一个新的描述性资源。
 	public DescriptiveResource(@Nullable String description) {
 		this.description = (description != null ? description : "");
 	}

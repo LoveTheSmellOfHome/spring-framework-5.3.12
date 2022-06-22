@@ -46,6 +46,8 @@ import org.springframework.util.Assert;
  * @author Juergen Hoeller
  * @since 4.0
  */
+// 完整实现{@link org.springframework.beans.factory.support.AutowireCandidateResolver}策略接口，
+// 提供对限定符注解 @Qualifier 以及{@code context.annotation} 包中的{@link Lazy}注解驱动的惰性解析的支持
 public class ContextAnnotationAutowireCandidateResolver extends QualifierAnnotationAutowireCandidateResolver {
 
 	@Override

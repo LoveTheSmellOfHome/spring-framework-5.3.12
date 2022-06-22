@@ -34,6 +34,14 @@ package org.springframework.beans.factory;
  * @see org.springframework.beans.factory.config.ConfigurableBeanFactory#destroySingletons()
  * @see org.springframework.context.ConfigurableApplicationContext#close()
  */
+// 由想要在销毁时释放资源的 bean 实现的接口。 {@link BeanFactory} 将在单独销毁作用域 bean 时调用 destroy 方法。
+// {@link org.springframework.context.ApplicationContext} 应该在关闭时处理其所有单例，由应用程序生命周期驱动
+//
+// <p>出于相同目的，Spring 管理的 bean 也可以实现 Java 的 {@link AutoCloseable} 接口。
+// 实现接口的另一种方法是指定自定义销毁方法，例如在 XML bean 定义中。有关所有 bean 生命周期方法的列表，
+// 请参阅 {@link BeanFactory BeanFactory javadocs}。
+//
+// 并不是所有的 Bean 都实现了这个接口
 public interface DisposableBean {
 
 	/**
@@ -41,6 +49,8 @@ public interface DisposableBean {
 	 * @throws Exception in case of shutdown errors. Exceptions will get logged
 	 * but not rethrown to allow other beans to release their resources as well.
 	 */
+	// 在销毁 bean 时由包含 {@code BeanFactory} 调用。
+	// @throws 异常在关闭错误的情况下。异常将被记录但不会重新抛出以允许其他 bean 也释放它们的资源
 	void destroy() throws Exception;
 
 }

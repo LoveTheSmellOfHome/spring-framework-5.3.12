@@ -28,6 +28,8 @@ package org.springframework.core.convert.converter;
  * for example {@link Number} for a set of number subtypes.
  * @see ConditionalConverter
  */
+// 范围”转换器的工厂，可以将对象从 S 转换为 R 的子类型
+// <p>实现可能会另外实现 {@link ConditionalConverter}
 public interface ConverterFactory<S, R> {
 
 	/**

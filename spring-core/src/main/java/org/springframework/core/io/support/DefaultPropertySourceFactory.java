@@ -30,6 +30,7 @@ import org.springframework.lang.Nullable;
  * @see PropertySourceFactory
  * @see ResourcePropertySource
  */
+// {@link PropertySourceFactory} 的默认实现，将每个资源包装在 {@link ResourcePropertySource} 中。
 public class DefaultPropertySourceFactory implements PropertySourceFactory {
 
 	@Override

@@ -37,6 +37,10 @@ import org.springframework.util.ObjectUtils;
  * @author Juergen Hoeller
  * @author Sam Brannen
  */
+// 用于简单 cflow-style 风格切入点的切入点和方法匹配器。请注意，评估此类切入点比评估普通切入点
+// 慢 10-15 倍，但它们在某些情况下很有用。
+//
+// Joinpoint 的便利实现，方便开发人员使用的，控制流匹配器
 @SuppressWarnings("serial")
 public class ControlFlowPointcut implements Pointcut, ClassFilter, MethodMatcher, Serializable {
 
@@ -95,6 +99,9 @@ public class ControlFlowPointcut implements Pointcut, ClassFilter, MethodMatcher
 	public boolean matches(Method method, Class<?> targetClass, Object... args) {
 		this.evaluations.incrementAndGet();
 
+		// 去匹配 StackTraceElement，Throwable 会调用 fillInStackTrace()，
+		// 这个操作本身是同步的，此外当跟踪的链路比较深的时候，此时通过名称和方法去判断，性能上会有损耗。
+		// 此处可以使用 JDK 9 的 StackWalker 来实现。性能会好很多
 		for (StackTraceElement element : new Throwable().getStackTrace()) {
 			if (element.getClassName().equals(this.clazz.getName()) &&
 					(this.methodName == null || element.getMethodName().equals(this.methodName))) {

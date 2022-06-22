@@ -118,6 +118,7 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 		this.running = false;
 	}
 
+	// 调用 DefaultLifecycleProcessor
 	@Override
 	public void onRefresh() {
 		startBeans(true);
@@ -138,7 +139,9 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 
 	// Internal helpers
 
+	// 是不是自动启动
 	private void startBeans(boolean autoStartupOnly) {
+		// 找出所有 LifecycleBeans,进行递归
 		Map<String, Lifecycle> lifecycleBeans = getLifecycleBeans();
 		Map<Integer, LifecycleGroup> phases = new TreeMap<>();
 
@@ -152,6 +155,7 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 			}
 		});
 		if (!phases.isEmpty()) {
+			// 启动 bean
 			phases.values().forEach(LifecycleGroup::start);
 		}
 	}
@@ -162,11 +166,16 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 	 * @param lifecycleBeans a Map with bean name as key and Lifecycle instance as value
 	 * @param beanName the name of the bean to start
 	 */
+	// 将指定的 bean 作为给定的 Lifecycle bean 集的一部分启动，确保首先启动它所依赖的任何 bean。
+	// 形参：
+	// 			lifecycleBeans -bean name作为 key,生命周期实例作为 value 的 Map
+	// 			beanName – 要启动的 bean 的名称
 	private void doStart(Map<String, ? extends Lifecycle> lifecycleBeans, String beanName, boolean autoStartupOnly) {
 		Lifecycle bean = lifecycleBeans.remove(beanName);
 		if (bean != null && bean != this) {
 			String[] dependenciesForBean = getBeanFactory().getDependenciesForBean(beanName);
 			for (String dependency : dependenciesForBean) {
+				// 先启动 bean 的依赖项
 				doStart(lifecycleBeans, dependency, autoStartupOnly);
 			}
 			if (!bean.isRunning() &&
@@ -175,6 +184,7 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 					logger.trace("Starting bean '" + beanName + "' of type [" + bean.getClass().getName() + "]");
 				}
 				try {
+					// 启动 bean
 					bean.start();
 				}
 				catch (Throwable ex) {
@@ -271,6 +281,8 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 	 * as well as all SmartLifecycle beans (even if they are marked as lazy-init).
 	 * @return the Map of applicable beans, with bean names as keys and bean instances as values
 	 */
+	// 检索所有适用的 Lifecycle beans：所有已创建的单例，以及所有 SmartLifecycle beans（即使它们被标记为 lazy-init）。
+	// 返回值：适用 bean 的 Map，以 bean 名称作为键和 bean 实例作为值
 	protected Map<String, Lifecycle> getLifecycleBeans() {
 		ConfigurableListableBeanFactory beanFactory = getBeanFactory();
 		Map<String, Lifecycle> beans = new LinkedHashMap<>();

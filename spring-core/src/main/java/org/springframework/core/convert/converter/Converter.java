@@ -32,6 +32,10 @@ import org.springframework.util.Assert;
  * @param <S> the source type
  * @param <T> the target type
  */
+// 类型转换器将 {@code S} 类型的源对象转换为 {@code T} 类型的目标对象,一般用于单一类型转换
+// <p>这个接口的实现是线程安全的并且可以共享，需要确保泛型类型是 计算类型(没有属性和局部变量来保存中间状态，不会被多线程修改)
+// <p>实现可能会另外实现 {@link ConditionalConverter}
+// 缺点：由于泛型擦除的原因，
 @FunctionalInterface
 public interface Converter<S, T> {
 
@@ -41,6 +45,11 @@ public interface Converter<S, T> {
 	 * @return the converted object, which must be an instance of {@code T} (potentially {@code null})
 	 * @throws IllegalArgumentException if the source cannot be converted to the desired target type
 	 */
+	// 将 {@code S} 类型的源对象转换为目标类型 {@code T}
+	// @param source 要转换的源对象，它必须是 {@code S} 的实例（永远不会 {@code null}）
+	// @return 转换后的对象，它必须是 {@code T} 的实例（可能是 {@code null}）
+	// 如果源无法转换为所需的目标类型，则@throws IllegalArgumentException
+	// 强类型转换，S 和 T 都是确定类型
 	@Nullable
 	T convert(S source);
 
@@ -56,6 +65,9 @@ public interface Converter<S, T> {
 	 * and then applies the {@code after} {@link Converter}
 	 * @since 5.3
 	 */
+	// 构造一个组合的 {@link Converter}，首先将此 {@link Converter} 应用于其输入，
+	// 然后将 {@code after} {@link Converter} 应用于结果。
+	//
 	default <U> Converter<S, U> andThen(Converter<? super T, ? extends U> after) {
 		Assert.notNull(after, "After Converter must not be null");
 		return (S s) -> {

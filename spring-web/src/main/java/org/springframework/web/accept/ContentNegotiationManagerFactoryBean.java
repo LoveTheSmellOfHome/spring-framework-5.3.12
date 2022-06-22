@@ -16,15 +16,6 @@
 
 package org.springframework.web.accept;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-
-import javax.servlet.ServletContext;
-
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.http.MediaType;
@@ -33,6 +24,9 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.context.ServletContextAware;
+
+import javax.servlet.ServletContext;
+import java.util.*;
 
 /**
  * Factory to create a {@code ContentNegotiationManager} and configure it with
@@ -137,6 +131,11 @@ public class ContentNegotiationManagerFactoryBean
 	 * @param strategies the strategies to use
 	 * @since 5.0
 	 */
+	// 设置要使用的确切策略列表。
+	// 注意：此方法的使用与此类中自定义默认、固定策略集的所有其他设置器的使用是互斥的。
+	// 有关更多详细信息，请参阅类级别文档。
+	// 参形：
+	//			策略——使用的策略
 	public void setStrategies(@Nullable List<ContentNegotiationStrategy> strategies) {
 		this.strategies = (strategies != null ? new ArrayList<>(strategies) : null);
 	}
@@ -148,6 +147,8 @@ public class ContentNegotiationManagerFactoryBean
 	 * <p>By default this is set to {@code false}.
 	 * @see #setParameterName
 	 */
+	// 是否应使用请求参数（默认为“格式”）来确定请求的媒体类型。要使此选项起作用，您必须注册media type mappings 。
+	// 默认情况下，这设置为false
 	public void setFavorParameter(boolean favorParameter) {
 		this.favorParameter = favorParameter;
 	}
@@ -156,6 +157,8 @@ public class ContentNegotiationManagerFactoryBean
 	 * Set the query parameter name to use when {@link #setFavorParameter} is on.
 	 * <p>The default parameter name is {@code "format"}.
 	 */
+	// 设置打开setFavorParameter时要使用的查询参数名称。
+	// 默认参数名称是"format
 	public void setParameterName(String parameterName) {
 		Assert.notNull(parameterName, "parameterName is required");
 		this.parameterName = parameterName;
@@ -171,6 +174,11 @@ public class ContentNegotiationManagerFactoryBean
 	 * in 5.2.x it is necessary to set it to {@code false}. In 5.3 the default
 	 * changes to {@code false} and use of this property becomes unnecessary.
 	 */
+	// 是否应使用 URL 路径中的路径扩展来确定请求的媒体类型。
+	// 默认情况下，这设置为false在这种情况下路径扩展对内容协商没有影响。
+	// 已弃用
+	// 从 5.2.4 开始。请参阅有关弃用路径扩展配置选项的类级别注释。由于此方法没有替代品，因此在 5.2.x 中
+	// 必须将其设置为false 。在 5.3 中，默认更改为false并且不需要使用此属性。
 	@Deprecated
 	public void setFavorPathExtension(boolean favorPathExtension) {
 		this.favorPathExtension = favorPathExtension;
@@ -203,6 +211,16 @@ public class ContentNegotiationManagerFactoryBean
 	 * @see #addMediaType(String, MediaType)
 	 * @see #addMediaTypes(Map)
 	 */
+	// 添加从键到 MediaType 的映射，其中键被规范化为小写，并且可能已从路径扩展名、文件扩展名或作为查询参数传递。
+	//
+	// parameter strategy需要这样的映射才能工作，而path extension strategy 可以通过 ServletContext.getMimeType
+	// 和 MediaTypeFactory 依靠查找。
+	//
+	// 注意：此处注册的映射可以通过 ContentNegotiationManager.getMediaTypeMappings() 访问，并且不仅可以用于参数和路径扩展策略。
+	// 例如，使用 Spring MVC 配置，例如@EnableWebMvc或  ，媒体类型映射也插入到：
+	// -确定使用ResourceHttpRequestHandler服务的静态资源的媒体类型。
+	// -确定使用ContentNegotiatingViewResolver呈现的视图的媒体类型。
+	// -列出 RFD 攻击检测的安全扩展（查看 Spring Framework
 	public void setMediaTypes(Properties mediaTypes) {
 		if (!CollectionUtils.isEmpty(mediaTypes)) {
 			mediaTypes.forEach((key, value) ->
@@ -213,6 +231,7 @@ public class ContentNegotiationManagerFactoryBean
 	/**
 	 * An alternative to {@link #setMediaTypes} for programmatic registrations.
 	 */
+	// 用于编程注册的 setMediaTypes 的替代方法
 	public void addMediaType(String key, MediaType mediaType) {
 		this.mediaTypes.put(key.toLowerCase(Locale.ENGLISH), mediaType);
 	}
@@ -220,6 +239,7 @@ public class ContentNegotiationManagerFactoryBean
 	/**
 	 * An alternative to {@link #setMediaTypes} for programmatic registrations.
 	 */
+	// 用于编程注册的 setMediaTypes 的替代方法
 	public void addMediaTypes(@Nullable Map<String, MediaType> mediaTypes) {
 		if (mediaTypes != null) {
 			mediaTypes.forEach(this::addMediaType);
@@ -234,6 +254,10 @@ public class ContentNegotiationManagerFactoryBean
 	 * @deprecated as of 5.2.4. See class-level note on the deprecation of path
 	 * extension config options.
 	 */
+	// 是否忽略路径扩展无法解析为任何媒体类型的请求。如果不匹配，将此设置为 false 将导致 HttpMediaTypeNotAcceptableException 。
+	// 默认情况下，这设置为 true 。
+	// 已弃用
+	//				从 5.2.4 开始。请参阅有关弃用路径扩展配置选项的类级别注释
 	@Deprecated
 	public void setIgnoreUnknownPathExtensions(boolean ignore) {
 		this.ignoreUnknownPathExtensions = ignore;
@@ -245,6 +269,9 @@ public class ContentNegotiationManagerFactoryBean
 	 * @deprecated as of 5.0, in favor of {@link #setUseRegisteredExtensionsOnly(boolean)},
 	 * which has reverse behavior.
 	 */
+	// 指示是否使用 Java 激活框架作为从文件扩展名映射到媒体类型的后备选项。
+	//已弃用
+	//从 5.0 开始，支持setUseRegisteredExtensionsOnly(boolean) ，它具有相反的行为。
 	@Deprecated
 	public void setUseJaf(boolean useJaf) {
 		setUseRegisteredExtensionsOnly(!useJaf);
@@ -257,6 +284,8 @@ public class ContentNegotiationManagerFactoryBean
 	 * dynamic resolution, e.g. via {@link MediaTypeFactory}.
 	 * <p>By default this is not set in which case dynamic resolution is on.
 	 */
+	// 当设置了喜爱路径扩展或favorPathExtension setFavorParameter(boolean)时，此属性确定是仅使用已注册的MediaType映射还是允许动态解析，例如通过MediaTypeFactory 。
+	// 默认情况下，在启用动态分辨率的情况下未设置此项
 	public void setUseRegisteredExtensionsOnly(boolean useRegisteredExtensionsOnly) {
 		this.useRegisteredExtensionsOnly = useRegisteredExtensionsOnly;
 	}
@@ -269,6 +298,8 @@ public class ContentNegotiationManagerFactoryBean
 	 * Whether to disable checking the 'Accept' request header.
 	 * <p>By default this value is set to {@code false}.
 	 */
+	// 是否禁用检查“接受”请求标头。
+	// 默认情况下，此值设置为 false
 	public void setIgnoreAcceptHeader(boolean ignoreAcceptHeader) {
 		this.ignoreAcceptHeader = ignoreAcceptHeader;
 	}
@@ -278,6 +309,8 @@ public class ContentNegotiationManagerFactoryBean
 	 * <p>By default this is not set.
 	 * @see #setDefaultContentTypeStrategy
 	 */
+	// 设置在没有请求内容类型时使用的默认内容类型。
+	// 默认情况下未设置。
 	public void setDefaultContentType(MediaType contentType) {
 		this.defaultNegotiationStrategy = new FixedContentNegotiationStrategy(contentType);
 	}
@@ -288,6 +321,8 @@ public class ContentNegotiationManagerFactoryBean
 	 * @since 5.0
 	 * @see #setDefaultContentTypeStrategy
 	 */
+	// 设置在没有请求内容类型时使用的默认内容类型。
+	// 默认情况下未设置
 	public void setDefaultContentTypes(List<MediaType> contentTypes) {
 		this.defaultNegotiationStrategy = new FixedContentNegotiationStrategy(contentTypes);
 	}
@@ -299,6 +334,8 @@ public class ContentNegotiationManagerFactoryBean
 	 * @since 4.1.2
 	 * @see #setDefaultContentType
 	 */
+	// 设置自定义 ContentNegotiationStrategy 用于确定在没有请求内容类型时使用的内容类型。
+	// 默认情况下未设置
 	public void setDefaultContentTypeStrategy(ContentNegotiationStrategy strategy) {
 		this.defaultNegotiationStrategy = strategy;
 	}
@@ -306,6 +343,7 @@ public class ContentNegotiationManagerFactoryBean
 	/**
 	 * Invoked by Spring to inject the ServletContext.
 	 */
+	// 由 Spring 调用以注入 ServletContext
 	@Override
 	public void setServletContext(ServletContext servletContext) {
 		this.servletContext = servletContext;
@@ -321,6 +359,7 @@ public class ContentNegotiationManagerFactoryBean
 	 * Create and initialize a {@link ContentNegotiationManager} instance.
 	 * @since 5.0
 	 */
+	// 创建并初始化一个ContentNegotiationManager实例
 	@SuppressWarnings("deprecation")
 	public ContentNegotiationManager build() {
 		List<ContentNegotiationStrategy> strategies = new ArrayList<>();
@@ -366,7 +405,7 @@ public class ContentNegotiationManagerFactoryBean
 
 		// Ensure media type mappings are available via ContentNegotiationManager#getMediaTypeMappings()
 		// independent of path extension or parameter strategies.
-
+		// 确保媒体类型映射可通过 ContentNegotiationManagergetMediaTypeMappings() 获得，而与路径扩展或参数策略无关。
 		if (!CollectionUtils.isEmpty(this.mediaTypes) && !this.favorPathExtension && !this.favorParameter) {
 			this.contentNegotiationManager.addFileExtensionResolvers(
 					new MappingMediaTypeFileExtensionResolver(this.mediaTypes));

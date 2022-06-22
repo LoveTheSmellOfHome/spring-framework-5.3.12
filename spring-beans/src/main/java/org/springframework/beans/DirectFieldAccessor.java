@@ -16,14 +16,14 @@
 
 package org.springframework.beans;
 
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.core.ResolvableType;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
+
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * {@link ConfigurablePropertyAccessor} implementation that directly accesses
@@ -45,6 +45,12 @@ import org.springframework.util.ReflectionUtils;
  * @see org.springframework.validation.DirectFieldBindingResult
  * @see org.springframework.validation.DataBinder#initDirectFieldAccess()
  */
+// 直接访问实例字段的ConfigurablePropertyAccessor实现。允许直接绑定到字段而不是通过 JavaBean 设置器。
+//
+// 从 Spring 4.2 开始，绝大多数 BeanWrapper 特性已合并到 AbstractPropertyAccessor ，这意味着现在
+// 这里也支持属性遍历以及集合和映射访问。
+//
+// DirectFieldAccessor 的 “extractOldValueForEditor” 设置的默认值为 “true”，因为始终可以读取字段而没有副作用
 public class DirectFieldAccessor extends AbstractNestablePropertyAccessor {
 
 	private final Map<String, FieldPropertyHandler> fieldMap = new HashMap<>();
@@ -54,6 +60,7 @@ public class DirectFieldAccessor extends AbstractNestablePropertyAccessor {
 	 * Create a new DirectFieldAccessor for the given object.
 	 * @param object the object wrapped by this DirectFieldAccessor
 	 */
+	// 为给定对象创建一个新的 DirectFieldAccessor
 	public DirectFieldAccessor(Object object) {
 		super(object);
 	}
@@ -65,6 +72,7 @@ public class DirectFieldAccessor extends AbstractNestablePropertyAccessor {
 	 * @param nestedPath the nested path of the object
 	 * @param parent the containing DirectFieldAccessor (must not be {@code null})
 	 */
+	// 为给定对象创建一个新的 DirectFieldAccessor，注册该对象所在的嵌套路径
 	protected DirectFieldAccessor(Object object, String nestedPath, DirectFieldAccessor parent) {
 		super(object, nestedPath, parent);
 	}
@@ -84,11 +92,13 @@ public class DirectFieldAccessor extends AbstractNestablePropertyAccessor {
 		return propertyHandler;
 	}
 
+	// 新的嵌套属性访问器
 	@Override
 	protected DirectFieldAccessor newNestedPropertyAccessor(Object object, String nestedPath) {
 		return new DirectFieldAccessor(object, nestedPath, this);
 	}
 
+	// 创建不可写属性异常
 	@Override
 	protected NotWritablePropertyException createNotWritablePropertyException(String propertyName) {
 		PropertyMatches matches = PropertyMatches.forField(propertyName, getRootClass());

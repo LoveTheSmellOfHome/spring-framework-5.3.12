@@ -35,6 +35,11 @@ import org.springframework.util.comparator.Comparators;
  * @param <S> the source type
  * @param <T> the target type
  */
+// 在Comparator值之前转换值的比较器。
+// 指定的Converter将用于在将每个值传递给基础Comparator之前对其进行转换。
+// 类型形参：
+//				< S > – 源类型
+//				< T >——目标类型
 public class ConvertingComparator<S, T> implements Comparator<S> {
 
 	private final Comparator<T> comparator;

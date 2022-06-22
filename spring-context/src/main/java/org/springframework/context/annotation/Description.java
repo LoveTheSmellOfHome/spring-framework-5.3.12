@@ -30,6 +30,7 @@ import java.lang.annotation.Target;
  * @since 4.0
  * @see org.springframework.beans.factory.config.BeanDefinition#getDescription()
  */
+// 为从 org.springframework.stereotype.@Component 或 @Bean 派生的 bean 定义添加文本描述
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

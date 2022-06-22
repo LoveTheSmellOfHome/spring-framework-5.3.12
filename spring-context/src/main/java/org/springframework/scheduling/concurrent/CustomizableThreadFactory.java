@@ -32,12 +32,15 @@ import org.springframework.util.CustomizableThreadCreator;
  * @see #setThreadNamePrefix
  * @see #setThreadPriority
  */
+// ThreadFactory 接口的实现，允许自定义创建的线程（名称、优先级等）。
+// 有关可用配置选项的详细信息，请参阅基类 CustomizableThreadCreator 。
 @SuppressWarnings("serial")
 public class CustomizableThreadFactory extends CustomizableThreadCreator implements ThreadFactory {
 
 	/**
 	 * Create a new CustomizableThreadFactory with default thread name prefix.
 	 */
+	// 使用默认线程名称前缀创建一个新的 CustomizableThreadFactory
 	public CustomizableThreadFactory() {
 		super();
 	}
@@ -46,6 +49,9 @@ public class CustomizableThreadFactory extends CustomizableThreadCreator impleme
 	 * Create a new CustomizableThreadFactory with the given thread name prefix.
 	 * @param threadNamePrefix the prefix to use for the names of newly created threads
 	 */
+	// 使用给定的线程名称前缀创建一个新的 CustomizableThreadFactory。
+	// 参形：
+	//			threadNamePrefix – 用于新创建线程名称的前缀
 	public CustomizableThreadFactory(String threadNamePrefix) {
 		super(threadNamePrefix);
 	}

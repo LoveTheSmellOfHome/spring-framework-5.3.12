@@ -16,19 +16,8 @@
 
 package org.springframework.beans.factory.config;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.Map;
-import java.util.Optional;
-
 import kotlin.reflect.KProperty;
 import kotlin.reflect.jvm.ReflectJvmMapping;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InjectionPoint;
@@ -41,6 +30,16 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Map;
+import java.util.Optional;
+
 /**
  * Descriptor for a specific dependency that is about to be injected.
  * Wraps a constructor parameter, a method parameter or a field,
@@ -50,33 +49,44 @@ import org.springframework.util.ObjectUtils;
  * @since 2.5
  */
 @SuppressWarnings("serial")
+// 依赖描述符
 public class DependencyDescriptor extends InjectionPoint implements Serializable {
-
+	// 声明类：就是待解析的类
 	private final Class<?> declaringClass;
 
+	// 方法和构造器
 	@Nullable
 	private String methodName;
 
+	// 方法参数类型
 	@Nullable
 	private Class<?>[] parameterTypes;
 
+	// 方法参数索引
 	private int parameterIndex;
 
+	// 属性名称
 	@Nullable
 	private String fieldName;
 
+	// @Autowired的值
 	private final boolean required;
 
+	// 是否立即加载 @Lazy的相反值
 	private final boolean eager;
 
+	// 嵌入层次，1为顶级层次，是根
 	private int nestingLevel = 1;
 
+	// 包含类
 	@Nullable
 	private Class<?> containingClass;
 
+	// 解析后的泛型类
 	@Nullable
 	private transient volatile ResolvableType resolvableType;
 
+	// 类型描述符
 	@Nullable
 	private transient volatile TypeDescriptor typeDescriptor;
 
@@ -363,6 +373,8 @@ public class DependencyDescriptor extends InjectionPoint implements Serializable
 	 * this point; it just allows discovery to happen when the application calls
 	 * {@link #getDependencyName()} (if ever).
 	 */
+	// 初始化底层方法参数的参数名称发现（如果有）。
+	// 此方法此时实际上并没有尝试检索参数名称；它只允许在应用程序调用getDependencyName()时发生发现（如果有的话）。
 	public void initParameterNameDiscovery(@Nullable ParameterNameDiscoverer parameterNameDiscoverer) {
 		if (this.methodParameter != null) {
 			this.methodParameter.initParameterNameDiscovery(parameterNameDiscoverer);
@@ -374,6 +386,9 @@ public class DependencyDescriptor extends InjectionPoint implements Serializable
 	 * @return the declared name (may be {@code null} if unresolvable)
 	 */
 	@Nullable
+	// 确定包装参数/字段的名称。
+	// 返回值：
+	//      		声明的名称（如果无法解析，可能为null ）
 	public String getDependencyName() {
 		return (this.field != null ? this.field.getName() : obtainMethodParameter().getParameterName());
 	}
@@ -382,6 +397,8 @@ public class DependencyDescriptor extends InjectionPoint implements Serializable
 	 * Determine the declared (non-generic) type of the wrapped parameter/field.
 	 * @return the declared type (never {@code null})
 	 */
+	// 确定包装参数/字段的声明（非泛型）类型。
+	// 返回值：声明的类型（从不为null ）
 	public Class<?> getDependencyType() {
 		if (this.field != null) {
 			if (this.nestingLevel > 1) {

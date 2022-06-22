@@ -44,6 +44,15 @@ import org.springframework.util.StringValueResolver;
  * @author Juergen Hoeller
  * @since 3.1
  */
+// {@link FormattingConversionService} 的特殊化默认配置了适用于大多数应用程序的转换器和格式化程序。
+//
+// <p>专为直接实例化而设计，但也公开了静态 {@link addDefaultFormatters} 实用程序方法，以便针对任何
+// {@code FormatterRegistry} 实例临时使用，就像 {@code DefaultConversionService} 公开其自己的
+// {@link DefaultConversionService#addDefaultConverters addDefaultConverters} 方法一样。
+//
+// <p>自动注册 JSR-354 Money &amp; Currency、JSR-310 Date-Time 和/或 Joda-Time 2.x 的格式化程序，
+// 具体取决于类路径上是否存在相应的 API。
+// Spring Boot 的默认类型转换服务
 public class DefaultFormattingConversionService extends FormattingConversionService {
 
 	private static final boolean jsr354Present;
@@ -52,6 +61,7 @@ public class DefaultFormattingConversionService extends FormattingConversionServ
 
 	static {
 		ClassLoader classLoader = DefaultFormattingConversionService.class.getClassLoader();
+		// 加载 money
 		jsr354Present = ClassUtils.isPresent("javax.money.MonetaryAmount", classLoader);
 		jodaTimePresent = ClassUtils.isPresent("org.joda.time.YearMonth", classLoader);
 	}

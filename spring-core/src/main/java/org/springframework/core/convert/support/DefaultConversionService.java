@@ -38,8 +38,15 @@ import org.springframework.lang.Nullable;
  * @author Stephane Nicoll
  * @since 3.1
  */
+// {@link GenericConversionService} 的特殊化默认配置了适合大多数环境的转换器。
+//
+// <p>专为直接实例化而设计，但也公开了静态 {@link addDefaultConverters(ConverterRegistry)}
+// 实用程序方法，用于针对任何 {@code ConverterRegistry} 实例进行临时使用。
+//
+// Spring Framework 默认的类型转换服务
 public class DefaultConversionService extends GenericConversionService {
 
+	// 享元模式（Flyweight）实现：DefaultConversionService，基于 ClassLoader 级别的缓存，也就是在 JVM 内单例共享
 	@Nullable
 	private static volatile DefaultConversionService sharedInstance;
 
@@ -48,6 +55,8 @@ public class DefaultConversionService extends GenericConversionService {
 	 * Create a new {@code DefaultConversionService} with the set of
 	 * {@linkplain DefaultConversionService#addDefaultConverters(ConverterRegistry) default converters}.
 	 */
+	// 使用一组 {@linkplain DefaultConversionService#addDefaultConverters(ConverterRegistry) 默认转换器}
+	// 创建一个新的 {@code DefaultConversionService}。
 	public DefaultConversionService() {
 		addDefaultConverters(this);
 	}
@@ -64,7 +73,12 @@ public class DefaultConversionService extends GenericConversionService {
 	 * @return the shared {@code ConversionService} instance (never {@code null})
 	 * @since 4.3.5
 	 */
+	// 返回一个共享的默认 {@code ConversionService} 实例，在需要时延迟构建它。
+	// <p><b>注意：<b>我们强烈建议为自定义目的构建单独的 {@code ConversionService} 实例。
+	// 此访问器仅用作需要简单类型强制但无法以任何其他方式访问寿命较长的 {@code ConversionService} 实例的代码路径的后备。
+	// 懒加载的过程
 	public static ConversionService getSharedInstance() {
+		// 单例，一个 ClassLoader 只能有一个
 		DefaultConversionService cs = sharedInstance;
 		if (cs == null) {
 			synchronized (DefaultConversionService.class) {
@@ -84,8 +98,13 @@ public class DefaultConversionService extends GenericConversionService {
 	 * (must also be castable to ConversionService, e.g. being a {@link ConfigurableConversionService})
 	 * @throws ClassCastException if the given ConverterRegistry could not be cast to a ConversionService
 	 */
+	// 添加适用于大多数环境的转换器。
+	// @param converterRegistry 要添加到的转换器注册表（也必须可转换为 ConversionService，
+	// 例如作为 {@link ConfigurableConversionService}）
 	public static void addDefaultConverters(ConverterRegistry converterRegistry) {
+		// 添加和精度相关的转换器
 		addScalarConverters(converterRegistry);
+		// 添加集合相关的转换器
 		addCollectionConverters(converterRegistry);
 
 		converterRegistry.addConverter(new ByteBufferConverter((ConversionService) converterRegistry));
@@ -106,6 +125,9 @@ public class DefaultConversionService extends GenericConversionService {
 	 * @throws ClassCastException if the given ConverterRegistry could not be cast to a ConversionService
 	 * @since 4.2.3
 	 */
+	// 添加常用集合转换器。
+	// @param converterRegistry 要添加到的转换器注册表（也必须可转换为 ConversionService，例如作为
+	// {@link ConfigurableConversionService}）
 	public static void addCollectionConverters(ConverterRegistry converterRegistry) {
 		ConversionService conversionService = (ConversionService) converterRegistry;
 
@@ -131,6 +153,7 @@ public class DefaultConversionService extends GenericConversionService {
 		converterRegistry.addConverter(new StreamConverter(conversionService));
 	}
 
+	// 添加和精度(刻度)相关的转换器
 	private static void addScalarConverters(ConverterRegistry converterRegistry) {
 		converterRegistry.addConverterFactory(new NumberToNumberConverterFactory());
 

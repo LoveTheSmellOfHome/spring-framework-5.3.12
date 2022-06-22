@@ -35,9 +35,15 @@ import org.springframework.lang.Nullable;
  * @see #setPointcut
  * @see #setAdvice
  */
+// 方便的切入点驱动的顾问实现。
+// 这是最常用的顾问实现。 它可以与任何切入点和建议类型一起使用，除了介绍。 通常不需要子类化这个类，或者实现自定义顾问。
+//
+// 适配实现 - 用于 Pointcut 和 Spring IoC 容器进行实现，
+// Advisor 包含两个方面，pointcut 是判断，Advice 是拦截后的动作，同时具有顺序性
 @SuppressWarnings("serial")
 public class DefaultPointcutAdvisor extends AbstractGenericPointcutAdvisor implements Serializable {
 
+	// 默认是 TRUE,即匹配所有方法
 	private Pointcut pointcut = Pointcut.TRUE;
 
 
@@ -46,6 +52,8 @@ public class DefaultPointcutAdvisor extends AbstractGenericPointcutAdvisor imple
 	 * <p>Advice must be set before use using setter methods.
 	 * Pointcut will normally be set also, but defaults to {@code Pointcut.TRUE}.
 	 */
+	// 创建一个空的 DefaultPointcutAdvisor。
+	// 在使用 setter 方法之前必须设置建议。 Pointcut 通常也会设置，但默认为Pointcut.TRUE
 	public DefaultPointcutAdvisor() {
 	}
 
@@ -54,6 +62,11 @@ public class DefaultPointcutAdvisor extends AbstractGenericPointcutAdvisor imple
 	 * <p>{@code Pointcut.TRUE} will be used as Pointcut.
 	 * @param advice the Advice to use
 	 */
+	// 创建一个匹配所有方法的 DefaultPointcutAdvisor。
+	// Pointcut.TRUE将用作切入点。
+	// 参形：
+	//			advice - 使用的建议
+	// 实现了传递 Advice 的功能
 	public DefaultPointcutAdvisor(Advice advice) {
 		this(Pointcut.TRUE, advice);
 	}
@@ -63,6 +76,10 @@ public class DefaultPointcutAdvisor extends AbstractGenericPointcutAdvisor imple
 	 * @param pointcut the Pointcut targeting the Advice
 	 * @param advice the Advice to run when Pointcut matches
 	 */
+	// 创建一个 DefaultPointcutAdvisor，指定切入点和建议。
+	// 参形：
+	//			pointcut – 针对 Advice 的切入点
+	//			advice - 当切入点匹配时运行的建议
 	public DefaultPointcutAdvisor(Pointcut pointcut, Advice advice) {
 		this.pointcut = pointcut;
 		setAdvice(advice);
@@ -74,6 +91,8 @@ public class DefaultPointcutAdvisor extends AbstractGenericPointcutAdvisor imple
 	 * <p>Default is {@code Pointcut.TRUE}.
 	 * @see #setAdvice
 	 */
+	// 指定针对建议的切入点。
+	// 默认为 Pointcut.TRUE 。
 	public void setPointcut(@Nullable Pointcut pointcut) {
 		this.pointcut = (pointcut != null ? pointcut : Pointcut.TRUE);
 	}

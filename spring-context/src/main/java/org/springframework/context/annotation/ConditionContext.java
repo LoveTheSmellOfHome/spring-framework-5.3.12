@@ -29,6 +29,8 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 4.0
  */
+// 供 {@link Condition} 实现使用的上下文信息。在 {@link Condition} 实现时侯，来进行回调传入。
+// @see ConditionEvaluator
 public interface ConditionContext {
 
 	/**

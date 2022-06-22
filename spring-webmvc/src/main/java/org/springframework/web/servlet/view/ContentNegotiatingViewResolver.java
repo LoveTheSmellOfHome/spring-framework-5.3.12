@@ -16,19 +16,6 @@
 
 package org.springframework.web.servlet.view;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.Ordered;
@@ -50,6 +37,11 @@ import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.SmartView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.*;
 
 /**
  * Implementation of {@link ViewResolver} that resolves a view based on the request file name
@@ -86,6 +78,21 @@ import org.springframework.web.servlet.ViewResolver;
  * @see InternalResourceViewResolver
  * @see BeanNameViewResolver
  */
+// ViewResolver的实现，它根据请求文件名或Accept标头解析视图。
+//
+// ContentNegotiatingViewResolver本身并不解析视图，而是委托给其他ViewResolvers 。
+// 默认情况下，这些其他视图解析器会自动从应用程序上下文中获取，尽管它们也可以使用viewResolvers属性显式设置。
+// 请注意，为了使此视图解析器正常工作，需要将order属性设置为比其他属性更高的优先级（默认为Ordered.HIGHEST_PRECEDENCE ）。
+//
+// 此视图解析器使用请求的媒体类型为请求选择合适的View 。请求的媒体类型通过配置的ContentNegotiationManager确定。
+// 一旦确定了请求的媒体类型，此解析器会向每个委托视图解析器查询View并确定请求的媒体类型是否与视图的内容类型兼容）。
+// 返回最兼容的视图。
+//
+// 此外，此视图解析器公开了defaultViews属性，允许您覆盖视图解析器提供的视图。请注意，这些默认视图作为候选视图提供，
+// 并且仍然需要具有请求的内容类型（通过文件扩展名、参数或Accept标头，如上所述）。
+//
+// 例如，如果请求路径是/view.html ，则此视图解析器将查找具有text/html内容类型（基于html文件扩展名）的视图。
+// 带有text/html请求Accept标头的/view请求具有相同的结果。
 public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 		implements ViewResolver, Ordered, InitializingBean {
 
@@ -111,6 +118,10 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 	 * applying a {@link org.springframework.web.accept.HeaderContentNegotiationStrategy}.
 	 * @see ContentNegotiationManager#ContentNegotiationManager()
 	 */
+	// 设置 ContentNegotiationManager 以用于确定请求的媒体类型。
+	//
+	// 如果未设置，将使用 ContentNegotiationManager 的默认构造函数，应用
+	// org.springframework.web.accept.HeaderContentNegotiationStrategy 。
 	public void setContentNegotiationManager(@Nullable ContentNegotiationManager contentNegotiationManager) {
 		this.contentNegotiationManager = contentNegotiationManager;
 	}
@@ -119,6 +130,7 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 	 * Return the {@link ContentNegotiationManager} to use to determine requested media types.
 	 * @since 4.1.9
 	 */
+	// 返回 ContentNegotiationManager 以用于确定请求的媒体类型
 	@Nullable
 	public ContentNegotiationManager getContentNegotiationManager() {
 		return this.contentNegotiationManager;
@@ -133,6 +145,11 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 	 * {@link #resolveViewName(String, Locale)} will respond with a view that sets the
 	 * response status to {@code 406 Not Acceptable} instead.
 	 */
+	// 指示如果找不到合适的视图，是否应返回 406 Not Acceptable 状态代码。
+	//
+	// 默认值为false ，这意味着当找不到可接受的视图时，此视图解析器为 resolveViewName(String, Locale)返回 null 。
+	// 这将允许视图解析器链接。当此属性设置为true时， resolveViewName(String, Locale)将使用将响应状态
+	// 设置为 406 Not Acceptable的视图进行响应
 	public void setUseNotAcceptableStatusCode(boolean useNotAcceptableStatusCode) {
 		this.useNotAcceptableStatusCode = useNotAcceptableStatusCode;
 	}
@@ -140,6 +157,7 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 	/**
 	 * Whether to return HTTP Status 406 if no suitable is found.
 	 */
+	// 如果没有找到合适的，是否返回 HTTP 状态 406
 	public boolean isUseNotAcceptableStatusCode() {
 		return this.useNotAcceptableStatusCode;
 	}
@@ -148,6 +166,7 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 	 * Set the default views to use when a more specific view can not be obtained
 	 * from the {@link ViewResolver} chain.
 	 */
+	// 当无法从 ViewResolver 链中获取更具体的视图时，设置要使用的默认视图
 	public void setDefaultViews(List<View> defaultViews) {
 		this.defaultViews = defaultViews;
 	}
@@ -161,6 +180,8 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 	 * Sets the view resolvers to be wrapped by this view resolver.
 	 * <p>If this property is not set, view resolvers will be detected automatically.
 	 */
+	// 将视图解析器设置为此视图解析器包装。
+	// 如果未设置此属性，将自动检测视图解析器
 	public void setViewResolvers(List<ViewResolver> viewResolvers) {
 		this.viewResolvers = viewResolvers;
 	}
@@ -225,7 +246,9 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 		Assert.state(attrs instanceof ServletRequestAttributes, "No current ServletRequestAttributes");
 		List<MediaType> requestedMediaTypes = getMediaTypes(((ServletRequestAttributes) attrs).getRequest());
 		if (requestedMediaTypes != null) {
+			// 获取候选视图
 			List<View> candidateViews = getCandidateViews(viewName, locale, requestedMediaTypes);
+			// 获取最优视图
 			View bestView = getBestView(candidateViews, requestedMediaTypes, attrs);
 			if (bestView != null) {
 				return bestView;
@@ -252,6 +275,11 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 	 * @param request the current servlet request
 	 * @return the list of media types requested, if any
 	 */
+	// 确定给定HttpServletRequest的MediaType列表。
+	// 参形：
+	//			request – 当前的 servlet 请求
+	// 返回值：
+	//			请求的媒体类型列表（如果有)
 	@Nullable
 	protected List<MediaType> getMediaTypes(HttpServletRequest request) {
 		Assert.state(this.contentNegotiationManager != null, "No ContentNegotiationManager set");
@@ -295,6 +323,7 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 	 * Return the more specific of the acceptable and the producible media types
 	 * with the q-value of the former.
 	 */
+	// 使用前者的 q 值返回更具体的可接受和可生产的媒体类型。
 	private MediaType getMostSpecificMediaType(MediaType acceptType, MediaType produceType) {
 		produceType = produceType.copyQualityValue(acceptType);
 		return (MediaType.SPECIFICITY_COMPARATOR.compare(acceptType, produceType) < 0 ? acceptType : produceType);
@@ -307,11 +336,13 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 		if (this.viewResolvers != null) {
 			Assert.state(this.contentNegotiationManager != null, "No ContentNegotiationManager set");
 			for (ViewResolver viewResolver : this.viewResolvers) {
+				// 遍历解析出视图
 				View view = viewResolver.resolveViewName(viewName, locale);
 				if (view != null) {
 					candidateViews.add(view);
 				}
 				for (MediaType requestedMediaType : requestedMediaTypes) {
+					// 解析文件扩展名
 					List<String> extensions = this.contentNegotiationManager.resolveFileExtensions(requestedMediaType);
 					for (String extension : extensions) {
 						String viewNameWithExtension = viewName + '.' + extension;
@@ -334,6 +365,7 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 		for (View candidateView : candidateViews) {
 			if (candidateView instanceof SmartView) {
 				SmartView smartView = (SmartView) candidateView;
+				// 视图是否需要重定向
 				if (smartView.isRedirectView()) {
 					return candidateView;
 				}
@@ -342,6 +374,7 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 		for (MediaType mediaType : requestedMediaTypes) {
 			for (View candidateView : candidateViews) {
 				if (StringUtils.hasText(candidateView.getContentType())) {
+					// 获取媒体类型
 					MediaType candidateContentType = MediaType.parseMediaType(candidateView.getContentType());
 					if (mediaType.isCompatibleWith(candidateContentType)) {
 						mediaType = mediaType.removeQualityValue();

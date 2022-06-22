@@ -107,18 +107,42 @@ import org.springframework.util.StringUtils;
  * @see DefaultBindingErrorProcessor
  * @see org.springframework.context.MessageSource
  */
+// 允许将属性值设置到目标对象上的绑定器，包括支持验证和绑定结果分析。可以通过指定允许字段、必填字段、自定义编辑器等来自定义绑定过程
+//
+// <p>请注意，未能设置一组允许的字段会带来潜在的安全隐患。例如，在 HTTP 表单 POST 数据的情况下，恶意客户端可以尝试通过为表单上不存在
+// 的字段或属性提供值来破坏应用程序。在某些情况下，这可能会导致在命令对象<i>或其嵌套对象<i>上设置非法数据。
+// 为此，<b>强烈建议在 DataBinder 上指定 {@link setAllowedFields allowedFields} 属性<b>。
+//
+// <p>可以通过 {@link BindingResult} 接口检查绑定结果，扩展 {@link Errors} 接口：参见 {@link getBindingResult()} 方法。
+// 缺少字段和属性访问异常将转换为 {@link FieldError FieldErrors}，收集在 Errors 实例中，使用以下错误代码：
+//
+// <p>默认情况下，绑定错误通过 {@link BindingErrorProcessor} 策略解决，处理丢失的字段和属性访问异常：请参阅
+// {@link setBindingErrorProcessor} 方法。如果需要，您可以覆盖默认策略，例如生成不同的错误代码
+//
+// <p>自定义验证错误可以在之后添加。您通常希望将此类错误代码解析为正确的用户可见错误消息；这可以通过通过
+// {@link org.springframework.context.MessageSource} 解决每个错误来实现，它能够通过其
+// {@link org.springframework.context.MessageSourcegetMessage} 解决 {@link ObjectError}/{@link FieldError}
+// (org.springframework.context.MessageSourceResolvable, java.util.Locale)} 方法。可以通过
+// {@link MessageCodesResolver} 策略自定义消息代码列表：参见 {@link setMessageCodesResolver} 方法。
+// {@link DefaultMessageCodesResolver} 的 javadoc 详细说明了默认解析规则。
+//
+// <p>这种通用数据绑定器可用于任何类型的环境
+// Spring 标准数据绑定组件，将 PropertyValues 绑定到某个对象上去，
 public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 
 	/** Default object name used for binding: "target". */
+	// 用于绑定的默认对象名称："target"
 	public static final String DEFAULT_OBJECT_NAME = "target";
 
 	/** Default limit for array and collection growing: 256. */
+	// 数组和集合增长的默认限制：256
 	public static final int DEFAULT_AUTO_GROW_COLLECTION_LIMIT = 256;
 
 
 	/**
 	 * We'll create a lot of DataBinder instances: Let's use a static logger.
 	 */
+	// 我们将创建很多 DataBinder 实例：让我们使用静态日志
 	protected static final Log logger = LogFactory.getLog(DataBinder.class);
 
 	@Nullable
@@ -134,20 +158,27 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	@Nullable
 	private SimpleTypeConverter typeConverter;
 
+	// 是否忽略未知属性，默认为 true,如果存在未知属性也不报错，直接忽略 {@link DataBinderDemo} source.put("age", "18");
 	private boolean ignoreUnknownFields = true;
 
+	// 是否忽略掉非法字段，默认为 false
 	private boolean ignoreInvalidFields = false;
 
+	// 是否自动增加嵌套路径，比如 user 中有个 Company 属性，我们在设置值时候可以直接将嵌套对象的属性名设值
+	// source.put("company.name", "gupao");
 	private boolean autoGrowNestedPaths = true;
 
 	private int autoGrowCollectionLimit = DEFAULT_AUTO_GROW_COLLECTION_LIMIT;
 
+	// 绑定字段白名单
 	@Nullable
 	private String[] allowedFields;
 
+	// 绑定字段黑名单
 	@Nullable
 	private String[] disallowedFields;
 
+	// 必须绑定字段
 	@Nullable
 	private String[] requiredFields;
 
@@ -168,6 +199,8 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * if the binder is just used to convert a plain parameter value)
 	 * @see #DEFAULT_OBJECT_NAME
 	 */
+	// 使用默认对象名称创建一个新的 DataBinder 实例
+	// @param target 要绑定的目标对象（如果绑定器仅用于转换普通参数值，则为 {@code null}）
 	public DataBinder(@Nullable Object target) {
 		this(target, DEFAULT_OBJECT_NAME);
 	}
@@ -178,6 +211,9 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * if the binder is just used to convert a plain parameter value)
 	 * @param objectName the name of the target object
 	 */
+	// 创建一个新的 DataBinder 实例
+	// @param target 要绑定的目标对象（如果绑定器仅用于转换普通参数值，则为 {@code null}）
+	// @param objectName 目标对象的名称
 	public DataBinder(@Nullable Object target, String objectName) {
 		this.target = ObjectUtils.unwrapOptional(target);
 		this.objectName = objectName;
@@ -209,6 +245,9 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #initBeanPropertyAccess()
 	 * @see org.springframework.beans.BeanWrapper#setAutoGrowNestedPaths
 	 */
+	// 设置此绑定器是否应尝试“自动增长”包含空值的嵌套路径。
+	// <p>如果为“true”，则将使用默认对象值填充空路径位置并进行遍历，而不是导致异常。当访问越界索引时，此标志还启用集合元素的自动增长。
+	// <p>标准 DataBinder 上的默认值为“true”。请注意，从 Spring 4.1 开始，此功能支持 bean 属性访问（DataBinder 的默认模式）和字段访问。
 	public void setAutoGrowNestedPaths(boolean autoGrowNestedPaths) {
 		Assert.state(this.bindingResult == null,
 				"DataBinder is already initialized - call setAutoGrowNestedPaths before other configuration methods");
@@ -218,6 +257,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	/**
 	 * Return whether "auto-growing" of nested paths has been activated.
 	 */
+	// 返回是否已激活嵌套路径的“自动增长”
 	public boolean isAutoGrowNestedPaths() {
 		return this.autoGrowNestedPaths;
 	}
@@ -229,6 +269,8 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #initBeanPropertyAccess()
 	 * @see org.springframework.beans.BeanWrapper#setAutoGrowCollectionLimit
 	 */
+	// 指定数组和集合自动增长的限制。
+	// <p>默认值为 256，防止在大索引的情况下出现 OutOfMemoryErrors。如果您的自动增长需求异常高，请提高此限制。
 	public void setAutoGrowCollectionLimit(int autoGrowCollectionLimit) {
 		Assert.state(this.bindingResult == null,
 				"DataBinder is already initialized - call setAutoGrowCollectionLimit before other configuration methods");
@@ -238,6 +280,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	/**
 	 * Return the current limit for array and collection auto-growing.
 	 */
+	// 返回数组和集合自动增长的当前限制
 	public int getAutoGrowCollectionLimit() {
 		return this.autoGrowCollectionLimit;
 	}
@@ -248,6 +291,8 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #initDirectFieldAccess()
 	 * @see #createBeanPropertyBindingResult()
 	 */
+	// 初始化此 DataBinder 的标准 JavaBean 属性访问。
+	// <p>这是默认设置；显式调用只会导致急切的初始化。
 	public void initBeanPropertyAccess() {
 		Assert.state(this.bindingResult == null,
 				"DataBinder is already initialized - call initBeanPropertyAccess before other configuration methods");
@@ -259,7 +304,9 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * JavaBean property access.
 	 * @since 4.2.1
 	 */
+	// 使用标准 JavaBean 属性访问创建 {@link AbstractPropertyBindingResult} 实例。
 	protected AbstractPropertyBindingResult createBeanPropertyBindingResult() {
+		// 创建一个 BeanPropertyBindingResult
 		BeanPropertyBindingResult result = new BeanPropertyBindingResult(getTarget(),
 				getObjectName(), isAutoGrowNestedPaths(), getAutoGrowCollectionLimit());
 
@@ -270,6 +317,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 			result.setMessageCodesResolver(this.messageCodesResolver);
 		}
 
+		// 返回 BeanPropertyBindingResult
 		return result;
 	}
 
@@ -279,6 +327,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #initBeanPropertyAccess()
 	 * @see #createDirectFieldBindingResult()
 	 */
+	// 初始化此 DataBinder 的直接字段访问，作为默认 bean 属性访问的替代方法。
 	public void initDirectFieldAccess() {
 		Assert.state(this.bindingResult == null,
 				"DataBinder is already initialized - call initDirectFieldAccess before other configuration methods");
@@ -290,6 +339,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * field access.
 	 * @since 4.2.1
 	 */
+	// 使用直接字段访问创建 {@link AbstractPropertyBindingResult} 实例。
 	protected AbstractPropertyBindingResult createDirectFieldBindingResult() {
 		DirectFieldBindingResult result = new DirectFieldBindingResult(getTarget(),
 				getObjectName(), isAutoGrowNestedPaths());
@@ -308,24 +358,29 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * Return the internal BindingResult held by this DataBinder,
 	 * as an AbstractPropertyBindingResult.
 	 */
+	// 返回此 DataBinder 持有的内部 BindingResult，作为 AbstractPropertyBindingResult。
 	protected AbstractPropertyBindingResult getInternalBindingResult() {
 		if (this.bindingResult == null) {
 			this.bindingResult = (this.directFieldAccess ?
 					createDirectFieldBindingResult(): createBeanPropertyBindingResult());
 		}
+		// bind 方法生成 BeanPropertyBindingResult
 		return this.bindingResult;
 	}
 
 	/**
 	 * Return the underlying PropertyAccessor of this binder's BindingResult.
 	 */
+	// 返回此绑定器的 BindingResult 的底层 PropertyAccessor
 	protected ConfigurablePropertyAccessor getPropertyAccessor() {
+		// 前边返回 BeanPropertyBindingResult 对象
 		return getInternalBindingResult().getPropertyAccessor();
 	}
 
 	/**
 	 * Return this binder's underlying SimpleTypeConverter.
 	 */
+	// 返回此绑定器的底层 SimpleTypeConverter。
 	protected SimpleTypeConverter getSimpleTypeConverter() {
 		if (this.typeConverter == null) {
 			this.typeConverter = new SimpleTypeConverter();
@@ -339,6 +394,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	/**
 	 * Return the underlying TypeConverter of this binder's BindingResult.
 	 */
+	// 返回此绑定器的 BindingResult 的基础 TypeConverter。
 	protected PropertyEditorRegistry getPropertyEditorRegistry() {
 		if (getTarget() != null) {
 			return getInternalBindingResult().getPropertyAccessor();
@@ -351,6 +407,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	/**
 	 * Return the underlying TypeConverter of this binder's BindingResult.
 	 */
+	// 返回此绑定器的 BindingResult 的基础 TypeConverter。
 	protected TypeConverter getTypeConverter() {
 		if (getTarget() != null) {
 			return getInternalBindingResult().getPropertyAccessor();
@@ -369,6 +426,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see Errors
 	 * @see #bind
 	 */
+	// 返回由此 DataBinder 创建的 BindingResult 实例。这允许在绑定操作后方便地访问绑定结果
 	public BindingResult getBindingResult() {
 		return getInternalBindingResult();
 	}
@@ -384,6 +442,9 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * {@link #getBindingResult() BindingResult}.
 	 * @see #bind
 	 */
+	// 设置是否忽略未知字段，即是否忽略目标对象中没有对应字段的绑定参数。
+	// <p>默认为"true"。关闭此选项以强制所有绑定参数必须在目标对象中具有匹配字段。
+	// <p>请注意，此设置仅适用于此 DataBinder 上的 <i>binding<i> 操作，不适用于 <i>通过其检索<i> 值
 	public void setIgnoreUnknownFields(boolean ignoreUnknownFields) {
 		this.ignoreUnknownFields = ignoreUnknownFields;
 	}
@@ -406,6 +467,9 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * {@link #getBindingResult() BindingResult}.
 	 * @see #bind
 	 */
+	// 设置是否忽略无效字段，即是否忽略目标对象中对应字段不可访问的绑定参数（例如由于嵌套路径中的空值）。
+	// <p>默认为"false"。打开此选项可忽略目标对象图不存在部分中嵌套对象的绑定参数。
+	// <p>请注意，此设置仅适用于此 DataBinder 上的 <i>binding<i> 操作，不适用于 <i>通过其检索<i> 值
 	public void setIgnoreInvalidFields(boolean ignoreInvalidFields) {
 		this.ignoreInvalidFields = ignoreInvalidFields;
 	}
@@ -413,6 +477,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	/**
 	 * Return whether to ignore invalid fields when binding.
 	 */
+	// 返回绑定时是否忽略无效字段
 	public boolean isIgnoreInvalidFields() {
 		return this.ignoreInvalidFields;
 	}
@@ -428,6 +493,8 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #setDisallowedFields
 	 * @see #isAllowed(String)
 	 */
+	// 注册应该允许绑定的字段。默认为所有字段。例如，限制此项以避免在绑定 HTTP 请求参数时被恶意用户进行不必要的修改
+	// <p>支持“xxx*”、“*xxx”和“*xxx*”模式。通过覆盖 {@code isAllowed} 方法可以实现更复杂的匹配。
 	public void setAllowedFields(@Nullable String... allowedFields) {
 		this.allowedFields = PropertyAccessorUtils.canonicalPropertyNames(allowedFields);
 	}
@@ -436,6 +503,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * Return the fields that should be allowed for binding.
 	 * @return array of field names
 	 */
+	// 返回应该允许绑定的字段
 	@Nullable
 	public String[] getAllowedFields() {
 		return this.allowedFields;
@@ -452,6 +520,9 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #setAllowedFields
 	 * @see #isAllowed(String)
 	 */
+	// 注册应该<i>不允许<i>绑定的字段。默认为无。例如，将字段标记为不允许的，以避免在绑定 HTTP 请求参数时恶意用户进行不必要的修改。
+	// <p>支持“xxx*”、“*xxx”和“*xxx*”模式。通过覆盖 {@code isAllowed} 方法可以实现更复杂的匹配。
+	// <p>或者，指定一个 <i>允许的<i> 字段列表
 	public void setDisallowedFields(@Nullable String... disallowedFields) {
 		this.disallowedFields = PropertyAccessorUtils.canonicalPropertyNames(disallowedFields);
 	}
@@ -460,6 +531,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * Return the fields that should <i>not</i> be allowed for binding.
 	 * @return array of field names
 	 */
+	// 返回应该 <i>not<i> 允许绑定的字段
 	@Nullable
 	public String[] getDisallowedFields() {
 		return this.disallowedFields;
@@ -475,6 +547,8 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #setBindingErrorProcessor
 	 * @see DefaultBindingErrorProcessor#MISSING_FIELD_ERROR_CODE
 	 */
+	// 注册每个绑定过程所需的字段。
+	// <p>如果传入属性值列表中不包含指定字段之一，则会创建相应的“缺少字段”错误，错误代码为“required”（由默认绑定错误处理器）。
 	public void setRequiredFields(@Nullable String... requiredFields) {
 		this.requiredFields = PropertyAccessorUtils.canonicalPropertyNames(requiredFields);
 		if (logger.isDebugEnabled()) {
@@ -487,6 +561,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * Return the fields that are required for each binding process.
 	 * @return array of field names
 	 */
+	// 返回每个绑定过程所需的字段
 	@Nullable
 	public String[] getRequiredFields() {
 		return this.requiredFields;
@@ -499,6 +574,8 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see BeanPropertyBindingResult#setMessageCodesResolver
 	 * @see DefaultMessageCodesResolver
 	 */
+	// 设置用于将错误解析为消息代码的策略。将给定的策略应用于基础错误持有者。
+	// <p>默认是一个 DefaultMessageCodesResolver。
 	public void setMessageCodesResolver(@Nullable MessageCodesResolver messageCodesResolver) {
 		Assert.state(this.messageCodesResolver == null, "DataBinder is already initialized with MessageCodesResolver");
 		this.messageCodesResolver = messageCodesResolver;
@@ -513,6 +590,8 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * <p>Default is a DefaultBindingErrorProcessor.
 	 * @see DefaultBindingErrorProcessor
 	 */
+	// 设置用于处理绑定错误的策略，即必填字段错误和 {@code PropertyAccessException}。
+	// <p>默认是一个 DefaultBindingErrorProcessor。
 	public void setBindingErrorProcessor(BindingErrorProcessor bindingErrorProcessor) {
 		Assert.notNull(bindingErrorProcessor, "BindingErrorProcessor must not be null");
 		this.bindingErrorProcessor = bindingErrorProcessor;
@@ -521,6 +600,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	/**
 	 * Return the strategy for processing binding errors.
 	 */
+	// 返回处理绑定错误的策略
 	public BindingErrorProcessor getBindingErrorProcessor() {
 		return this.bindingErrorProcessor;
 	}
@@ -530,6 +610,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #addValidators(Validator...)
 	 * @see #replaceValidators(Validator...)
 	 */
+	// 将验证器设置为在每个绑定步骤后应用
 	public void setValidator(@Nullable Validator validator) {
 		assertValidators(validator);
 		this.validators.clear();
@@ -552,6 +633,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #setValidator(Validator)
 	 * @see #replaceValidators(Validator...)
 	 */
+	// 添加验证器以在每个绑定步骤之后应用。
 	public void addValidators(Validator... validators) {
 		assertValidators(validators);
 		this.validators.addAll(Arrays.asList(validators));
@@ -562,6 +644,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #setValidator(Validator)
 	 * @see #addValidators(Validator...)
 	 */
+	// 在每个绑定步骤之后替换要应用的验证器。
 	public void replaceValidators(Validator... validators) {
 		assertValidators(validators);
 		this.validators.clear();
@@ -571,6 +654,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	/**
 	 * Return the primary Validator to apply after each binding step, if any.
 	 */
+	// 在每个绑定步骤之后返回要应用的主要验证器（如果有）
 	@Nullable
 	public Validator getValidator() {
 		return (!this.validators.isEmpty() ? this.validators.get(0) : null);
@@ -579,6 +663,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	/**
 	 * Return the Validators to apply after data binding.
 	 */
+	// 返回数据绑定后要应用的验证器
 	public List<Validator> getValidators() {
 		return Collections.unmodifiableList(this.validators);
 	}
@@ -586,12 +671,14 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 
 	//---------------------------------------------------------------------
 	// Implementation of PropertyEditorRegistry/TypeConverter interface
+	// PropertyEditorRegistry/TypeConverter 接口的实现
 	//---------------------------------------------------------------------
 
 	/**
 	 * Specify a Spring 3.0 ConversionService to use for converting
 	 * property values, as an alternative to JavaBeans PropertyEditors.
 	 */
+	// 指定用于转换属性值的 Spring 3.0 ConversionService，作为 JavaBeans PropertyEditors 的替代。
 	public void setConversionService(@Nullable ConversionService conversionService) {
 		Assert.state(this.conversionService == null, "DataBinder is already initialized with ConversionService");
 		this.conversionService = conversionService;
@@ -603,6 +690,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	/**
 	 * Return the associated ConversionService, if any.
 	 */
+	// 返回关联的 ConversionService（如果有）
 	@Nullable
 	public ConversionService getConversionService() {
 		return this.conversionService;
@@ -616,6 +704,8 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @since 4.2
 	 * @see #registerCustomEditor(Class, PropertyEditor)
 	 */
+	// 添加自定义格式化程序，将其应用于与 {@link Formatter} 声明类型匹配的所有字段。
+	// <p>在封面下注册相应的 {@link PropertyEditor} 适配器。
 	public void addCustomFormatter(Formatter<?> formatter) {
 		FormatterPropertyEditorAdapter adapter = new FormatterPropertyEditorAdapter(formatter);
 		getPropertyEditorRegistry().registerCustomEditor(adapter.getFieldType(), adapter);
@@ -630,6 +720,8 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @since 4.2
 	 * @see #registerCustomEditor(Class, String, PropertyEditor)
 	 */
+	// 为 {@link Formatter} 类中指定的字段类型添加自定义格式化程序，仅将其应用于指定的字段（如果有），否则应用于所有字段。
+	// <p>在封面下注册相应的 {@link PropertyEditor} 适配器
 	public void addCustomFormatter(Formatter<?> formatter, String... fields) {
 		FormatterPropertyEditorAdapter adapter = new FormatterPropertyEditorAdapter(formatter);
 		Class<?> fieldType = adapter.getFieldType();
@@ -654,6 +746,8 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @since 4.2
 	 * @see #registerCustomEditor(Class, PropertyEditor)
 	 */
+	// 添加自定义格式化程序，仅将其应用于指定的字段类型（如果有），或以其他方式应用于与 {@link Formatter} 声明的类型匹配的所有字段。
+	// <p>在封面下注册相应的 {@link PropertyEditor} 适配器。
 	public void addCustomFormatter(Formatter<?> formatter, Class<?>... fieldTypes) {
 		FormatterPropertyEditorAdapter adapter = new FormatterPropertyEditorAdapter(formatter);
 		if (ObjectUtils.isEmpty(fieldTypes)) {
@@ -726,9 +820,15 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @param pvs property values to bind
 	 * @see #doBind(org.springframework.beans.MutablePropertyValues)
 	 */
+	// 将给定的属性值绑定到此绑定器的目标。
+	// <p>这个调用会产生字段错误，代表基本的绑定错误，比如必填字段（代码“required”），或者值和 bean 属性之间的类型
+	// 不匹配（代码“typeMismatch”）。
+	// <p>注意，给定的 PropertyValues 应该是一个一次性实例：为了效率，如果它实现了 MutablePropertyValues 接口，它将被修改为
+	// 只包含允许的字段；否则，将为此创建一个内部可变副本。如果您希望原始实例在任何情况下都保持不变，请传入 PropertyValues 的副本。
 	public void bind(PropertyValues pvs) {
 		MutablePropertyValues mpvs = (pvs instanceof MutablePropertyValues ?
 				(MutablePropertyValues) pvs : new MutablePropertyValues(pvs));
+		// 绑定属性值
 		doBind(mpvs);
 	}
 
@@ -741,9 +841,13 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #checkRequiredFields
 	 * @see #applyPropertyValues
 	 */
+	// 绑定过程的实际实现，使用传入的 MutablePropertyValues 实例
+	// @param mpvs 要绑定的属性值，作为 MutablePropertyValues 实例
 	protected void doBind(MutablePropertyValues mpvs) {
 		checkAllowedFields(mpvs);
 		checkRequiredFields(mpvs);
+		// {@link AbstractAutowireCapableBeanFactory}#populateBean##
+		// applyPropertyValues(beanName, mbd, bw, pvs); 二者实现过程一致
 		applyPropertyValues(mpvs);
 	}
 
@@ -754,6 +858,8 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #getAllowedFields
 	 * @see #isAllowed(String)
 	 */
+	// 根据允许的字段检查给定的属性值，删除不允许的字段的值。
+	// @param mpvs 要绑定的属性值（可以修改）
 	protected void checkAllowedFields(MutablePropertyValues mpvs) {
 		PropertyValue[] pvs = mpvs.getPropertyValues();
 		for (PropertyValue pv : pvs) {
@@ -783,6 +889,12 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #setDisallowedFields
 	 * @see org.springframework.util.PatternMatchUtils#simpleMatch(String, String)
 	 */
+	// 如果给定的字段允许绑定，则返回。为每个传入的属性值调用。
+	// <p>默认实现会检查指定的允许字段和不允许字段列表中的“xxx*”、“*xxx”和“*xxx*”匹配以及直接相等。
+	// 匹配不允许模式的字段将不被接受，即使它也恰好与允许列表中的模式匹配。
+	// <p>可以在子类中覆盖。
+	// @param field 要检查的字段
+	// @return 如果该字段被允许
 	protected boolean isAllowed(String field) {
 		String[] allowed = getAllowedFields();
 		String[] disallowed = getDisallowedFields();
@@ -798,6 +910,8 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #getBindingErrorProcessor
 	 * @see BindingErrorProcessor#processMissingFieldError
 	 */
+	// 根据所需字段检查给定的属性值，在适当的情况下生成缺失字段错误。
+	// @param mpvs 要绑定的属性值（可以修改）
 	protected void checkRequiredFields(MutablePropertyValues mpvs) {
 		String[] requiredFields = getRequiredFields();
 		if (!ObjectUtils.isEmpty(requiredFields)) {
@@ -821,6 +935,7 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 				}
 				if (empty) {
 					// Use bind error processor to create FieldError.
+					// 使用绑定错误处理器创建 FieldError
 					getBindingErrorProcessor().processMissingFieldError(field, getInternalBindingResult());
 					// Remove property from property values to bind:
 					// It has already caused a field error with a rejected value.
@@ -845,13 +960,17 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #getBindingErrorProcessor
 	 * @see BindingErrorProcessor#processPropertyAccessException
 	 */
+	// 将给定的属性值应用于目标对象。
+	// <p>默认实现将所有提供的属性值应用为 bean 属性值。默认情况下，未知字段将被忽略
 	protected void applyPropertyValues(MutablePropertyValues mpvs) {
 		try {
 			// Bind request parameters onto target object.
+			// 将请求参数绑定到目标对象上。
 			getPropertyAccessor().setPropertyValues(mpvs, isIgnoreUnknownFields(), isIgnoreInvalidFields());
 		}
 		catch (PropertyBatchUpdateException ex) {
 			// Use bind error processor to create FieldErrors.
+			// 使用绑定错误处理器来创建 FieldErrors
 			for (PropertyAccessException pae : ex.getPropertyAccessExceptions()) {
 				getBindingErrorProcessor().processPropertyAccessException(pae, getInternalBindingResult());
 			}
@@ -864,11 +983,13 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #setValidator(Validator)
 	 * @see #getBindingResult()
 	 */
+	// 调用指定的验证器（如果有）。
 	public void validate() {
 		Object target = getTarget();
 		Assert.state(target != null, "No target to validate");
 		BindingResult bindingResult = getBindingResult();
 		// Call each validator with the same binding result
+		// 使用相同的绑定结果调用每个验证器
 		for (Validator validator : getValidators()) {
 			validator.validate(target, bindingResult);
 		}
@@ -882,11 +1003,14 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @see #setValidator(Validator)
 	 * @see SmartValidator#validate(Object, Errors, Object...)
 	 */
+	// 使用给定的验证提示调用指定的验证器（如果有）。 <p>注意：实际目标验证器可能会忽略验证提示
+	// @param validationHints 一个或多个要传递给 {@link SmartValidator} 的提示对象
 	public void validate(Object... validationHints) {
 		Object target = getTarget();
 		Assert.state(target != null, "No target to validate");
 		BindingResult bindingResult = getBindingResult();
 		// Call each validator with the same binding result
+		// 使用相同的绑定结果调用每个验证器
 		for (Validator validator : getValidators()) {
 			if (!ObjectUtils.isEmpty(validationHints) && validator instanceof SmartValidator) {
 				((SmartValidator) validator).validate(target, bindingResult, validationHints);
@@ -904,6 +1028,8 @@ public class DataBinder implements PropertyEditorRegistry, TypeConverter {
 	 * @throws BindException if there were any errors in the bind operation
 	 * @see BindingResult#getModel()
 	 */
+	// 关闭此 DataBinder，如果遇到任何错误，可能会导致抛出 BindException。
+	// @return 模型 Map，包含目标对象和 Errors 实例
 	public Map<?, ?> close() throws BindException {
 		if (getBindingResult().hasErrors()) {
 			throw new BindException(getBindingResult());

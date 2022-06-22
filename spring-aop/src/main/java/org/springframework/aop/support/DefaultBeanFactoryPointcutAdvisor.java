@@ -33,6 +33,12 @@ import org.springframework.lang.Nullable;
  * @see #setPointcut
  * @see #setAdviceBeanName
  */
+// 基于 BeanFactory 的具体 PointcutAdvisor 允许将任何 Advice 配置为对 BeanFactory 中的 Advice bean 的引用，
+// 以及通过 bean 属性配置的 Pointcut。
+//
+// 指定通知 bean 的名称而不是通知对象本身（如果在 BeanFactory 中运行）会增加初始化时的松散耦合，以便在切入点实际匹配之前不初始化通知对象。
+//
+// 有 IoC 能力的 PointcutAdvisor，它的能力来自于父类
 @SuppressWarnings("serial")
 public class DefaultBeanFactoryPointcutAdvisor extends AbstractBeanFactoryPointcutAdvisor {
 
@@ -44,6 +50,8 @@ public class DefaultBeanFactoryPointcutAdvisor extends AbstractBeanFactoryPointc
 	 * <p>Default is {@code Pointcut.TRUE}.
 	 * @see #setAdviceBeanName
 	 */
+	// 指定针对建议的切入点。
+	// 默认为 Pointcut.TRUE，这里写入的都是 原型 bean
 	public void setPointcut(@Nullable Pointcut pointcut) {
 		this.pointcut = (pointcut != null ? pointcut : Pointcut.TRUE);
 	}

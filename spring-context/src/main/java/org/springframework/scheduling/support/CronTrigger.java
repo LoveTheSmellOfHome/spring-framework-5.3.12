@@ -35,8 +35,10 @@ import org.springframework.util.Assert;
  * @since 3.0
  * @see CronExpression
  */
+// cron 表达式的 {@link Trigger} 实现。包装一个 {@link CronExpression}。
 public class CronTrigger implements Trigger {
 
+	// 包装一个 {@link CronExpression}
 	private final CronExpression expression;
 
 	private final ZoneId zoneId;
@@ -47,6 +49,8 @@ public class CronTrigger implements Trigger {
 	 * @param expression a space-separated list of time fields, following cron
 	 * expression conventions
 	 */
+	// 根据默认时区中提供的模式构建 {@code CronTrigger}。
+	// @param expression 以空格分隔的时间字段列表，遵循 cron 表达式约定
 	public CronTrigger(String expression) {
 		this(expression, ZoneId.systemDefault());
 	}
@@ -57,6 +61,9 @@ public class CronTrigger implements Trigger {
 	 * expression conventions
 	 * @param timeZone a time zone in which the trigger times will be generated
 	 */
+	// 根据给定时区中提供的模式构建 {@code CronTrigger}。
+	// @param expression 以空格分隔的时间字段列表，遵循 cron 表达式约定
+	// @param timeZone 将在其中生成触发时间的时区
 	public CronTrigger(String expression, TimeZone timeZone) {
 		this(expression, timeZone.toZoneId());
 	}
@@ -69,6 +76,9 @@ public class CronTrigger implements Trigger {
 	 * @since 5.3
 	 * @see CronExpression#parse(String)
 	 */
+	// 根据给定时区中提供的模式构建 {@code CronTrigger}。
+	// @param expression 以空格分隔的时间字段列表，遵循 cron 表达式约定
+	// @param zoneId 将在其中生成触发时间的时区
 	public CronTrigger(String expression, ZoneId zoneId) {
 		Assert.hasLength(expression, "Expression must not be empty");
 		Assert.notNull(zoneId, "ZoneId must not be null");
@@ -81,6 +91,7 @@ public class CronTrigger implements Trigger {
 	/**
 	 * Return the cron pattern that this trigger has been built with.
 	 */
+	// 返回构建此触发器的 cron 模式
 	public String getExpression() {
 		return this.expression.toString();
 	}
@@ -92,6 +103,8 @@ public class CronTrigger implements Trigger {
 	 * {@linkplain TriggerContext#lastCompletionTime completion time} of the
 	 * previous execution; therefore, overlapping executions won't occur.
 	 */
+	// 根据给定的触发上下文确定下一次执行时间。
+	// <p>下一次执行时间根据上一次执行的{@linkplain TriggerContextlastCompletionTime完成时间}计算；因此，不会发生重叠执行。
 	@Override
 	public Date nextExecutionTime(TriggerContext triggerContext) {
 		Date date = triggerContext.lastCompletionTime();

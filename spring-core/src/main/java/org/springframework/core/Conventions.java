@@ -34,11 +34,13 @@ import org.springframework.util.ClassUtils;
  * @author Rossen Stoyanchev
  * @since 2.0
  */
+// 公约：提供支持整个框架中使用的各种命名和其他约定的方法。主要供框架内部使用
 public final class Conventions {
 
 	/**
 	 * Suffix added to names when using arrays.
 	 */
+	// 使用数组时添加到名称的后缀。
 	private static final String PLURAL_SUFFIX = "List";
 
 
@@ -249,6 +251,9 @@ public final class Conventions {
 	 * For example the attribute name '{@code foo}' qualified by {@link Class}
 	 * '{@code com.myapp.SomeClass}' would be '{@code com.myapp.SomeClass.foo}'
 	 */
+	// 返回由给定的封闭 {@link Class} 限定的属性名称。
+	// 例如，由 {@link Class} '{@code com.myapp.SomeClass}'
+	// 限定的属性名称 '{@code foo}' 将是 '{@code com.myapp.SomeClass.foo}'
 	public static String getQualifiedAttributeName(Class<?> enclosingClass, String attributeName) {
 		Assert.notNull(enclosingClass, "'enclosingClass' must not be null");
 		Assert.notNull(attributeName, "'attributeName' must not be null");

@@ -26,6 +26,8 @@ import org.springframework.lang.Nullable;
  * @author Phillip Webb
  * @since 3.0
  */
+// 用于类型转换的服务接口。这是转换系统的入口点。
+// 调用 {@link convert(Object, Class)} 以使用此系统执行线程安全的类型转换
 public interface ConversionService {
 
 	/**
@@ -42,6 +44,12 @@ public interface ConversionService {
 	 * @return {@code true} if a conversion can be performed, {@code false} if not
 	 * @throws IllegalArgumentException if {@code targetType} is {@code null}
 	 */
+	// 如果 {@code sourceType} 的对象可以转换为 {@code targetType}，则返回 {@code true}。
+	// <p>如果此方法返回{@code true}，则表示{@link convert(Object, Class)}能够将
+	// {@code sourceType}的实例转换为{@code targetType}。
+	//
+	// <p>关于集合、数组和映射类型的特别说明：对于集合、数组和映射类型之间的转换，该方法将返回 {@code true}，
+	// 即使转换调用仍然可能生成 {@link ConversionException}，如果底层元素不可转换。在处理集合和映射时，调用者应该处理这种特殊情况。
 	boolean canConvert(@Nullable Class<?> sourceType, Class<?> targetType);
 
 	/**
@@ -62,6 +70,12 @@ public interface ConversionService {
 	 * {@code false} if not
 	 * @throws IllegalArgumentException if {@code targetType} is {@code null}
 	 */
+	// 如果 {@code sourceType} 的对象可以转换为 {@code targetType}，则返回 {@code true}。
+	// TypeDescriptors 提供有关发生转换的源和目标位置的附加上下文，通常是对象字段或属性位置。
+	// <p>如果此方法返回 {@code true}，则表示 {@link convert(Object, TypeDescriptor, TypeDescriptor)} 能够将
+	// {@code sourceType} 的实例转换为 {@code targetType}。
+	// <p>关于集合、数组和映射类型的特别说明：对于集合、数组和映射类型之间的转换，该方法将返回 {@code true}，
+	// 即使转换调用仍然可能生成 {@link ConversionException}，如果底层元素不可转换。在处理集合和映射时，调用者应该处理这种特殊情况。
 	boolean canConvert(@Nullable TypeDescriptor sourceType, TypeDescriptor targetType);
 
 	/**
@@ -72,6 +86,7 @@ public interface ConversionService {
 	 * @throws ConversionException if a conversion exception occurred
 	 * @throws IllegalArgumentException if targetType is {@code null}
 	 */
+	// 将给定的 {@code source} 转换为指定的 {@code targetType}
 	@Nullable
 	<T> T convert(@Nullable Object source, Class<T> targetType);
 
@@ -88,6 +103,8 @@ public interface ConversionService {
 	 * @throws IllegalArgumentException if targetType is {@code null},
 	 * or {@code sourceType} is {@code null} but source is not {@code null}
 	 */
+	// 将给定的 {@code source} 转换为指定的 {@code targetType}。
+	// TypeDescriptors 提供有关将发生转换的源和目标位置的附加上下文，通常是对象字段或属性位置。
 	@Nullable
 	Object convert(@Nullable Object source, @Nullable TypeDescriptor sourceType, TypeDescriptor targetType);
 

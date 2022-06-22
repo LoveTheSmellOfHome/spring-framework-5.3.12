@@ -26,6 +26,7 @@ import org.springframework.context.ApplicationContext;
  * @since 2.5
  * @see ContextStoppedEvent
  */
+// {@code ApplicationContext} 启动时引发的事件
 @SuppressWarnings("serial")
 public class ContextStartedEvent extends ApplicationContextEvent {
 

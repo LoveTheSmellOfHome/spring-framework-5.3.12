@@ -29,6 +29,8 @@ import org.springframework.lang.Nullable;
  * @author Andy Clement
  * @since 3.0
  */
+// 构造函数解析器尝试定位构造函数并返回可用于调用该构造函数的 ConstructorExecutor。
+// ConstructorExecutor 将被缓存，但如果它“过时”，解析器将再次被调用。
 @FunctionalInterface
 public interface ConstructorResolver {
 
@@ -41,6 +43,8 @@ public interface ConstructorResolver {
 	 * @param argumentTypes the arguments that the constructor must be able to handle
 	 * @return a ConstructorExecutor that can invoke the constructor, or null if non found
 	 */
+	// 在提供的上下文中，在提供的类型上确定可以处理指定参数的合适构造函数。 返回可用于调用该
+	// 构造函数的 ConstructorExecutor（如果找不到构造函数，则返回null ）。
 	@Nullable
 	ConstructorExecutor resolve(EvaluationContext context, String typeName, List<TypeDescriptor> argumentTypes)
 			throws AccessException;

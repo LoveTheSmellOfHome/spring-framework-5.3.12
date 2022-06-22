@@ -46,6 +46,19 @@ import java.lang.annotation.Target;
  * @author Juergen Hoeller
  * @since 3.0
  */
+// 当前 bean 所依赖的 bean。任意指定的 bean 都保证由容器在此 bean 之前创建。
+// 在 bean 不通过属性或构造函数参数显式依赖另一个 bean 而是依赖于另一个 bean 初始化的副作用的情况下很少使用。
+//
+// 依赖声明既可以指定初始化时间依赖项，也可以指定对应的销毁时间依赖项（仅在单例 bean 的情况下）。
+// 与给定 bean 定义依赖关系的依赖 bean 首先被销毁，在给定 bean 本身被销毁之前。因此，依赖声明也可以控制关闭顺序。
+//
+// 可用于任何直接或间接使用 org.springframework.stereotype.@Component 注解的类或使用 @Bean 注解的方法。
+//
+// 除非正在使用组件扫描，否则在类级别使用 @DependsOn 无效。如果通过 XML 声明 DependsOn注释类，则忽略DependsOn注释元数据，并且  反而受到尊重。
+//
+// 1. 当前 bean 之前必须先创建 @DependsOn 指定的 bean,当前 bean 销毁前必须先销毁 @DependsOn 指定的 bean
+// 2. 必须在注解环境 @ComponentScan 扫描作用的范围内使用 @DependsOn
+
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

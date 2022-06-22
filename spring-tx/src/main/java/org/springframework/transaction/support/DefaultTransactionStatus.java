@@ -48,19 +48,33 @@ import org.springframework.util.Assert;
  * @see #releaseSavepoint
  * @see SimpleTransactionStatus
  */
+// AbstractPlatformTransactionManager使用的org.springframework.transaction.TransactionStatus
+// 接口的默认实现。基于底层“交易对象”的概念。
+//
+// 保存 AbstractPlatformTransactionManager 内部需要的所有状态信息，包括由具体事务管理器实现确定的通用事务对象。
+//
+// 支持将保存点相关的方法委托给实现 SavepointManager 接口的事务对象。
+//
+// 注意：这不适用于其他 PlatformTransactionManager 实现，特别是不适用于测试环境中的模拟事务管理器。改为
+// 使用替代的 SimpleTransactionStatus 类或普通 org.springframework.transaction.TransactionStatus接口的模拟。
 public class DefaultTransactionStatus extends AbstractTransactionStatus {
 
+	// 事务
 	@Nullable
 	private final Object transaction;
 
+	// 是否是新事物
 	private final boolean newTransaction;
 
+	// 是不是为给定事务打开了新事务同步
 	private final boolean newSynchronization;
 
+	// 是不是只读
 	private final boolean readOnly;
 
 	private final boolean debug;
 
+	// 挂起资源
 	@Nullable
 	private final Object suspendedResources;
 
@@ -80,6 +94,14 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	 * @param suspendedResources a holder for resources that have been suspended
 	 * for this transaction, if any
 	 */
+	// 创建一个新的DefaultTransactionStatus实例。
+	// 参形：
+	//			transaction - 可以为内部事务实现保持状态的底层事务对象
+	//			newTransaction – 如果事务是新的，否则参与现有事务
+	//			newSynchronization – 如果为给定事务打开了新事务同步
+	//			readOnly – 事务是否被标记为只读
+	//			debug – 是否应该启用调试日志来处理此事务？在这里缓存它可以防止重复调用询问日志系统是否应该启用调试日志。
+	//			suspendedResources – 已为此事务暂停的资源的持有者（如果有）
 	public DefaultTransactionStatus(
 			@Nullable Object transaction, boolean newTransaction, boolean newSynchronization,
 			boolean readOnly, boolean debug, @Nullable Object suspendedResources) {
@@ -97,6 +119,9 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	 * Return the underlying transaction object.
 	 * @throws IllegalStateException if no transaction is active
 	 */
+	// 返回底层交易对象。
+	// 抛出：
+	//			IllegalStateException – 如果没有事务处于活动状态
 	public Object getTransaction() {
 		Assert.state(this.transaction != null, "No transaction active");
 		return this.transaction;
@@ -105,6 +130,7 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	/**
 	 * Return whether there is an actual transaction active.
 	 */
+	// 返回是否有实际的交易活动。
 	public boolean hasTransaction() {
 		return (this.transaction != null);
 	}
@@ -118,6 +144,7 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	 * Return if a new transaction synchronization has been opened
 	 * for this transaction.
 	 */
+	// 如果已为此事务打开新的事务同步，则返回。
 	public boolean isNewSynchronization() {
 		return this.newSynchronization;
 	}
@@ -125,6 +152,7 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	/**
 	 * Return if this transaction is defined as read-only transaction.
 	 */
+	// 如果此事务被定义为只读事务，则返回
 	public boolean isReadOnly() {
 		return this.readOnly;
 	}
@@ -134,6 +162,8 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	 * {@link AbstractPlatformTransactionManager} as an optimization, to prevent repeated
 	 * calls to {@code logger.isDebugEnabled()}. Not really intended for client code.
 	 */
+	// 返回此事务的进度是否已调试。 AbstractPlatformTransactionManager将其用作优化，
+	// 以防止重复调用 logger.isDebugEnabled() 。并非真正用于客户端代码。
 	public boolean isDebug() {
 		return this.debug;
 	}
@@ -142,6 +172,7 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	 * Return the holder for resources that have been suspended for this transaction,
 	 * if any.
 	 */
+	// 返回已为此事务挂起的资源的持有者（如果有）
 	@Nullable
 	public Object getSuspendedResources() {
 		return this.suspendedResources;
@@ -150,6 +181,7 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 
 	//---------------------------------------------------------------------
 	// Enable functionality through underlying transaction object
+	// 通过底层事务对象启用功能
 	//---------------------------------------------------------------------
 
 	/**
@@ -159,6 +191,8 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	 * rollback-only by the transaction coordinator, for example in case of a timeout.
 	 * @see SmartTransactionObject#isRollbackOnly()
 	 */
+	// 通过检查事务对象确定仅回滚标志，前提是后者实现 SmartTransactionObject 接口。
+	// 如果全局事务本身已被事务协调器标记为仅回滚，例如在超时的情况下，将返回true
 	@Override
 	public boolean isGlobalRollbackOnly() {
 		return ((this.transaction instanceof SmartTransactionObject) &&
@@ -171,6 +205,9 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	 * @throws NestedTransactionNotSupportedException if savepoints are not supported
 	 * @see #isTransactionSavepointManager()
 	 */
+	// 此实现公开底层事务对象的 SavepointManager 接口（如果有）。
+	// 抛出：
+	//			NestedTransactionNotSupportedException – 如果不支持保存点
 	@Override
 	protected SavepointManager getSavepointManager() {
 		Object transaction = this.transaction;
@@ -187,6 +224,7 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	 * @see #getTransaction()
 	 * @see #getSavepointManager()
 	 */
+	// 返回底层事务是否实现了SavepointManager接口并因此支持保存点
 	public boolean isTransactionSavepointManager() {
 		return (this.transaction instanceof SavepointManager);
 	}
@@ -196,6 +234,7 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
 	 * implements the {@link SmartTransactionObject} interface.
 	 * @see SmartTransactionObject#flush()
 	 */
+	// 将刷新委托给事务对象，前提是后者实现 SmartTransactionObject 接口。
 	@Override
 	public void flush() {
 		if (this.transaction instanceof SmartTransactionObject) {

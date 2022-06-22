@@ -32,6 +32,11 @@ package org.springframework.expression;
  * @author Andy Clement
  * @since 3.0
  */
+// 执行器由解析器构建，可以被基础设施缓存以快速重复操作而无需返回解析器。
+// 例如，在类上运行的特定构造函数可能会被反射构造函数解析器发现——然后它会构建一个执行该构造函数的 ConstructorExecutor，
+// 并且 ConstructorExecutor 可以被重用，而无需返回解析器再次发现构造函数
+//
+// 它们可能会变得陈旧，在这种情况下应该抛出 AccessException - 这将导致基础结构返回到解析器以请求一个新的
 public interface ConstructorExecutor {
 
 	/**
@@ -43,6 +48,12 @@ public interface ConstructorExecutor {
 	 * @throws AccessException if there is a problem executing the command or the
 	 * CommandExecutor is no longer valid
 	 */
+	// 使用指定的参数在指定的上下文中执行构造函数。
+	// 形参：
+	// context- 执行命令的评估上下文
+	// arguments - 构造函数调用的参数，应该匹配（在数量和类型方面）命令需要运行的任何内容
+	// 返回值：新对象
+	// AccessException – 如果执行命令时出现问题或 CommandExecutor 不再有效
 	TypedValue execute(EvaluationContext context, Object... arguments) throws AccessException;
 
 }

@@ -31,9 +31,10 @@ import org.springframework.core.Ordered;
  * @since 4.2
  * @see ApplicationListenerMethodAdapter
  */
+// 支持常规 {@link EventListener} 注解的默认 {@link EventListenerFactory} 实现。
 public class DefaultEventListenerFactory implements EventListenerFactory, Ordered {
 
-	private int order = LOWEST_PRECEDENCE;
+	private int order = LOWEST_PRECEDENCE; // 默认最低优先级
 
 
 	public void setOrder(int order) {

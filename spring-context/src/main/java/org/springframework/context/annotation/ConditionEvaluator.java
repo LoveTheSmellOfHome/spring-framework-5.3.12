@@ -45,6 +45,7 @@ import org.springframework.util.MultiValueMap;
  * @author Juergen Hoeller
  * @since 4.0
  */
+// 条件评估器：用于评估 {@link Conditional} 注解的内部类，用来评估这个条件是不是予以忽略
 class ConditionEvaluator {
 
 	private final ConditionContextImpl context;
@@ -67,6 +68,8 @@ class ConditionEvaluator {
 	 * @param metadata the meta data
 	 * @return if the item should be skipped
 	 */
+	// 根据 {@code @Conditional} 注释确定是否应跳过项目。 {@link ConfigurationPhase} 将从项目的类型
+	// 中推导出（即 {@code @Configuration} 类将是 {@link Configuration#PhasePARSE_CONFIGURATION}）
 	public boolean shouldSkip(AnnotatedTypeMetadata metadata) {
 		return shouldSkip(metadata, null);
 	}
@@ -77,11 +80,16 @@ class ConditionEvaluator {
 	 * @param phase the phase of the call
 	 * @return if the item should be skipped
 	 */
+	// 根据 {@code @Conditional} 注解确定是否应跳过项目
+	// @param metadata 元数据，注解或方法元数据类
+	// @param phase 调用的阶段
+	// @return 是否该项目应该被跳过
 	public boolean shouldSkip(@Nullable AnnotatedTypeMetadata metadata, @Nullable ConfigurationPhase phase) {
 		if (metadata == null || !metadata.isAnnotated(Conditional.class.getName())) {
 			return false;
 		}
 
+		// 判断阶段是否匹配
 		if (phase == null) {
 			if (metadata instanceof AnnotationMetadata &&
 					ConfigurationClassUtils.isConfigurationCandidate((AnnotationMetadata) metadata)) {
@@ -90,6 +98,7 @@ class ConditionEvaluator {
 			return shouldSkip(metadata, ConfigurationPhase.REGISTER_BEAN);
 		}
 
+		// 从 metadata 获取条件类型，逐一添加
 		List<Condition> conditions = new ArrayList<>();
 		for (String[] conditionClasses : getConditionClasses(metadata)) {
 			for (String conditionClass : conditionClasses) {
@@ -98,6 +107,7 @@ class ConditionEvaluator {
 			}
 		}
 
+		// 根据优先级排序，优先级高的在前
 		AnnotationAwareOrderComparator.sort(conditions);
 
 		for (Condition condition : conditions) {
@@ -105,6 +115,7 @@ class ConditionEvaluator {
 			if (condition instanceof ConfigurationCondition) {
 				requiredPhase = ((ConfigurationCondition) condition).getConfigurationPhase();
 			}
+			// 从条件集合中获取第一个不满足条件的直接返回 true,他们之间的关系是 ||
 			if ((requiredPhase == null || requiredPhase == phase) && !condition.matches(this.context, metadata)) {
 				return true;
 			}

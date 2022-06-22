@@ -35,6 +35,7 @@ import org.springframework.util.StringValueResolver;
  * @author Mark Paluch
  * @since 16.03.2003
  */
+// Spring 的通用事务属性实现。默认情况下回滚运行时但未检查的异常
 @SuppressWarnings("serial")
 public class DefaultTransactionAttribute extends DefaultTransactionDefinition implements TransactionAttribute {
 
@@ -59,6 +60,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * @see #setReadOnly
 	 * @see #setName
 	 */
+	// 使用默认设置创建一个新的 DefaultTransactionAttribute。可以通过 bean 属性设置器进行修改
 	public DefaultTransactionAttribute() {
 		super();
 	}
@@ -71,6 +73,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * @see #setReadOnly
 	 * @see #setName
 	 */
+	// 复制构造函数。可以通过 bean 属性设置器修改定义
 	public DefaultTransactionAttribute(TransactionAttribute other) {
 		super(other);
 	}
@@ -84,6 +87,8 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * @see #setTimeout
 	 * @see #setReadOnly
 	 */
+	// 使用给定的传播行为创建一个新的 DefaultTransactionAttribute。可以通过 bean 属性设置器进行修改。
+	// @parampropagationBehavior TransactionDefinition 接口中的传播常量之一
 	public DefaultTransactionAttribute(int propagationBehavior) {
 		super(propagationBehavior);
 	}
@@ -94,6 +99,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * e.g. indicating where the attribute is applying.
 	 * @since 4.3.4
 	 */
+	// 为这个事务属性设置一个描述符，例如指示应用属性的位置。
 	public void setDescriptor(@Nullable String descriptor) {
 		this.descriptor = descriptor;
 	}
@@ -103,6 +109,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * or {@code null} if none.
 	 * @since 4.3.4
 	 */
+	// 返回此事务属性的描述符，如果没有，则返回 {@code null}。
 	@Nullable
 	public String getDescriptor() {
 		return this.descriptor;
@@ -115,6 +122,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * @see #setTimeout
 	 * @see #resolveAttributeStrings
 	 */
+	// 将超时设置为应用（如果有）作为解析为秒数的字符串值。
 	public void setTimeoutString(@Nullable String timeoutString) {
 		this.timeoutString = timeoutString;
 	}
@@ -126,6 +134,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * @see #getTimeout
 	 * @see #resolveAttributeStrings
 	 */
+	// 返回要应用的超时（如果有），作为解析为秒数的字符串值。
 	@Nullable
 	public String getTimeoutString() {
 		return this.timeoutString;
@@ -138,6 +147,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * @since 3.0
 	 * @see #resolveAttributeStrings
 	 */
+	// 将限定符值与此事务属性相关联。 <p>这可用于选择相应的事务管理器来处理此特定事务。
 	public void setQualifier(@Nullable String qualifier) {
 		this.qualifier = qualifier;
 	}
@@ -146,6 +156,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * Return a qualifier value associated with this transaction attribute.
 	 * @since 3.0
 	 */
+	// 返回与此事务属性关联的限定符值
 	@Override
 	@Nullable
 	public String getQualifier() {
@@ -159,6 +170,8 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * @since 5.3
 	 * @see #resolveAttributeStrings
 	 */
+	// 将一个或多个标签与此交易属性相关联。
+	// <p>这可用于应用特定的交易行为或遵循纯粹的描述性质。
 	public void setLabels(Collection<String> labels) {
 		this.labels = labels;
 	}
@@ -182,6 +195,11 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * intentionally declared as business exceptions, leading to a commit by default.
 	 * @see org.springframework.transaction.support.TransactionTemplate#execute
 	 */
+	// 默认行为与 EJB 一样：回滚未经检查的异常 ({@link RuntimeException})，假设任何业务规则之外的意外结果。
+	// 此外，我们还尝试回滚 {@link Error}，这显然也是一个意想不到的结果。
+	// 相比之下，检查异常被认为是业务异常，因此是事务性业务方法的常规预期结果，即一种仍然允许资源操作的常规完成的替代返回值。
+	// <p>这与 TransactionTemplate 的默认行为基本一致，除了 TransactionTemplate 也会回滚未声明的已检查异常（极端情况）。
+	// 对于声明性事务，我们希望将检查异常有意声明为业务异常，从而导致默认提交。
 	@Override
 	public boolean rollbackOn(Throwable ex) {
 		return (ex instanceof RuntimeException || ex instanceof Error);

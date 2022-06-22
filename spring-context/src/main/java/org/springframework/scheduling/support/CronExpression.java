@@ -37,6 +37,8 @@ import org.springframework.util.StringUtils;
  * @since 5.3
  * @see CronTrigger
  */
+// <a href="https:www.manpagez.comman5crontab">crontab 表达式</a> 的表示，可以计算下一次匹配。
+// <p>{@code CronExpression} 实例是通过 {@link #parse(String)} 创建的；下一次匹配条件由 {@link #next(Temporal)} 决定。
 public final class CronExpression {
 
 	static final int MAX_ATTEMPTS = 366;
@@ -68,6 +70,7 @@ public final class CronExpression {
 
 		// reverse order, to make big changes first
 		// to make sure we end up at 0 nanos, we add an extra field
+		// 倒序，首先要进行大的更改以确保我们最终达到 0 nanos，我们添加了一个额外的字段
 		this.fields = new CronField[]{daysOfWeek, months, daysOfMonth, hours, minutes, seconds, CronField.zeroNanos()};
 		this.expression = expression;
 	}
@@ -208,6 +211,9 @@ public final class CronExpression {
 	 * @return {@code true} if the given expression is a valid cron expression
 	 * @since 5.3.8
 	 */
+	// 确定给定的字符串是否代表有效的 cron 表达式
+	// @param expression 要计算的表达式
+	// @return {@code true} 如果给定的表达式是有效的 cron 表达式
 	public static boolean isValidExpression(@Nullable String expression) {
 		if (expression == null) {
 			return false;
@@ -240,6 +246,10 @@ public final class CronExpression {
 	 * @return the next temporal that matches this expression, or {@code null}
 	 * if no such temporal can be found
 	 */
+	// 计算与此表达式匹配的下一个 {@link Temporal}。
+	// @param temporal 种子值
+	// @param <T> 时间类型
+	// @return 匹配这个表达式的下一个时间，或者 {@code null} 如果找不到这样的时间
 	@Nullable
 	public <T extends Temporal & Comparable<? super T>> T next(T temporal) {
 		return nextOrSame(ChronoUnit.NANOS.addTo(temporal, 1));

@@ -48,6 +48,16 @@ import org.springframework.lang.Nullable;
  * @author Chris Beams
  * @since 3.0
  */
+// 一个工厂，提供对 ConversionService 的方便访问，该服务配置有适用于大多数环境的转换器。
+// 设置 {@link #setConverters "converters"} 属性以补充默认转换器
+//
+// <p>此实现创建了一个 {@link DefaultConversionService}。
+// 子类可以覆盖 {@link #createConversionService()} 以返回他们选择的 {@link GenericConversionService} 实例。
+//
+// <p>与所有 {@code FactoryBean} 实现一样，此类适用于使用 Spring {@code <beans>} XML 配置
+// Spring 应用程序上下文时使用。使用 {@link org.springframework.context.annotation.Configuration @Configuration} 类
+// 配置容器时，只需从 {@link org.springframework.context.annotation.Bean @Bean} 方法
+// 实例化、配置并返回适当的 {@code ConversionService} 对象。
 public class ConversionServiceFactoryBean implements FactoryBean<ConversionService>, InitializingBean {
 
 	@Nullable
@@ -63,6 +73,9 @@ public class ConversionServiceFactoryBean implements FactoryBean<ConversionServi
 	 * {@link org.springframework.core.convert.converter.ConverterFactory},
 	 * or {@link org.springframework.core.convert.converter.GenericConverter}.
 	 */
+	// 配置应添加的自定义转换器对象集：实现 {@link org.springframework.core.convert.converter.Converter}、
+	// {@link org.springframework.core.convert.converter.ConverterFactory} 或
+	// {@link org .springframework.core.convert.converter.GenericConverter}
 	public void setConverters(Set<?> converters) {
 		this.converters = converters;
 	}
@@ -79,6 +92,8 @@ public class ConversionServiceFactoryBean implements FactoryBean<ConversionServi
 	 * Subclasses may override to customize the ConversionService instance that
 	 * gets created.
 	 */
+	// 创建此工厂 bean 返回的 ConversionService 实例。
+	// <p>默认创建一个简单的 {@link GenericConversionService} 实例。子类可以重写以自定义创建的 ConversionService 实例
 	protected GenericConversionService createConversionService() {
 		return new DefaultConversionService();
 	}

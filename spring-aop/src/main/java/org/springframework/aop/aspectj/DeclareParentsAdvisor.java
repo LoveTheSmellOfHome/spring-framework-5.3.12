@@ -33,6 +33,7 @@ import org.springframework.aop.support.DelegatingIntroductionInterceptor;
  * @author Ramnivas Laddad
  * @since 2.0
  */
+// 委托给给定对象的介绍顾问。为 DeclareParents 注解实现 AspectJ 注解样式的行为
 public class DeclareParentsAdvisor implements IntroductionAdvisor {
 
 	private final Advice advice;
@@ -48,6 +49,11 @@ public class DeclareParentsAdvisor implements IntroductionAdvisor {
 	 * @param typePattern type pattern the introduction is restricted to
 	 * @param defaultImpl the default implementation class
 	 */
+	// 为此 DeclareParents 字段创建一个新顾问。
+	// 参形：
+	//			interfaceType – 定义介绍的静态字段
+	//			typePattern – 介绍仅限于的类型模式
+	//			defaultImpl – 默认实现类
 	public DeclareParentsAdvisor(Class<?> interfaceType, String typePattern, Class<?> defaultImpl) {
 		this(interfaceType, typePattern,
 				new DelegatePerTargetObjectIntroductionInterceptor(defaultImpl, interfaceType));
@@ -59,6 +65,11 @@ public class DeclareParentsAdvisor implements IntroductionAdvisor {
 	 * @param typePattern type pattern the introduction is restricted to
 	 * @param delegateRef the delegate implementation object
 	 */
+	// 为此 DeclareParents 字段创建一个新顾问。
+	// 参形：
+	//			interfaceType – 定义介绍的静态字段
+	//			typePattern – 介绍仅限于的类型模式
+	//			delegateRef – 委托实现对象
 	public DeclareParentsAdvisor(Class<?> interfaceType, String typePattern, Object delegateRef) {
 		this(interfaceType, typePattern, new DelegatingIntroductionInterceptor(delegateRef));
 	}
@@ -70,11 +81,17 @@ public class DeclareParentsAdvisor implements IntroductionAdvisor {
 	 * @param typePattern type pattern the introduction is restricted to
 	 * @param interceptor the delegation advice as {@link IntroductionInterceptor}
 	 */
+	// 私有构造函数，用于在基于 impl 的委托和基于引用的委托之间共享公共代码（由于使用 final 字段，不能使用诸如 init() 之类的方法来共享公共代码）。
+	// 参形：
+	//			interfaceType – 定义介绍的静态字段
+	//			typePattern – 介绍仅限于的类型模式
+	//			interceptor - 作为 IntroductionInterceptor 的委托建议
 	private DeclareParentsAdvisor(Class<?> interfaceType, String typePattern, IntroductionInterceptor interceptor) {
 		this.advice = interceptor;
 		this.introducedInterface = interfaceType;
 
 		// Excludes methods implemented.
+		// 不包括实现的方法
 		ClassFilter typePatternFilter = new TypePatternClassFilter(typePattern);
 		ClassFilter exclusion = (clazz -> !this.introducedInterface.isAssignableFrom(clazz));
 		this.typePatternClassFilter = ClassFilters.intersection(typePatternFilter, exclusion);

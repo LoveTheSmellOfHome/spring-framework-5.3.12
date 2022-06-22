@@ -16,12 +16,12 @@
 
 package org.springframework.beans.factory.config;
 
-import java.util.Iterator;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.lang.Nullable;
+
+import java.util.Iterator;
 
 /**
  * Configuration interface to be implemented by most listable bean factories.
@@ -39,6 +39,14 @@ import org.springframework.lang.Nullable;
  * @since 03.11.2003
  * @see org.springframework.context.support.AbstractApplicationContext#getBeanFactory()
  */
+// 大多数可列出的bean工厂要实现的配置接口。除了ConfigurableBeanFactory之外，它还提供了
+// 分析和修改 bean 定义以及预实例化单例的工具。
+//
+//org.springframework.beans.factory.BeanFactory的这个子接口并不意味着在正常的应用程序代码中使用：对于典型用例，
+// 请坚持使用org.springframework.beans.factory.BeanFactory 或 ListableBeanFactory 。这个接口只是为了允许
+// 框架内部的即插即用，即使在需要访问 bean 工厂配置方法时也是如此。
+//
+// 提供框架内部可写的 ListableBeanFactory
 public interface ConfigurableListableBeanFactory
 		extends ListableBeanFactory, AutowireCapableBeanFactory, ConfigurableBeanFactory {
 
@@ -47,6 +55,7 @@ public interface ConfigurableListableBeanFactory
 	 * for example, String. Default is none.
 	 * @param type the dependency type to ignore
 	 */
+	// 忽略给定的自动装配依赖类型：例如，字符串。默认为无
 	void ignoreDependencyType(Class<?> type);
 
 	/**
@@ -60,6 +69,12 @@ public interface ConfigurableListableBeanFactory
 	 * @see org.springframework.beans.factory.BeanFactoryAware
 	 * @see org.springframework.context.ApplicationContextAware
 	 */
+	// 忽略给定的自动装配依赖接口。
+	// <p>这通常由应用程序上下文用于注册以其他方式解析的依赖项，例如通过 BeanFactoryAware 的 BeanFactory 或通
+	// 过 ApplicationContextAware 的 ApplicationContext。
+	// <p>默认情况下，仅忽略 BeanFactoryAware 接口。对于要忽略的其他类型，请为每种类型调用此方法。
+	// @param ifc 忽略的依赖接口 @see org.springframework.beans.factory.BeanFactoryAware
+	// @see org.springframework.context.ApplicationContextAware
 	void ignoreDependencyInterface(Class<?> ifc);
 
 	/**
@@ -78,6 +93,14 @@ public interface ConfigurableListableBeanFactory
 	 * implementation of the {@link org.springframework.beans.factory.ObjectFactory}
 	 * interface, which allows for lazy resolution of the actual target value.
 	 */
+	// 使用相应的自动装配值注册一个特殊的依赖类型。
+	// <p>这适用于应该是可自动装配但在工厂中未定义为 bean 的 factorycontext 引用：例如ApplicationContext 类型的依赖项解析
+	// 为 bean 所在的 ApplicationContext 实例。
+	// <p>注意：在普通 BeanFactory 中没有注册这样的默认类型，甚至对于 BeanFactory 接口本身也没有。
+	// @param dependencyType 要注册的依赖类型。这通常是一个基本接口，例如 BeanFactory，如果声明为自动装配依
+	// 赖项（例如 ListableBeanFactory），它的扩展也会被解析，只要给定的值实际上实现了扩展接口。
+	// @param autowiredValue 相应的自动装配值。这也可能是 {@link org.springframework.beans.factory.ObjectFactory} 接口的实现，
+	// 它允许延迟解析实际目标值。
 	void registerResolvableDependency(Class<?> dependencyType, @Nullable Object autowiredValue);
 
 	/**
@@ -89,6 +112,8 @@ public interface ConfigurableListableBeanFactory
 	 * @return whether the bean should be considered as autowire candidate
 	 * @throws NoSuchBeanDefinitionException if there is no bean with the given name
 	 */
+	// 确定指定的 bean 是否有资格作为自动装配候选者，以注入到声明匹配类型依赖项的其他 bean 中。
+	// <p>这个方法也检查祖先工厂。
 	boolean isAutowireCandidate(String beanName, DependencyDescriptor descriptor)
 			throws NoSuchBeanDefinitionException;
 
@@ -106,6 +131,9 @@ public interface ConfigurableListableBeanFactory
 	 * @throws NoSuchBeanDefinitionException if there is no bean with the given name
 	 * defined in this factory
 	 */
+	// 返回指定 bean 的注册 BeanDefinition，允许访问其属性值和构造函数参数值（可以在 bean factory 后处理期间修改）。
+	// <p>返回的 BeanDefinition 对象不应是副本，而是在工厂中注册的原始定义对象。这意味着，如有必要，它应该可以转换为更具体的实现类型。
+	// <p><b>注意：<b>此方法<i>不<i>考虑祖先工厂。它仅用于访问此工厂的本地 bean 定义。
 	BeanDefinition getBeanDefinition(String beanName) throws NoSuchBeanDefinitionException;
 
 	/**
@@ -120,6 +148,8 @@ public interface ConfigurableListableBeanFactory
 	 * @see #getBeanNamesForType
 	 * @see #getBeanNamesForAnnotation
 	 */
+	// 返回此工厂管理的所有 bean 名称的统一视图。
+	// <p> 包括 bean 定义名称以及手动注册的单例实例的名称，bean 定义名称始终排在最前面，类似于 bean 名称的类型注释特定检索的工作原理
 	Iterator<String> getBeanNamesIterator();
 
 	/**
@@ -132,6 +162,9 @@ public interface ConfigurableListableBeanFactory
 	 * @see #getBeanDefinition
 	 * @see #getMergedBeanDefinition
 	 */
+	// 清除合并的 bean 定义缓存，删除认为尚不符合完整元数据缓存条件的 bean 的条目。
+	// <p>通常在更改原始 bean 定义后触发，例如应用 {@link BeanFactoryPostProcessor} 后。
+	// 请注意，此时已创建的 bean 的元数据将保留
 	void clearMetadataCache();
 
 	/**
@@ -139,6 +172,8 @@ public interface ConfigurableListableBeanFactory
 	 * will not be modified or post-processed any further.
 	 * <p>This allows the factory to aggressively cache bean definition metadata.
 	 */
+	// 冻结所有 bean 定义，表明注册的 bean 定义不会被进一步修改或后处理。
+	// <p>这允许工厂积极缓存 bean 定义元数据
 	void freezeConfiguration();
 
 	/**
@@ -146,6 +181,7 @@ public interface ConfigurableListableBeanFactory
 	 * i.e. are not supposed to be modified or post-processed any further.
 	 * @return {@code true} if the factory's configuration is considered frozen
 	 */
+	// 返回此工厂的 bean 定义是否被冻结，即不应进一步修改或后处理。
 	boolean isConfigurationFrozen();
 
 	/**
@@ -157,6 +193,8 @@ public interface ConfigurableListableBeanFactory
 	 * Call {@link #destroySingletons()} for full cleanup in this case.
 	 * @see #destroySingletons()
 	 */
+	// 确保所有非延迟初始化单例都被实例化，同时考虑 {@link org.springframework.beans.factory.FactoryBean FactoryBeans}。
+	// 如果需要，通常在工厂设置结束时调用。
 	void preInstantiateSingletons() throws BeansException;
 
 }

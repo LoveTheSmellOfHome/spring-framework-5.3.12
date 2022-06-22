@@ -27,6 +27,8 @@ import java.util.function.Supplier;
  *
  * @author Brian Clozel
  */
+// 默认“无操作”{@code ApplicationStartup} 实现
+// <p>此变体旨在将开销降至最低，并且不记录事件。
 class DefaultApplicationStartup implements ApplicationStartup {
 
 	private static final DefaultStartupStep DEFAULT_STARTUP_STEP = new DefaultStartupStep();
