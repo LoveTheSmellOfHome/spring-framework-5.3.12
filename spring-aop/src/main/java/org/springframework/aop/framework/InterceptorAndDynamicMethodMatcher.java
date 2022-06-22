@@ -26,6 +26,7 @@ import org.springframework.aop.MethodMatcher;
  *
  * @author Rod Johnson
  */
+// 内部框架类，将 MethodInterceptor 实例与 MethodMatcher 相结合，用作顾问链中的元素一般用运于运行时动态匹配
 class InterceptorAndDynamicMethodMatcher {
 
 	final MethodInterceptor interceptor;

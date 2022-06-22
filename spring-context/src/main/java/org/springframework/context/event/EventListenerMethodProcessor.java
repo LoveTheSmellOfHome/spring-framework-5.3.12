@@ -62,6 +62,11 @@ import org.springframework.util.CollectionUtils;
  * @see EventListenerFactory
  * @see DefaultEventListenerFactory
  */
+// 将 {@link EventListener} 方法注册为单独的 {@link ApplicationListener} 实例。
+// 实现 {@link BeanFactoryPostProcessor}（从 5.1 开始）主要用于早期检索，避免对此处理器 bean
+// 及其 {@link EventListenerFactory} 委托进行 AOP 检查
+//
+// 主要用于处理方法，
 public class EventListenerMethodProcessor
 		implements SmartInitializingSingleton, ApplicationContextAware, BeanFactoryPostProcessor {
 
@@ -106,21 +111,26 @@ public class EventListenerMethodProcessor
 		this.applicationContext = (ConfigurableApplicationContext) applicationContext;
 	}
 
+	// 1. 最先被调用
 	@Override
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 
+		// 通过依赖查找所有 EventListenerFactory
 		Map<String, EventListenerFactory> beans = beanFactory.getBeansOfType(EventListenerFactory.class, false, false);
 		List<EventListenerFactory> factories = new ArrayList<>(beans.values());
-		AnnotationAwareOrderComparator.sort(factories);
+		AnnotationAwareOrderComparator.sort(factories); // 排序
 		this.eventListenerFactories = factories;
 	}
 
 
+	// 2.Singleton 实例化后，就开始回调。
 	@Override
 	public void afterSingletonsInstantiated() {
 		ConfigurableListableBeanFactory beanFactory = this.beanFactory;
 		Assert.state(this.beanFactory != null, "No ConfigurableListableBeanFactory set");
+		// 依赖查找所有的 bean，不仅仅是从 BeanDefinition 中获取，而扫描所有应用上下文中的 bean 的原因是：有些 bean 可能是
+		// 中间合成的，还有可能包含一些 Singleton bean 的搜索。
 		String[] beanNames = beanFactory.getBeanNamesForType(Object.class);
 		for (String beanName : beanNames) {
 			if (!ScopedProxyUtils.isScopedTarget(beanName)) {
@@ -137,6 +147,7 @@ public class EventListenerMethodProcessor
 				if (type != null) {
 					if (ScopedObject.class.isAssignableFrom(type)) {
 						try {
+							// 目标类是脱离 CGLIB 提升的原始类的额类型，没有任何包装
 							Class<?> targetClass = AutoProxyUtils.determineTargetClass(
 									beanFactory, ScopedProxyUtils.getTargetBeanName(beanName));
 							if (targetClass != null) {
@@ -151,6 +162,7 @@ public class EventListenerMethodProcessor
 						}
 					}
 					try {
+						// 处理 bean
 						processBean(beanName, type);
 					}
 					catch (Throwable ex) {
@@ -169,6 +181,7 @@ public class EventListenerMethodProcessor
 
 			Map<Method, EventListener> annotatedMethods = null;
 			try {
+				// 搜索目标类型中所有标注了 @EventListener 注解的方法
 				annotatedMethods = MethodIntrospector.selectMethods(targetType,
 						(MethodIntrospector.MetadataLookup<EventListener>) method ->
 								AnnotatedElementUtils.findMergedAnnotation(method, EventListener.class));
@@ -192,10 +205,12 @@ public class EventListenerMethodProcessor
 				Assert.state(context != null, "No ApplicationContext set");
 				List<EventListenerFactory> factories = this.eventListenerFactories;
 				Assert.state(factories != null, "EventListenerFactory List not initialized");
+				// 迭代被 @EventListener 注解标注的方法
 				for (Method method : annotatedMethods.keySet()) {
 					for (EventListenerFactory factory : factories) {
 						if (factory.supportsMethod(method)) {
 							Method methodToUse = AopUtils.selectInvocableMethod(method, context.getType(beanName));
+							// 为每个方法创建 ApplicationListener
 							ApplicationListener<?> applicationListener =
 									factory.createApplicationListener(beanName, targetType, methodToUse);
 							if (applicationListener instanceof ApplicationListenerMethodAdapter) {
@@ -220,6 +235,8 @@ public class EventListenerMethodProcessor
 	 * which indicates that there is no {@link EventListener} to be found there.
 	 * @since 5.1
 	 */
+	// 判断给定的类是否是一个{@code org.springframework} bean 类，没有被注解为用户或者测试{@link Component}...
+	// 这表明在那里找不到 {@link EventListener}
 	private static boolean isSpringContainerClass(Class<?> clazz) {
 		return (clazz.getName().startsWith("org.springframework.") &&
 				!AnnotatedElementUtils.isAnnotated(ClassUtils.getUserClass(clazz), Component.class));

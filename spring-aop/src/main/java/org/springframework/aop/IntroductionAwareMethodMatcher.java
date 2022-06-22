@@ -26,6 +26,8 @@ import java.lang.reflect.Method;
  * @author Adrian Colyer
  * @since 2.0
  */
+// MethodMatcher 的一种特殊类型，在匹配方法时会考虑引入。 如果没有对目标类的介绍，
+// 例如，方法匹配器可能能够更有效地优化匹配
 public interface IntroductionAwareMethodMatcher extends MethodMatcher {
 
 	/**
@@ -38,6 +40,13 @@ public interface IntroductionAwareMethodMatcher extends MethodMatcher {
 	 * asking is the subject on one or more introductions; {@code false} otherwise
 	 * @return whether or not this method matches statically
 	 */
+	// 执行静态检查给定方法是否匹配。 如果调用者支持扩展的 IntroductionAwareMethodMatcher 接口，则可以调用此方法而不是 2-arg matches(Method, Class)方法。
+	// 参形：
+	//			method - 候选方法
+	//			targetClass – 目标类
+	//			hasIntroductions – 如果我们代表其询问的对象是一个或多个介绍的主题，则为true ； 否则false
+	// 返回值：
+	//			此方法是否静态匹配
 	boolean matches(Method method, Class<?> targetClass, boolean hasIntroductions);
 
 }

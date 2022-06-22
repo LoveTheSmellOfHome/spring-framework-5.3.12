@@ -38,6 +38,14 @@ import java.io.InputStream;
  * @see InputStreamResource
  * @see ByteArrayResource
  */
+// 作为 {@link InputStream} 源的对象的简单接口
+//
+// <p>这是 Spring 更广泛的 {@link Resource} 接口的基础接口
+//
+// <p>对于一次性流，{@link InputStreamResource} 可用于任何给定的 {@code InputStream}。
+// Spring 的 {@link ByteArrayResource} 或任何基于文件的 {@code Resource} 实现都可以用作具体实例，允许多次读取底层内容流。
+// 例如，这使得该接口可用作邮件附件的抽象内容源。
+// 只读资源
 public interface InputStreamSource {
 
 	/**
@@ -52,6 +60,10 @@ public interface InputStreamSource {
 	 * @throws IOException if the content stream could not be opened
 	 * @see Resource#isReadable()
 	 */
+	// 为底层资源的内容返回一个 {@link InputStream}。
+	// <p>预计每次调用都会创建一个 <i>fresh<i> 流。
+	// <p>当您考虑 JavaMail 等 API 时，此要求尤其重要，该 API 在创建邮件附件时需要能够多次读取流。对于这样的用例，<i>要求<i>每个
+	// {@code getInputStream()} 调用返回一个新的流。
 	InputStream getInputStream() throws IOException;
 
 }

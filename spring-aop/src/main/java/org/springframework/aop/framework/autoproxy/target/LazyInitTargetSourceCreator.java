@@ -54,6 +54,23 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator#setCustomTargetSourceCreators
  * @see org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator
  */
+// TargetSourceCreator为定义为“lazy-init”的每个 bean 强制执行LazyInitTargetSource 。这将导致为每个
+// bean 创建一个代理，允许在不实际初始化目标 bean 实例的情况下获取对此类 bean 的引用。
+//
+// 注册为自动代理创建者的自定义TargetSourceCreator ，结合特定 bean 的自定义拦截器或仅用于创建惰性初始化代理。
+// 例如，作为 XML 应用程序上下文定义中的自动检测基础设施 bean：
+//   <bean class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">
+//     <property name="beanNames" value="*" /> <!-- apply to all beans -->
+//     <property name="customTargetSourceCreators">
+//       <list>
+//         <bean class="org.springframework.aop.framework.autoproxy.target.LazyInitTargetSourceCreator" />
+//       </list>
+//     </property>
+//   </bean>
+//
+//   <bean id="myLazyInitBean" class="mypackage.MyBeanClass" lazy-init="true">
+//     <!-- ... -->
+//   </bean>
 public class LazyInitTargetSourceCreator extends AbstractBeanFactoryBasedTargetSourceCreator {
 
 	@Override
@@ -67,6 +84,7 @@ public class LazyInitTargetSourceCreator extends AbstractBeanFactoryBasedTargetS
 			Class<?> beanClass, String beanName) {
 
 		if (getBeanFactory() instanceof ConfigurableListableBeanFactory) {
+			// 通过依赖查找获取 BeanDefinition
 			BeanDefinition definition =
 					((ConfigurableListableBeanFactory) getBeanFactory()).getBeanDefinition(beanName);
 			if (definition.isLazyInit()) {

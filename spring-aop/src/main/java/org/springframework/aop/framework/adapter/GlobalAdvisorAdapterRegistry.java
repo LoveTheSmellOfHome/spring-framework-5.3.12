@@ -24,6 +24,8 @@ package org.springframework.aop.framework.adapter;
  * @author Phillip Webb
  * @see DefaultAdvisorAdapterRegistry
  */
+// Singleton 发布一个共享的 DefaultAdvisorAdapterRegistry 实例
+// 享元模式（Flyweight）实现：全局的共享中心，基于 ClassLoader 级别的缓存，也就是在 JVM 内单例共享
 public final class GlobalAdvisorAdapterRegistry {
 
 	private GlobalAdvisorAdapterRegistry() {
@@ -33,11 +35,13 @@ public final class GlobalAdvisorAdapterRegistry {
 	/**
 	 * Keep track of a single instance so we can return it to classes that request it.
 	 */
+	// 跟踪单个实例，以便我们可以将其返回给请求它的类
 	private static AdvisorAdapterRegistry instance = new DefaultAdvisorAdapterRegistry();
 
 	/**
 	 * Return the singleton {@link DefaultAdvisorAdapterRegistry} instance.
 	 */
+	// 返回单例 DefaultAdvisorAdapterRegistry 实例
 	public static AdvisorAdapterRegistry getInstance() {
 		return instance;
 	}
@@ -47,6 +51,7 @@ public final class GlobalAdvisorAdapterRegistry {
 	 * {@link AdvisorAdapterRegistry#registerAdvisorAdapter(AdvisorAdapter) registered}
 	 * adapters.
 	 */
+	// 重置单例 DefaultAdvisorAdapterRegistry ，删除所有 registered 的适配器
 	static void reset() {
 		instance = new DefaultAdvisorAdapterRegistry();
 	}

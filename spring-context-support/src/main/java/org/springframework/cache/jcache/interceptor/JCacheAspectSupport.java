@@ -49,22 +49,35 @@ import org.springframework.util.Assert;
  * @see KeyGeneratorAdapter
  * @see CacheResolverAdapter
  */
+// JSR-107 缓存切面的基类，例如 JCacheInterceptor 或 AspectJ 切面。
+//
+// 将 Spring 缓存抽象用于缓存相关操作。处理标准 JSR-107 缓存注解不需要 JSR-107 
+// javax.cache.Cache或javax.cache.CacheManager 。
+//
+// JCacheOperationSource 用于确定缓存操作
+//
+// 如果 JCacheOperationSource 是可序列化的，则缓存切面是可序列化的。
 public class JCacheAspectSupport extends AbstractCacheInvoker implements InitializingBean {
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
+	// JCache 操作源
 	@Nullable
 	private JCacheOperationSource cacheOperationSource;
 
+	// CacheResult 拦截器
 	@Nullable
 	private CacheResultInterceptor cacheResultInterceptor;
 
+	// CachePut 拦截器
 	@Nullable
 	private CachePutInterceptor cachePutInterceptor;
 
+	// 移除缓存实体拦截器
 	@Nullable
 	private CacheRemoveEntryInterceptor cacheRemoveEntryInterceptor;
 
+	// 移除所有缓存拦截器
 	@Nullable
 	private CacheRemoveAllInterceptor cacheRemoveAllInterceptor;
 
@@ -74,6 +87,7 @@ public class JCacheAspectSupport extends AbstractCacheInvoker implements Initial
 	/**
 	 * Set the CacheOperationSource for this cache aspect.
 	 */
+	// 为此缓存切面设置 CacheOperationSource。
 	public void setCacheOperationSource(JCacheOperationSource cacheOperationSource) {
 		Assert.notNull(cacheOperationSource, "JCacheOperationSource must not be null");
 		this.cacheOperationSource = cacheOperationSource;
@@ -82,6 +96,7 @@ public class JCacheAspectSupport extends AbstractCacheInvoker implements Initial
 	/**
 	 * Return the CacheOperationSource for this cache aspect.
 	 */
+	// 返回此缓存切面的 CacheOperationSource。
 	public JCacheOperationSource getCacheOperationSource() {
 		Assert.state(this.cacheOperationSource != null, "The 'cacheOperationSource' property is required: " +
 				"If there are no cacheable methods, then don't use a cache aspect.");
@@ -104,6 +119,7 @@ public class JCacheAspectSupport extends AbstractCacheInvoker implements Initial
 	@Nullable
 	protected Object execute(CacheOperationInvoker invoker, Object target, Method method, Object[] args) {
 		// Check whether aspect is enabled to cope with cases where the AJ is pulled in automatically
+		// 检查是否开启 aspect 以应对 AJ 自动拉入的情况
 		if (this.initialized) {
 			Class<?> targetClass = AopProxyUtils.ultimateTargetClass(target);
 			JCacheOperation<?> operation = getCacheOperationSource().getCacheOperation(method, targetClass);
@@ -165,6 +181,12 @@ public class JCacheAspectSupport extends AbstractCacheInvoker implements Initial
 	 * @return the result of the invocation
 	 * @see CacheOperationInvoker#invoke()
 	 */
+	// 执行底层操作（通常在缓存未命中的情况下）并返回调用结果。如果发生异常，它将被包装在ThrowableWrapper中：
+	// 可以处理或修改异常，但也必须将其包装在 ThrowableWrapper 中。
+	// 参形：
+	//			调用者——处理被缓存操作的调用者
+	// 返回值：
+	//			调用的结果
 	@Nullable
 	protected Object invokeOperation(CacheOperationInvoker invoker) {
 		return invoker.invoke();

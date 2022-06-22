@@ -16,21 +16,6 @@
 
 package org.springframework.cglib.proxy;
 
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.springframework.asm.ClassVisitor;
 import org.springframework.asm.Label;
 import org.springframework.asm.Type;
@@ -56,6 +41,21 @@ import org.springframework.cglib.core.Transformer;
 import org.springframework.cglib.core.TypeUtils;
 import org.springframework.cglib.core.VisibilityPredicate;
 import org.springframework.cglib.core.WeakCacheKey;
+
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Generates dynamic subclasses to enable method interception. This
@@ -90,6 +90,24 @@ import org.springframework.cglib.core.WeakCacheKey;
  * <code>java.lang.reflect.Proxy</code>, see the {@link Proxy} class.
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
+// 生成动态子类以启用方法拦截。此类最初是作为 JDK 1.3 中包含的标准动态代理支持的替代品，但除了实现接口之外，它还允许代理继承具体的基类。
+// 动态生成的子类覆盖父类的非最终方法，并具有回调到用户定义的拦截器实现的钩子
+//
+// <p> 原始和最通用的回调类型是 {@link MethodInterceptor}，在 AOP 术语中，它启用“环绕通知”——也就是说，
+// 您可以在调用“超级”方法之前和之后调用自定义代码。此外，您可以在调用 super 方法之前修改参数，或者根本不调用它
+//
+// <p> 尽管 <code>MethodInterceptor<code> 的通用性足以满足任何拦截需求，但它通常是矫枉过正的。为了简单和性能，还可以使用其他专门的回调类型，
+// 例如 {@link LazyLoader}。通常每个增强类将使用一个回调，但您可以使用 {@link CallbackFilter} 控制在每个方法的基础上使用哪个回调。
+//
+// <p> 此类最常见的用途体现在静态辅助方法中。对于高级需求，例如自定义要使用的 <code>ClassLoader<code>，
+// 您应该创建一个 <code>Enhancer<code> 的新实例。 CGLIB 中的其他类遵循类似的模式
+//
+// <p> 所有增强对象都实现 {@link Factory} 接口，除非使用 {@link setUseFactory} 显式禁用此功能。
+// <code>Factory<code> 接口提供了一个 API 来更改现有对象的回调，以及一种更快、更简单的方法来创建相同类型的新实例
+//
+// 对于 <code>java.lang.reflect.Proxy<code> 的几乎直接替换，请参阅 {@link Proxy} 类。
+// 参见：{@link org.springframework.context.annotation.ConfigurationClassPostProcessor}#enhanceConfigurationClasses()
+// 参见：{@link org.springframework.context.annotation.ConfigurationClassEnhancer}
 public class Enhancer extends AbstractClassGenerator {
 
 	private static final CallbackFilter ALL_ZERO = new CallbackFilter() {
@@ -126,6 +144,11 @@ public class Enhancer extends AbstractClassGenerator {
 	 * cache, and it enables to unload classloader and the related {@link CallbackFilter} in case user does not need
 	 * that</p>
 	 */
+	// {@link org.springframework.cglib.core.AbstractClassGenerator.ClassLoaderDatageneratedClasses}
+	// 需要保持缓存键处于良好状态（如果代理类处于活动状态，键应该启动并运行），并且缓存键之一是 {@link回调过滤器}。
+	// 这就是为什么生成的类包含静态字段，该字段保持对 {@link 过滤器} 的强引用。
+	// <p>这个舞蹈实现了两个目标：确保生成的类可重用并且通过生成的类缓存可用，
+	// 并且可以卸载类加载器和相关的{@link CallbackFilter}，以防用户不需要<p>
 	private static final String CALLBACK_FILTER_FIELD = "CGLIB$CALLBACK_FILTER";
 
 	private static final Type OBJECT_TYPE =
@@ -200,6 +223,7 @@ public class Enhancer extends AbstractClassGenerator {
 	/**
 	 * Internal interface, only public due to ClassLoader issues.
 	 */
+	// 内部接口，由于 ClassLoader 问题仅公开
 	public interface EnhancerKey {
 
 		public Object newInstance(String type,
@@ -216,6 +240,7 @@ public class Enhancer extends AbstractClassGenerator {
 
 	private CallbackFilter filter;
 
+	// 回调，主要指 MethodInterceptor
 	private Callback[] callbacks;
 
 	private Type[] callbackTypes;
@@ -243,6 +268,8 @@ public class Enhancer extends AbstractClassGenerator {
 	 * generated class, use the <code>Factory</code> interface.
 	 * @see Factory
 	 */
+	// 创建一个新的 <code>Enhancer<code>。每个生成的对象都应该使用一个新的 <code>Enhancer<code> 对象，并且不应跨线程共享。
+	// 要创建生成的类的其他实例，请使用 <code>Factory<code> 接口。
 	public Enhancer() {
 		super(SOURCE);
 	}
@@ -256,6 +283,8 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @param superclass class to extend or interface to implement
 	 * @see #setInterfaces(Class[])
 	 */
+	// 设置生成的类将扩展的类。为方便起见，如果提供的父类实际上是一个接口，
+	// 则将使用适当的参数调用 <code>setInterfaces<code>。非接口参数不得声明为 final，并且必须具有可访问的构造函数。
 	public void setSuperclass(Class superclass) {
 		if (superclass != null && superclass.isInterface()) {
 			setInterfaces(new Class[]{superclass});
@@ -265,6 +294,7 @@ public class Enhancer extends AbstractClassGenerator {
 		}
 		else if (superclass != null && superclass.equals(Object.class)) {
 			// affects choice of ClassLoader
+			// 影响类加载器的选择
 			this.superclass = null;
 		}
 		else {
@@ -281,6 +311,8 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @param interfaces array of interfaces to implement, or null
 	 * @see Factory
 	 */
+	// 设置要实现的接口。无论此处指定什么，<code>Factory<code> 接口都将始终实现。
+	// @param interfaces 要实现的接口数组，或者为 null
 	public void setInterfaces(Class[] interfaces) {
 		this.interfaces = interfaces;
 	}
@@ -293,6 +325,9 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @param filter the callback filter to use when generating a new class
 	 * @see #setCallbacks
 	 */
+	// 设置用于将生成的类的方法映射到特定回调索引的 {@link CallbackFilter}。
+	// 新对象实例将始终使用相同的映射，但可能使用不同的实际回调对象。
+	// @param filter 生成新类时使用的回调过滤器 @see setCallbacks
 	public void setCallbackFilter(CallbackFilter filter) {
 		this.filter = filter;
 	}
@@ -304,6 +339,8 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @param callback the callback to use for all methods
 	 * @see #setCallbacks
 	 */
+	// 设置要使用的单个 {@link Callback}。如果您使用 {@link createClass}，则忽略。
+	// @param callback 用于所有方法的回调
 	public void setCallback(final Callback callback) {
 		setCallbacks(new Callback[]{callback});
 	}
@@ -317,6 +354,9 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @see #setCallbackFilter
 	 * @see #setCallback
 	 */
+	// 设置要使用的回调数组。如果您使用 {@link createClass}，则忽略。
+	// 您必须使用 {@link CallbackFilter} 为代理类中的每个方法指定此数组的索引。
+	// @param 回调回调数组
 	public void setCallbacks(Callback[] callbacks) {
 		if (callbacks != null && callbacks.length == 0) {
 			throw new IllegalArgumentException("Array cannot be empty");
@@ -333,6 +373,9 @@ public class Enhancer extends AbstractClassGenerator {
 	 * prevent code from changing the underlying callbacks.
 	 * @param useFactory whether to implement <code>Factory</code>; default is <code>true</code>
 	 */
+	// 设置增强对象实例是否应实现 {@link Factory} 接口。这是为需要代理与其目标更加难以区分的工具而添加的。
+	// 此外，在某些情况下，可能需要禁用 <code>Factory<code> 接口以防止代码更改底层回调。
+	// @param useFactory 是否实现<code>Factory<code>;默认为 <code>true<code>
 	public void setUseFactory(boolean useFactory) {
 		this.useFactory = useFactory;
 	}
@@ -343,6 +386,9 @@ public class Enhancer extends AbstractClassGenerator {
 	 * will call the method of the proxy's base class, if it exists.
 	 * @param interceptDuringConstruction whether to intercept methods called from the constructor
 	 */
+	// 设置是否拦截从代理的构造函数中调用的方法。默认值是true。
+	// 未被拦截的方法将调用代理基类的方法（如果存在）。
+	// @paraminterceptDuringConstruction 是否拦截构造函数调用的方法
 	public void setInterceptDuringConstruction(boolean interceptDuringConstruction) {
 		this.interceptDuringConstruction = interceptDuringConstruction;
 	}
@@ -355,6 +401,9 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @param callbackType the type of callback to use for all methods
 	 * @see #setCallbackTypes
 	 */
+	// 设置要使用的单一类型的 {@link Callback}。这可以在调用 {@link createClass} 时代替 {@link setCallback} 使用，
+	// 因为它可能无法拥有实际的回调实例数组。
+	// @param callbackType 用于所有方法的回调类型
 	public void setCallbackType(Class callbackType) {
 		setCallbackTypes(new Class[]{callbackType});
 	}
@@ -368,6 +417,9 @@ public class Enhancer extends AbstractClassGenerator {
 	 * array for each method in the proxied class.
 	 * @param callbackTypes the array of callback types
 	 */
+	// 设置要使用的单一类型的 {@link Callback}。这可以在调用 {@link createClass} 时代替 {@link setCallback} 使用，
+	// 因为它可能无法拥有实际的回调实例数组。
+	// @param callbackType 用于所有方法的回调类型
 	public void setCallbackTypes(Class[] callbackTypes) {
 		if (callbackTypes != null && callbackTypes.length == 0) {
 			throw new IllegalArgumentException("Array cannot be empty");
@@ -381,6 +433,7 @@ public class Enhancer extends AbstractClassGenerator {
 	 * Uses the no-arg constructor of the superclass.
 	 * @return a new instance
 	 */
+	// 如有必要，生成一个新类并使用指定的回调（如果有）来创建新的对象实例。使用超类的无参数构造函数。
 	public Object create() {
 		classOnly = false;
 		argumentTypes = null;
@@ -396,6 +449,8 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @param arguments compatible wrapped arguments to pass to constructor
 	 * @return a new instance
 	 */
+	// 如有必要，生成一个新类并使用指定的回调（如果有）来创建新的对象实例。
+	// 使用与 <code>argumentTypes<code> 参数匹配的超类的构造函数，以及给定的参数
 	public Object create(Class[] argumentTypes, Object[] arguments) {
 		classOnly = false;
 		if (argumentTypes == null || arguments == null || argumentTypes.length != arguments.length) {
@@ -414,6 +469,8 @@ public class Enhancer extends AbstractClassGenerator {
 	 * use the multi-arg <code>create</code> method.
 	 * @see #create(Class[], Object[])
 	 */
+	// 如有必要，生成一个新类并在不创建新实例的情况下返回它。这会忽略任何已设置的回调。
+	// 要创建新实例，您必须使用反射，并且不会拦截在构造函数期间调用的方法。为避免此问题，请使用多参数 <code>create<code> 方法。
 	public Class createClass() {
 		classOnly = true;
 		return (Class) createHelper();
@@ -423,6 +480,7 @@ public class Enhancer extends AbstractClassGenerator {
 	 * Insert a static serialVersionUID field into the generated class.
 	 * @param sUID the field value, or null to avoid generating field.
 	 */
+	// 将静态 serialVersionUID 字段插入到生成的类中。 @param sUID 字段值，或 null 以避免生成字段。
 	public void setSerialVersionUID(Long sUID) {
 		serialVersionUID = sUID;
 	}
@@ -486,6 +544,9 @@ public class Enhancer extends AbstractClassGenerator {
 	 * proxy-class can be instantiated faster that when using {@link ReflectUtils#newInstance(Class, Class[], Object[])}
 	 * and {@link Enhancer#setThreadCallbacks(Class, Callback[])}
 	 */
+	// 该类的想法是缓存相关的 java.lang.reflect 实例，以便代理类可以比使用
+	// {@link ReflectUtilsnewInstance(Class, Class[], Object[])} 和
+	// {@link EnhancersetThreadCallbacks(Class,打回来[]）}
 	static class EnhancerFactoryData {
 
 		public final Class generatedClass;
@@ -526,21 +587,32 @@ public class Enhancer extends AbstractClassGenerator {
 		 * @return newly created proxy
 		 * @see #createUsingReflection(Class)
 		 */
+		// 为给定的参数类型创建代理实例，并分配回调。理想情况下，对于每个代理类，应该只使用一组参数类型，否则将不得不花时间在构造函数查找上。
+		// 从技术上讲，它是对 {@link EnhancercreateUsingReflection(Class)} 的重新实现，带有“缓存 {@link setThreadCallbacks}
+		// 和 {@link primaryConstructor}”@param argumentTypes 构造函数参数类型
+		// @param arguments 构造函数参数
+		// @param callbacks 回调设置对于新实例
+		// @return 新创建的代理
+		// @see createUsingReflection(Class)
 		public Object newInstance(Class[] argumentTypes, Object[] arguments, Callback[] callbacks) {
 			setThreadCallbacks(callbacks);
 			try {
 				// Explicit reference equality is added here just in case Arrays.equals does not have one
+				// 此处添加了显式引用相等性以防万一 Arrays.equals 没有
 				if (primaryConstructorArgTypes == argumentTypes ||
 						Arrays.equals(primaryConstructorArgTypes, argumentTypes)) {
 					// If we have relevant Constructor instance at hand, just call it
 					// This skips "get constructors" machinery
+					// 如果我们手头有相关的构造函数实例，只需调用它这会跳过“获取构造函数”机制
 					return ReflectUtils.newInstance(primaryConstructor, arguments);
 				}
 				// Take a slow path if observing unexpected argument types
+				// 如果观察到意外的参数类型，请走慢路
 				return ReflectUtils.newInstance(generatedClass, argumentTypes, arguments);
 			}
 			finally {
 				// clear thread callbacks to allow them to be gc'd
+				// 清除线程回调以允许它们被 gc'd
 				setThreadCallbacks(null);
 			}
 
@@ -627,6 +699,11 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @param interfaces the list of interfaces that will be implemented, or null
 	 * @param methods the list into which to copy the applicable methods
 	 */
+	// 使用指定的超类和接口查找将由 Enhancer 生成的类扩展的所有方法。这在构建回调对象列表时非常有用。这些方法被添加到给定列表的末尾。
+	// 由于 Enhancer 生成的类的子类化特性，这些方法保证是非静态的、非最终的和非私有的。每个方法签名只会出现一次，即使它出现在多个类中。
+	// @param superclass 将被扩展的类，或 null
+	// @param interfaces 将实现的接口列表，或 null
+	// @param methods 将适用方法复制到的列表
 	public static void getMethods(Class superclass, Class[] interfaces, List methods) {
 		getMethods(superclass, interfaces, methods, null, null);
 	}
@@ -664,6 +741,7 @@ public class Enhancer extends AbstractClassGenerator {
 		// Order is very important: must add superclass, then
 		// its superclass chain, then each interface and
 		// its superinterfaces.
+		// 顺序很重要：必须添加父类，然后是它的父类链，然后是每个接口及其父接口。
 		List actualMethods = new ArrayList();
 		List interfaceMethods = new ArrayList();
 		final Set forcePublic = new HashSet();
@@ -720,6 +798,7 @@ public class Enhancer extends AbstractClassGenerator {
 			e.declare_field(Constants.ACC_PRIVATE, getCallbackField(i), callbackTypes[i], null);
 		}
 		// This is declared private to avoid "public field" pollution
+		// 这被宣布为私有以避免“公共领域”污染
 		e.declare_field(Constants.ACC_PRIVATE | Constants.ACC_STATIC, CALLBACK_FILTER_FIELD, OBJECT_TYPE, null);
 
 		if (currentData == null) {
@@ -757,6 +836,8 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @param constructors the list of all declared constructors from the superclass
 	 * @throws IllegalArgumentException if there are no non-private constructors
 	 */
+	// 从超类中过滤构造函数列表。剩下的构造函数将包含在生成的类中。默认实现是过滤掉所有私有构造函数，
+	// 但子类可以扩展 Enhancer 以覆盖此行为。
 	protected void filterConstructors(Class sc, List constructors) {
 		CollectionUtils.filter(constructors, new VisibilityPredicate(sc, true));
 		if (constructors.size() == 0)
@@ -772,6 +853,8 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @return newly created proxy instance
 	 * @throws Exception if something goes wrong
 	 */
+	// 不应在常规流程中调用此方法。从技术上讲，{@link wrapCachedClass(Class)} 使用 {@link Enhancer.EnhancerFactoryData}
+	// 作为缓存值，与普通的旧反射查找和调用相比，后者可以实现更快的实例化。出于向后兼容性的原因，此方法保持不变：以防万一它曾经被使用过。
 	protected Object firstInstance(Class type) throws Exception {
 		if (classOnly) {
 			return type;
@@ -808,6 +891,7 @@ public class Enhancer extends AbstractClassGenerator {
 		try {
 			// The subsequent dance is performed just once for each class,
 			// so it does not matter much how fast it goes
+			// 随后的舞蹈每班只表演一次，所以速度有多快并不重要
 			factoryDataField = klass.getField(FACTORY_DATA_FIELD);
 			factoryDataField.set(null, factoryData);
 			Field callbackFilterField = klass.getDeclaredField(CALLBACK_FILTER_FIELD);
@@ -855,6 +939,14 @@ public class Enhancer extends AbstractClassGenerator {
 	 * class are created
 	 * @see #setUseFactory
 	 */
+	// 在通过反射创建生成的类的新实例之前，调用此方法注册要使用的 {@link Callback} 数组。如果您使用 <code>Enhancer<code>
+	// 的实例或 {@link Factory} 接口来创建新实例，则不需要此方法。它的主要用途是当您想自己缓存和重用生成的类时，
+	// 生成的类<i>不<i>实现 {@link Factory} 接口
+	//
+	// <p> 请注意，此方法仅在当前线程上注册回调。如果要为多个线程创建的实例注册回调，请使用 {@link registerStaticCallbacks}。
+	// <p> 在调用任何 <code>create<code> 方法（例如 {@link create}）或任何 {@link Factory} <code>newInstance<code> 方法时，
+	// 注册的回调会被覆盖并随后被清除。否则它们<i>不会<i>被清除，如果内存泄漏是一个问题，
+	// 你应该小心地在通过反射创建新实例后将它们设置回<code>null<code>
 	public static void registerCallbacks(Class generatedClass, Callback[] callbacks) {
 		setThreadCallbacks(generatedClass, callbacks);
 	}
@@ -868,6 +960,10 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @param callbacks the array of callbacks to use when instances of the generated
 	 * class are created
 	 */
+	// 类似于 {@link registerCallbacks}，但适用于多个线程将创建生成类的实例时使用。
+	// 线程级回调将始终覆盖静态回调。静态回调永远不会被清除。
+	// @param generateClass 之前由 {@link Enhancer} 创建的类
+	// @param callbacks 在创建生成类的实例时使用的回调数组
 	public static void registerStaticCallbacks(Class generatedClass, Callback[] callbacks) {
 		setCallbacksHelper(generatedClass, callbacks, SET_STATIC_CALLBACKS_NAME);
 	}
@@ -877,6 +973,9 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @param type any class
 	 * @return whether the class was generated  using <code>Enhancer</code>
 	 */
+	// 确定类是否是使用 <code>Enhancer<code> 生成的。
+	// @param type any class
+	// @return 该类是否是使用 <code>Enhancer<code> 生成的
 	public static boolean isEnhanced(Class type) {
 		try {
 			getCallbacksSetter(type, SET_THREAD_CALLBACKS_NAME);
@@ -892,7 +991,7 @@ public class Enhancer extends AbstractClassGenerator {
 	}
 
 	private static void setCallbacksHelper(Class type, Callback[] callbacks, String methodName) {
-		// TODO: optimize
+		// TODO: optimize 优化
 		try {
 			Method setter = getCallbacksSetter(type, methodName);
 			setter.invoke(null, new Object[]{callbacks});
@@ -920,6 +1019,9 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @param type class to instantiate
 	 * @return newly created instance
 	 */
+	// 实例化代理实例并分配回调值。
+	// 实现细节：java.lang.reflect 实例没有被缓存，所以这个方法不应该用在热路径上。
+	// 当 {@link setUseCache(boolean)} 设置为 {@code false} 时使用此方法。
 	private Object createUsingReflection(Class type) {
 		setThreadCallbacks(type, callbacks);
 		try {
@@ -948,6 +1050,8 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @param type class to extend or interface to implement
 	 * @param callback the callback to use for all methods
 	 */
+	// 创建拦截对象的辅助方法。为了更好地控制生成的实例，请使用 <code>Enhancer<code> 的新实例而不是此静态方法。
+	// @param type 要扩展的类或接口来实现 @param callback 用于所有方法的回调
 	public static Object create(Class type, Callback callback) {
 		Enhancer e = new Enhancer();
 		e.setSuperclass(type);
@@ -963,6 +1067,10 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @param interfaces array of interfaces to implement, or null
 	 * @param callback the callback to use for all methods
 	 */
+	// 创建拦截对象的辅助方法。为了更好地控制生成的实例，请使用 <code>Enhancer<code> 的新实例而不是此静态方法。
+	// @param 要扩展的超类类或要实现的接口
+	// @param interfaces 要实现的接口数组，或 null
+	// @param callback 用于所有方法的回调
 	public static Object create(Class superclass, Class interfaces[], Callback callback) {
 		Enhancer e = new Enhancer();
 		e.setSuperclass(superclass);
@@ -980,6 +1088,11 @@ public class Enhancer extends AbstractClassGenerator {
 	 * @param filter the callback filter to use when generating a new class
 	 * @param callbacks callback implementations to use for the enhanced object
 	 */
+	// 创建拦截对象的辅助方法。为了更好地控制生成的实例，请使用 <code>Enhancer<code> 的新实例而不是此静态方法。
+	// @param 要扩展的超类类或要实现的接口
+	// @param interfaces 要实现的接口数组，或 null
+	// @param filter 生成新类时要使用的回调过滤器
+	// @param callbacks 回调实现以用于增强对象
 	public static Object create(Class superclass, Class[] interfaces, CallbackFilter filter, Callback[] callbacks) {
 		Enhancer e = new Enhancer();
 		e.setSuperclass(superclass);
@@ -1228,6 +1341,7 @@ public class Enhancer extends AbstractClassGenerator {
 
 			// Optimization: build up a map of Class -> bridge methods in class
 			// so that we can look up all the bridge methods in one pass for a class.
+			// 优化：在类中建立Class->桥接方法的映射，以便我们可以一次查找一个类的所有桥接方法。
 			if (TypeUtils.isBridge(actualMethod.getModifiers())) {
 				Set bridges = (Set) declToBridge.get(actualMethod.getDeclaringClass());
 				if (bridges == null) {
@@ -1274,6 +1388,8 @@ public class Enhancer extends AbstractClassGenerator {
 				// then we need to invoke_virtual w/ the bridge target instead of doing
 				// a super, because super may itself be using super, which would bypass
 				// any proxies on the target.
+				// 如果这是一个桥并且我们知道目标是从 invokespecial 调用的，那么我们需要 invoke_virtual w/ 桥目标
+				// 而不是执行 super，因为 super 本身可能正在使用 super，这将绕过目标上的任何代理
 				Signature bridgeTarget = (Signature) bridgeToTarget.get(method.getSignature());
 				if (bridgeTarget != null) {
 					// checkcast each argument against the target's argument types
@@ -1298,6 +1414,9 @@ public class Enhancer extends AbstractClassGenerator {
 					// assignable from the target.  (This would happen if a subclass
 					// used covariant returns to narrow the return type within a bridge
 					// method.)
+					// 如果目标和桥具有相同的返回类型，则不需要强制转换。 （这很方便地包括 void 和基本类型，如果强制转换就会失败。
+					// 不可能从装箱到拆箱（反之亦然）协变，因此不必为桥接箱）。 TODO：如果返回可从目标分配，则也没有必要进行检查。
+					//  （如果子类使用协变返回来缩小桥接方法中的返回类型，就会发生这种情况。）
 					if (!retType.equals(bridgeTarget.getReturnType())) {
 						e.checkcast(retType);
 					}

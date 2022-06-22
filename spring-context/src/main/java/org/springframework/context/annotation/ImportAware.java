@@ -28,11 +28,14 @@ import org.springframework.core.type.AnnotationMetadata;
  * @author Chris Beams
  * @since 3.1
  */
+// 由任何希望使用导入它的 Configuration 类的 AnnotationMetadata 注入的 @Configuration 类实现的 Configuration 。
+// 与使用 @Import作为元注解的注解结合使用时很有用
 public interface ImportAware extends Aware {
 
 	/**
 	 * Set the annotation metadata of the importing @{@code Configuration} class.
 	 */
+	// Configuration导入 @Configuration 类的注解元数据。
 	void setImportMetadata(AnnotationMetadata importMetadata);
 
 }

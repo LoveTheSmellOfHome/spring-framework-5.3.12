@@ -25,11 +25,13 @@ import org.springframework.lang.Nullable;
  * @author Rob Harrop
  * @since 2.0
  */
+// 由使用字符串表达式的切入点实现的接口
 public interface ExpressionPointcut extends Pointcut {
 
 	/**
 	 * Return the String expression for this pointcut.
 	 */
+	// 返回此切入点的字符串表达式
 	@Nullable
 	String getExpression();
 

@@ -34,12 +34,16 @@ import org.springframework.cache.interceptor.CacheResolver;
  * @since 4.1
  * @param <A> the type of the JSR-107 annotation
  */
+// 通过接口契约对 JSR-107 缓存操作的基础进行建模。
+// 缓存操作可以静态缓存，因为它不包含特定缓存调用的任何运行时操作。
+// 类型形参： < A > – JSR-107 注解的类型
 public interface JCacheOperation<A extends Annotation> extends BasicOperation, CacheMethodDetails<A> {
 
 	/**
 	 * Return the {@link CacheResolver} instance to use to resolve the cache
 	 * to use for this operation.
 	 */
+	// 返回 CacheResolver 实例以用于解析用于此操作的缓存。
 	CacheResolver getCacheResolver();
 
 	/**
@@ -48,6 +52,10 @@ public interface JCacheOperation<A extends Annotation> extends BasicOperation, C
 	 * <p>The method arguments must match the signature of the related method invocation
 	 * @param values the parameters value for a particular invocation
 	 */
+	// 根据指定的方法参数返回 CacheInvocationParameter 实例。
+	// 方法参数必须与相关方法调用的签名匹配
+	// 参形：
+	//			values – 特定调用的参数值
 	CacheInvocationParameter[] getAllParameters(Object... values);
 
 }

@@ -36,6 +36,13 @@ import org.aopalliance.aop.Advice;
  * @see IntroductionInfo
  * @see IntroductionAdvisor
  */
+// AOP Alliance Advice 的子接口，允许由 Advice 实现附加接口，并且可以通过使用该拦截器的代理获得。
+// 这是一个称为 Introduction 的基本 AOP 概念。
+//
+// 引入通常是 mixins ，可以构建复合对象，从而实现 Java 中多重继承的许多目标。
+//
+// 与 IntroductionInfo 相比，此接口允许通知实现事先不一定知道的一系列接口。因此， IntroductionAdvisor 可用于指定
+// 将在建议对象中公开哪些接口。
 public interface DynamicIntroductionAdvice extends Advice {
 
 	/**
@@ -43,6 +50,9 @@ public interface DynamicIntroductionAdvice extends Advice {
 	 * @param intf the interface to check
 	 * @return whether the advice implements the specified interface
 	 */
+	// 这个介绍建议是否实现了给定的接口？
+	// 参形：intf – 要检查的接口
+	// 返回值：通知是否实现了指定的接口
 	boolean implementsInterface(Class<?> intf);
 
 }

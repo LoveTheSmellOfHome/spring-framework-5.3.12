@@ -56,6 +56,21 @@ import java.lang.annotation.Target;
  * @see Configuration
  * @see org.springframework.stereotype.Component
  */
+// 指示是否要延迟初始化 bean。
+//
+// 可用于任何直接或间接使用 @Component 注解的类或使用 @Bean 注解的方法。
+//
+// 如果 @Component 或 @Bean 定义上不存在此注解，则会发生急切初始化。如果存在并设置为true ，
+// 则 @Bean 或 @Component 将不会被初始化，直到被另一个 bean 引用或从封闭的 BeanFactory 依赖查找。
+// 如果存在并设置为 false ，则 bean 将在启动时由执行单例初始化的 bean 工厂实例化。
+//
+// 如果 @Configuration 类上存在 Lazy，则表明该 @Configuration 中的所有 @Bean方法都应该被延迟初始化。
+// 如果 @Lazy 在 @Lazy -annotated @Configuration类中的 @Bean 方法上存在且为 false，则表明覆盖了“默认惰性”行为，
+// 并且应该急切地初始化 bean。
+//
+// 除了用于组件初始化之外，该注解还可以放置在标有 org.springframework.beans.factory.annotation.@Autowired
+// 或 javax.inject.@Inject 的注入点上：在这种情况下，它会导致创建惰性- 所有受影响依赖项的解析代理，
+// 作为使用 org.springframework.beans.factory.ObjectFactory 或 javax.inject.Provider 的替代方案。
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.PARAMETER, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

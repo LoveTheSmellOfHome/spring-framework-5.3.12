@@ -32,6 +32,7 @@ import org.springframework.lang.Nullable;
  * @see #setJndiTemplate
  * @see #setJndiEnvironment
  */
+// JNDI 访问器的便捷超类，提供“jndiTemplate”和“jndiEnvironment”bean 属性
 public class JndiAccessor {
 
 	/**
@@ -39,6 +40,7 @@ public class JndiAccessor {
 	 */
 	protected final Log logger = LogFactory.getLog(getClass());
 
+	// 提供 JndiTemplate
 	private JndiTemplate jndiTemplate = new JndiTemplate();
 
 
@@ -47,6 +49,8 @@ public class JndiAccessor {
 	 * <p>You can also specify JNDI environment settings via "jndiEnvironment".
 	 * @see #setJndiEnvironment
 	 */
+	// 设置 JNDI 模板以用于 JNDI 查找。
+	// 您还可以通过“jndiEnvironment”指定 JNDI 环境设置
 	public void setJndiTemplate(@Nullable JndiTemplate jndiTemplate) {
 		this.jndiTemplate = (jndiTemplate != null ? jndiTemplate : new JndiTemplate());
 	}
@@ -63,6 +67,8 @@ public class JndiAccessor {
 	 * <p>Creates a JndiTemplate with the given environment settings.
 	 * @see #setJndiTemplate
 	 */
+	// 设置 JNDI 环境以用于 JNDI 查找。
+	// 使用给定的环境设置创建一个 JndiTemplate
 	public void setJndiEnvironment(@Nullable Properties jndiEnvironment) {
 		this.jndiTemplate = new JndiTemplate(jndiEnvironment);
 	}

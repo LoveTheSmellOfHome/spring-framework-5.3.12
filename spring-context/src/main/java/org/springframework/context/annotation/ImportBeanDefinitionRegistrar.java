@@ -58,6 +58,22 @@ import org.springframework.core.type.AnnotationMetadata;
  * @see ImportSelector
  * @see Configuration
  */
+// 在处理@Configuration 类时，由注册附加bean 定义的类型实现的Configuration 。在需要或必须在 bean 定义
+// 级别（相对于@Bean方法/实例级别）操作时很有用。
+//
+// 与 @Configuration 和 ImportSelector 一起，这种类型的类可以提供给 @Import注解（或者也可以从 ImportSelector 返回）。
+//
+// ImportBeanDefinitionRegistrar可以实现以下任何Aware接口，它们各自的方法将在 registerBeanDefinitions 之前调用：
+//  >EnvironmentAware
+//  >BeanFactoryAware
+//  >BeanClassLoaderAware
+//  >ResourceLoaderAware
+// 或者，该类可以提供具有以下一种或多种支持的参数类型的单个构造函数：
+//  >Environment
+//  >BeanFactory
+//  >ClassLoader
+//  >ResourceLoader
+// Spring 自动代理 @EnableAspectJAutoProxy 的实现原理
 public interface ImportBeanDefinitionRegistrar {
 
 	/**
@@ -80,6 +96,17 @@ public interface ImportBeanDefinitionRegistrar {
 	 * @see ConfigurationClassPostProcessor#IMPORT_BEAN_NAME_GENERATOR
 	 * @see ConfigurationClassPostProcessor#setBeanNameGenerator
 	 */
+	// 根据导入@Configuration类的给定注解元数据，根据需要注册 bean 定义。
+	//
+	// 请注意，由于与 @Configuration类处理相关的生命周期限制，此处可能未注册 BeanDefinitionRegistryPostProcessor 类型。
+	//
+	// 默认实现委托给 registerBeanDefinitions(AnnotationMetadata, BeanDefinitionRegistry) 。
+	//
+	// 参形：
+	//			importingClassMetadata – 导入类的注解元数据
+	//			registry - 当前 bean 定义注册表
+	//
+	// importBeanNameGenerator - 导入 bean 的 bean 名称生成器策略：默认情况下为ConfigurationClassPostProcessor.IMPORT_BEAN_NAME_GENERATOR ，如果已设置ConfigurationClassPostProcessor.setBeanNameGenerator ，则为用户提供的策略。在后一种情况下，传入的策略将与包含应用程序上下文中的组件扫描所使用的策略相同（否则，默认的组件扫描命名策略是AnnotationBeanNameGenerator.INSTANCE ）
 	default void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry,
 			BeanNameGenerator importBeanNameGenerator) {
 
@@ -96,6 +123,12 @@ public interface ImportBeanDefinitionRegistrar {
 	 * @param importingClassMetadata annotation metadata of the importing class
 	 * @param registry current bean definition registry
 	 */
+	// 根据导入 @Configuration 类的给定注解元数据，根据需要注册 bean 定义。
+	// 请注意，由于与 @Configuration 类处理相关的生命周期限制，此处可能未注册BeanDefinitionRegistryPostProcessor类型。
+	// 默认实现为空。
+	// 参形：
+	//			importingClassMetadata – 导入类的注解元数据
+	//			registry - 当前 bean 定义注册表
 	default void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 	}
 

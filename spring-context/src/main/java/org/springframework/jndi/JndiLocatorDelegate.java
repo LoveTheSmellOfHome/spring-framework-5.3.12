@@ -29,6 +29,7 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 3.0.1
  */
+// JndiLocatorSupport具有公共查找方法的子类，方便用作委托。
 public class JndiLocatorDelegate extends JndiLocatorSupport {
 
 	/**
@@ -47,6 +48,13 @@ public class JndiLocatorDelegate extends JndiLocatorSupport {
 	 * @see #isDefaultJndiEnvironmentAvailable()
 	 * @see JndiPropertySource
 	 */
+	// 指示 Spring 忽略默认 JNDI 环境的系统属性，即始终从isDefaultJndiEnvironmentAvailable()返回false 。
+	//
+	// <p>默认值为“false”，允许常规默认 JNDI 访问，例如在JndiPropertySource 。 将此标志切换为true是针对此类
+	// JNDI 回退搜索一开始就找不到任何内容的场景的优化，从而避免了重复的 JNDI 查找开销。
+	//
+	// <p>请注意，此标志仅影响 JNDI 回退搜索，而不是显式配置的 JNDI 查找，例如DataSource或某些其他环境资源。
+	// 该标志字面上仅影响尝试基于JndiLocatorDelegate.isDefaultJndiEnvironmentAvailable()检查进行 JNDI 搜索的代码：特别是StandardServletEnvironment和StandardPortletEnvironment 。
 	public static final String IGNORE_JNDI_PROPERTY_NAME = "spring.jndi.ignore";
 
 
@@ -70,6 +78,8 @@ public class JndiLocatorDelegate extends JndiLocatorSupport {
 	 * {@code true}, meaning that all names will be prefixed with "java:comp/env/".
 	 * @see #setResourceRef
 	 */
+	// 配置JndiLocatorDelegate并将其“resourceRef”属性设置为true ，
+	// 这意味着所有名称都将以“java:comp/env/”为前缀
 	public static JndiLocatorDelegate createDefaultResourceRefLocator() {
 		JndiLocatorDelegate jndiLocator = new JndiLocatorDelegate();
 		jndiLocator.setResourceRef(true);
@@ -82,6 +92,7 @@ public class JndiLocatorDelegate extends JndiLocatorSupport {
 	 * @return {@code true} if a default InitialContext can be used,
 	 * {@code false} if not
 	 */
+	// 检查默认 JNDI 环境（如在 Java EE 环境中）是否在此 JVM 上可用
 	public static boolean isDefaultJndiEnvironmentAvailable() {
 		if (shouldIgnoreDefaultJndiEnvironment) {
 			return false;

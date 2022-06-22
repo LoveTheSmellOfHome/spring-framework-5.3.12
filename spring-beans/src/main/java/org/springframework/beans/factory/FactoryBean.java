@@ -62,6 +62,30 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.aop.framework.ProxyFactoryBean
  * @see org.springframework.jndi.JndiObjectFactoryBean
  */
+// 由 {@link BeanFactory} 中使用的对象实现的接口，这些对象本身就是单个对象的工厂。如果一个 bean 实现了这个接口，
+// 它就被用作一个对象暴露的工厂，而不是直接作为一个将暴露自己的 bean 实例。
+//
+// 实现此接口的 bean 不能用作普通 bean。
+// <b> FactoryBean 以 bean 样式定义，但为 bean 引用公开的对象({@link getObject()}) 始终是它创建的对象
+//
+// <b> FactoryBeans 可以支持单例和原型，并且可以根据需要懒惰地或在启动时急切地创建对象。 {@link SmartFactoryBean} 接口
+// 允许公开更细粒度的行为元数据
+//
+// 该接口在框架本身中大量使用，例如用于 AOP {@link org.springframework.aop.framework.ProxyFactoryBean} 或
+// {@link org.springframework.jndi.JndiObjectFactoryBean}。它也可以用于自定义组件；然而，这仅适用于基础设施代码
+//
+// {@code FactoryBean} 是一个程序化合约。实现不应该依赖于注解驱动的注入或其他反射设施。
+// {@link getObjectType()}，{@link getObject()} 调用可能会在引导过程的早期到达，甚至在任何后处理器设置之前.
+// 如果您需要访问其他 bean，请实现 {@link BeanFactoryAware} 并以编程方式获取它们
+//
+// 容器只负责管理FactoryBean 实例的生命周期，而不负责管理FactoryBean 创建的对象的生命周期。 因此，暴露的 bean
+// 对象（例如java.io.Closeable.close()上的 destroy 方法不会被自动调用。相反，FactoryBean 应该实现
+// DisposableBean 并将任何此类关闭调用委托给底层对象。
+//
+// 最后，FactoryBean 对象参与包含 BeanFactory 的 bean 创建同步。 除了 FactoryBean 本身（或类似的）内部的
+// 延迟初始化之外，通常不需要内部同步
+//
+// FactoryBean 与 BeanFactory 区别：FactoryBean 是一种特殊的 bean,它是生成 bean 的一种动态形式，
 public interface FactoryBean<T> {
 
 	/**
@@ -72,6 +96,8 @@ public interface FactoryBean<T> {
 	 * the factory bean class.
 	 * @since 5.2
 	 */
+	// 可以在org.springframework.beans.factory.config.BeanDefinition上set的属性的名称，
+	// 以便工厂 bean 可以在无法从工厂 bean 类中推断出它们的对象类型时发出信号
 	String OBJECT_TYPE_ATTRIBUTE = "factoryBeanObjectType";
 
 
@@ -92,6 +118,15 @@ public interface FactoryBean<T> {
 	 * @throws Exception in case of creation errors
 	 * @see FactoryBeanNotInitializedException
 	 */
+	// 返回此工厂管理的对象的实例（可能是共享的或独立的）。
+	// 与BeanFactory ，这允许同时支持 Singleton 和 Prototype 设计模式。
+	//
+	// 如果在调用时此 FactoryBean 尚未完全初始化（例如因为它涉及循环引用），则抛出
+	// 相应的FactoryBeanNotInitializedException 。
+	//
+	// 从 Spring 2.0 开始，FactoryBeans 被允许返回null对象。 工厂会将此视为使用的正常值；
+	// 在这种情况下它不会再抛出 FactoryBeanNotInitializedException 。 鼓励 FactoryBean 实现在适当的时候
+	// 自己抛出 FactoryBeanNotInitializedException 。
 	@Nullable
 	T getObject() throws Exception;
 
@@ -114,6 +149,13 @@ public interface FactoryBean<T> {
 	 * or {@code null} if not known at the time of the call
 	 * @see ListableBeanFactory#getBeansOfType
 	 */
+	// 返回此 FactoryBean 创建的对象类型，如果事先未知，则返回 {@code null}
+	//
+	// 这允许人们在不实例化对象的情况下检查特定类型的 bean，例如在自动装配时。
+	//
+	// 在创建单例对象的实现的情况下，此方法应尽量避免创建单例； 它应该提前估计类型。 对于原型，也建议在此处返回有意义的类型
+	//
+	// 注意：自动装配将简单地忽略在此处返回null FactoryBeans。 因此，强烈建议使用 FactoryBean 的当前状态正确实现此方法
 	@Nullable
 	Class<?> getObjectType();
 
@@ -142,6 +184,18 @@ public interface FactoryBean<T> {
 	 * @see #getObject()
 	 * @see SmartFactoryBean#isPrototype()
 	 */
+	// 这个工厂管理的对象是单例吗？也就是说，{@link getObject()} 是否总是返回相同的对象（可以缓存的引用）？
+	//
+	// 注意：如果 FactoryBean 指示持有单例对象，则从 {@code getObject()} 返回的对象可能会被拥有的 BeanFactory 缓存。
+	// 因此，除非 FactoryBean 始终公开相同的引用，否则不要返回 {@code true}。
+	//
+	// FactoryBean 本身的单例状态一般由拥有的 BeanFactory 提供； 通常，它必须在那里定义为单例。
+	//
+	// 注意：此方法返回false并不一定表示返回的对象是独立的实例。 扩展SmartFactoryBean接口的实现可以
+	// 通过其SmartFactoryBean.isPrototype()方法显式指示独立实例。 如果isSingleton()实现返回false
+	// 则简单地假定未实现此扩展接口的普通FactoryBean实现始终返回独立实例。
+	//
+	// 默认实现返回true ，因为FactoryBean通常管理一个单例实例
 	default boolean isSingleton() {
 		return true;
 	}

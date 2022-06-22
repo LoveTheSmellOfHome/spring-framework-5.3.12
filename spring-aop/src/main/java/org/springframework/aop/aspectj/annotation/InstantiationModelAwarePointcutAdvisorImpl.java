@@ -41,6 +41,8 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// AspectJPointcutAdvisor 的内部实现。 请注意，每个目标方法都会有一个此顾问程序的实例
+// 实例化模型意识判断动作实现
 @SuppressWarnings("serial")
 final class InstantiationModelAwarePointcutAdvisorImpl
 		implements InstantiationModelAwarePointcutAdvisor, AspectJPrecedenceInformation, Serializable {
@@ -48,34 +50,48 @@ final class InstantiationModelAwarePointcutAdvisorImpl
 	private static final Advice EMPTY_ADVICE = new Advice() {};
 
 
+	// 表达式
 	private final AspectJExpressionPointcut declaredPointcut;
 
+	// 引导类
 	private final Class<?> declaringClass;
 
+	// 方法名
 	private final String methodName;
 
+	// 参数类型数组
 	private final Class<?>[] parameterTypes;
 
+	// 建议方法
 	private transient Method aspectJAdviceMethod;
 
+	// AspectJ建议工厂
 	private final AspectJAdvisorFactory aspectJAdvisorFactory;
 
+	// 元数据意识切面实例工厂：包含元数据和对象实例
 	private final MetadataAwareAspectInstanceFactory aspectInstanceFactory;
 
+	// 排序
 	private final int declarationOrder;
 
+	// 切面名称
 	private final String aspectName;
 
+	// 判断点
 	private final Pointcut pointcut;
 
+	// 是否懒加载
 	private final boolean lazy;
 
+	// 实例化动作
 	@Nullable
 	private Advice instantiatedAdvice;
 
+	// 是否前置拦截
 	@Nullable
 	private Boolean isBeforeAdvice;
 
+	// 是否后置拦截
 	@Nullable
 	private Boolean isAfterAdvice;
 
@@ -96,12 +112,14 @@ final class InstantiationModelAwarePointcutAdvisorImpl
 
 		if (aspectInstanceFactory.getAspectMetadata().isLazilyInstantiated()) {
 			// Static part of the pointcut is a lazy type.
+			// 切入点的静态部分是惰性类型
 			Pointcut preInstantiationPointcut = Pointcuts.union(
 					aspectInstanceFactory.getAspectMetadata().getPerClausePointcut(), this.declaredPointcut);
 
 			// Make it dynamic: must mutate from pre-instantiation to post-instantiation state.
 			// If it's not a dynamic pointcut, it may be optimized out
 			// by the Spring AOP infrastructure after the first evaluation.
+			// 使其动态化：必须从实例化前状态转变为实例化后状态。如果不是动态切入点，可能会在第一次评估后被 Spring AOP 基础设施优化掉。
 			this.pointcut = new PerTargetInstantiationModelPointcut(
 					this.declaredPointcut, preInstantiationPointcut, aspectInstanceFactory);
 			this.lazy = true;
@@ -263,10 +281,13 @@ final class InstantiationModelAwarePointcutAdvisorImpl
 	 * Note that this is a <i>dynamic</i> pointcut; otherwise it might be optimized out
 	 * if it does not at first match statically.
 	 */
+	// 实例化建议时更改其行为的切入点实现。请注意，这是一个动态切入点；否则，如果它最初不是静态匹配的，它可能会被优化
 	private static final class PerTargetInstantiationModelPointcut extends DynamicMethodMatcherPointcut {
 
+		// 声明的切入点
 		private final AspectJExpressionPointcut declaredPointcut;
 
+		// 预实例化切入点
 		private final Pointcut preInstantiationPointcut;
 
 		@Nullable
@@ -286,6 +307,7 @@ final class InstantiationModelAwarePointcutAdvisorImpl
 		public boolean matches(Method method, Class<?> targetClass) {
 			// We're either instantiated and matching on declared pointcut,
 			// or uninstantiated matching on either pointcut...
+			// 我们要么在声明的切入点上进行实例化和匹配，要么在任一切入点上进行未实例化的匹配......
 			return (isAspectMaterialized() && this.declaredPointcut.matches(method, targetClass)) ||
 					this.preInstantiationPointcut.getMethodMatcher().matches(method, targetClass);
 		}
@@ -293,6 +315,7 @@ final class InstantiationModelAwarePointcutAdvisorImpl
 		@Override
 		public boolean matches(Method method, Class<?> targetClass, Object... args) {
 			// This can match only on declared pointcut.
+			// 这只能在声明的切入点上匹配
 			return (isAspectMaterialized() && this.declaredPointcut.matches(method, targetClass));
 		}
 

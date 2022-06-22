@@ -38,9 +38,14 @@ import org.springframework.util.Assert;
  * @see #setJndiEnvironment
  * @see #setResourceRef
  */
+// 可以定位任意数量 JNDI 对象的类的便捷超类。 派生自 JndiAccessor 以继承“jndiTemplate”和“jndiEnvironment”bean 属性。
+// JNDI 名称可能包含也可能不包含 Java EE 应用程序在访问本地映射（ENC - 环境命名上下文）资源时所期望的“java:comp/env/”前缀。
+// 如果没有，如果“resourceRef”属性为 true（默认为false ）并且没有给出其他方案（例如“java:”），则会在前面加上
+// “java:comp/env/”前缀。
 public abstract class JndiLocatorSupport extends JndiAccessor {
 
 	/** JNDI prefix used in a Java EE container. */
+	// Java EE 容器中使用的 JNDI 前缀
 	public static final String CONTAINER_PREFIX = "java:comp/env/";
 
 
@@ -53,6 +58,8 @@ public abstract class JndiLocatorSupport extends JndiAccessor {
 	 * contain it. Default is "false".
 	 * <p>Note: Will only get applied if no other scheme (e.g. "java:") is given.
 	 */
+	// 设置查找是否发生在 Java EE 容器中，即如果 JNDI 名称尚未包含前缀“java:comp/env/”，则是否需要添加它。 默认为 "false"。
+	// 注意：只有在没有给出其他方案（例如“java:”）时才会应用。
 	public void setResourceRef(boolean resourceRef) {
 		this.resourceRef = resourceRef;
 	}
@@ -60,6 +67,7 @@ public abstract class JndiLocatorSupport extends JndiAccessor {
 	/**
 	 * Return whether the lookup occurs in a Java EE container.
 	 */
+	// 返回查找是否发生在 Java EE 容器中
 	public boolean isResourceRef() {
 		return this.resourceRef;
 	}
@@ -74,6 +82,8 @@ public abstract class JndiLocatorSupport extends JndiAccessor {
 	 * @throws NamingException if the JNDI lookup failed
 	 * @see #setResourceRef
 	 */
+	// 通过 JndiTemplate 对给定名称执行实际的 JNDI 查找。
+	// 如果名称不以“java:comp/env/”开头，则在“resourceRef”设置为“true”时添加此前缀。
 	protected Object lookup(String jndiName) throws NamingException {
 		return lookup(jndiName, null);
 	}
@@ -88,6 +98,8 @@ public abstract class JndiLocatorSupport extends JndiAccessor {
 	 * @throws NamingException if the JNDI lookup failed
 	 * @see #setResourceRef
 	 */
+	// 通过 JndiTemplate 对给定名称执行实际的 JNDI 查找。
+	// 如果名称不以“java:comp/env/”开头，则在“resourceRef”设置为“true”时添加此前缀
 	protected <T> T lookup(String jndiName, @Nullable Class<T> requiredType) throws NamingException {
 		Assert.notNull(jndiName, "'jndiName' must not be null");
 		String convertedName = convertJndiName(jndiName);
@@ -123,6 +135,8 @@ public abstract class JndiLocatorSupport extends JndiAccessor {
 	 * @see #CONTAINER_PREFIX
 	 * @see #setResourceRef
 	 */
+	// 将给定的 JNDI 名称转换为要使用的实际 JNDI 名称。
+	// 如果“resourceRef”为“true”并且没有给出其他方案（例如“java:”），则默认实现应用“java:comp/env/”前缀。
 	protected String convertJndiName(String jndiName) {
 		// Prepend container prefix if not already specified and no other scheme given.
 		if (isResourceRef() && !jndiName.startsWith(CONTAINER_PREFIX) && jndiName.indexOf(':') == -1) {

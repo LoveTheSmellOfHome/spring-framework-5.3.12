@@ -27,6 +27,7 @@ import org.springframework.context.ApplicationListener;
  * @author Stephane Nicoll
  * @since 4.2
  */
+// 用于为使用 {@link EventListener} 注解的方法创建 {@link ApplicationListener} 的策略接口。
 public interface EventListenerFactory {
 
 	/**
@@ -34,6 +35,9 @@ public interface EventListenerFactory {
 	 * @param method an {@link EventListener} annotated method
 	 * @return {@code true} if this factory supports the specified method
 	 */
+	// 利用反射 Method 判断：指定此工厂是否支持指定的 {@link Method}。
+	// @param method 一个 {@link @EventListener} 注解标注方法
+	// @return {@code true} 如果这个工厂支持指定的方法
 	boolean supportsMethod(Method method);
 
 	/**
@@ -43,6 +47,10 @@ public interface EventListenerFactory {
 	 * @param method the {@link EventListener} annotated method
 	 * @return an application listener, suitable to invoke the specified method
 	 */
+	// 为指定的方法创建一个 {@link ApplicationListener}
+	// @param beanName
+	// @param type 目标实例的类型
+	// @param method 一个 {@link @EventListener} 注解标注方法
 	ApplicationListener<?> createApplicationListener(String beanName, Class<?> type, Method method);
 
 }

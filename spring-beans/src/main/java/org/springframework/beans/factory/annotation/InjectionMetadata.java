@@ -16,6 +16,12 @@
 
 package org.springframework.beans.factory.annotation;
 
+import org.springframework.beans.MutablePropertyValues;
+import org.springframework.beans.PropertyValues;
+import org.springframework.beans.factory.support.RootBeanDefinition;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ReflectionUtils;
+
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -25,12 +31,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
-
-import org.springframework.beans.MutablePropertyValues;
-import org.springframework.beans.PropertyValues;
-import org.springframework.beans.factory.support.RootBeanDefinition;
-import org.springframework.lang.Nullable;
-import org.springframework.util.ReflectionUtils;
 
 /**
  * Internal class for managing injection metadata.
@@ -43,6 +43,7 @@ import org.springframework.util.ReflectionUtils;
  * @author Juergen Hoeller
  * @since 2.5
  */
+// 用于管理注入元数据的内部类。不适用于直接在应用中使用。
 public class InjectionMetadata {
 
 	/**
@@ -68,6 +69,7 @@ public class InjectionMetadata {
 
 	private final Class<?> targetClass;
 
+	// @Autowired 标注的属性集合
 	private final Collection<InjectedElement> injectedElements;
 
 	@Nullable
@@ -94,6 +96,7 @@ public class InjectionMetadata {
 	 * @return {@code true} indicating a refresh, {@code false} otherwise
 	 * @since 5.2.4
 	 */
+	// 确定此元数据实例是否需要刷新
 	protected boolean needsRefresh(Class<?> clazz) {
 		return this.targetClass != clazz;
 	}
@@ -110,6 +113,7 @@ public class InjectionMetadata {
 		this.checkedElements = checkedElements;
 	}
 
+	//
 	public void inject(Object target, @Nullable String beanName, @Nullable PropertyValues pvs) throws Throwable {
 		Collection<InjectedElement> checkedElements = this.checkedElements;
 		Collection<InjectedElement> elementsToIterate =
@@ -125,6 +129,7 @@ public class InjectionMetadata {
 	 * Clear property skipping for the contained elements.
 	 * @since 3.2.13
 	 */
+	// 清除已包含元素之外的属性
 	public void clear(@Nullable PropertyValues pvs) {
 		Collection<InjectedElement> checkedElements = this.checkedElements;
 		Collection<InjectedElement> elementsToIterate =
@@ -164,8 +169,10 @@ public class InjectionMetadata {
 	/**
 	 * A single injected element.
 	 */
+	// 单个注入元素
 	public abstract static class InjectedElement {
 
+		// Member 在java反射中是反映有关单个成员（字段或方法）或构造函数的标识信息的接口
 		protected final Member member;
 
 		protected final boolean isField;
@@ -201,6 +208,8 @@ public class InjectionMetadata {
 		protected final void checkResourceType(Class<?> resourceType) {
 			if (this.isField) {
 				Class<?> fieldType = ((Field) this.member).getType();
+				// resourceType.isAssignableFrom(fieldType) 判断 resourceType 是否是 参数 fieldType 类型，或者是 fieldType
+				// 类型的父类
 				if (!(resourceType.isAssignableFrom(fieldType) || fieldType.isAssignableFrom(resourceType))) {
 					throw new IllegalStateException("Specified field type [" + fieldType +
 							"] is incompatible with resource type [" + resourceType.getName() + "]");

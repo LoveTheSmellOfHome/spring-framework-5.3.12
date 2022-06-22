@@ -25,12 +25,16 @@ package org.springframework.util;
  * @author Mark Fisher
  * @since 3.0
  */
+// 处理错误的策略接口。
+// 这对于处理在异步执行已提交给 TaskScheduler 的任务期间发生的错误特别有用。
+// 在这种情况下，可能无法将错误抛出给原始调用者。
 @FunctionalInterface
 public interface ErrorHandler {
 
 	/**
 	 * Handle the given error, possibly rethrowing it as a fatal exception.
 	 */
+	// 处理给定的错误，可能将其作为致命异常重新抛出
 	void handleError(Throwable t);
 
 }

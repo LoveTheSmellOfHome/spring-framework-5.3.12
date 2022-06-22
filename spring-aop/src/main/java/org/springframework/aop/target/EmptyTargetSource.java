@@ -30,6 +30,7 @@ import org.springframework.util.ObjectUtils;
  * @author Rod Johnson
  * @author Juergen Hoeller
  */
+// 没有目标（或仅已知目标类）时的规范TargetSource ，并且行为仅由接口和顾问提供
 public final class EmptyTargetSource implements TargetSource, Serializable {
 
 	/** use serialVersionUID from Spring 1.2 for interoperability. */
@@ -43,6 +44,7 @@ public final class EmptyTargetSource implements TargetSource, Serializable {
 	/**
 	 * The canonical (Singleton) instance of this {@link EmptyTargetSource}.
 	 */
+	// 此 EmptyTargetSource 的规范（单例）实例
 	public static final EmptyTargetSource INSTANCE = new EmptyTargetSource(null, true);
 
 
@@ -51,6 +53,8 @@ public final class EmptyTargetSource implements TargetSource, Serializable {
 	 * @param targetClass the target Class (may be {@code null})
 	 * @see #getTargetClass()
 	 */
+	// 返回给定目标类的 EmptyTargetSource。
+	// 参形：targetClass – 目标类（可能为null ）
 	public static EmptyTargetSource forClass(@Nullable Class<?> targetClass) {
 		return forClass(targetClass, true);
 	}
@@ -61,6 +65,10 @@ public final class EmptyTargetSource implements TargetSource, Serializable {
 	 * @param isStatic whether the TargetSource should be marked as static
 	 * @see #getTargetClass()
 	 */
+	// 返回给定目标类的 EmptyTargetSource。
+	// 参形：
+	//			targetClass – 目标类（可能为null ）
+	//			isStatic – TargetSource 是否应标记为静态
 	public static EmptyTargetSource forClass(@Nullable Class<?> targetClass, boolean isStatic) {
 		return (targetClass == null && isStatic ? INSTANCE : new EmptyTargetSource(targetClass, isStatic));
 	}
@@ -82,6 +90,11 @@ public final class EmptyTargetSource implements TargetSource, Serializable {
 	 * @param targetClass the target class to expose (may be {@code null})
 	 * @param isStatic whether the TargetSource is marked as static
 	 */
+	// 创建EmptyTargetSource类的新实例。
+	// 此构造函数是private的，用于强制执行单例模式/工厂方法模式。
+	// 参形：
+	//			targetClass – 要公开的目标类（可能为null ）
+	//			isStatic – TargetSource 是否标记为静态
 	private EmptyTargetSource(@Nullable Class<?> targetClass, boolean isStatic) {
 		this.targetClass = targetClass;
 		this.isStatic = isStatic;
@@ -91,6 +104,7 @@ public final class EmptyTargetSource implements TargetSource, Serializable {
 	/**
 	 * Always returns the specified target Class, or {@code null} if none.
 	 */
+	// 始终返回指定的目标类，如果没有则返回null 。
 	@Override
 	@Nullable
 	public Class<?> getTargetClass() {
@@ -100,6 +114,7 @@ public final class EmptyTargetSource implements TargetSource, Serializable {
 	/**
 	 * Always returns {@code true}.
 	 */
+	// 总是返回true
 	@Override
 	public boolean isStatic() {
 		return this.isStatic;
@@ -108,6 +123,7 @@ public final class EmptyTargetSource implements TargetSource, Serializable {
 	/**
 	 * Always returns {@code null}.
 	 */
+	// 始终返回null
 	@Override
 	@Nullable
 	public Object getTarget() {
@@ -117,6 +133,7 @@ public final class EmptyTargetSource implements TargetSource, Serializable {
 	/**
 	 * Nothing to release.
 	 */
+	// 没有什么可以释放的
 	@Override
 	public void releaseTarget(Object target) {
 	}
@@ -126,6 +143,7 @@ public final class EmptyTargetSource implements TargetSource, Serializable {
 	 * Returns the canonical instance on deserialization in case
 	 * of no target class, thus protecting the Singleton pattern.
 	 */
+	// 在没有目标类的情况下返回反序列化的规范实例，从而保护单例模式
 	private Object readResolve() {
 		return (this.targetClass == null && this.isStatic ? INSTANCE : this);
 	}

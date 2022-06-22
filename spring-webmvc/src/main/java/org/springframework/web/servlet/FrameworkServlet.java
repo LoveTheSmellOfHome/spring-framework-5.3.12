@@ -16,28 +16,8 @@
 
 package org.springframework.web.servlet;
 
-import java.io.IOException;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
-
-import javax.servlet.DispatcherType;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
-
 import org.springframework.beans.BeanUtils;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ApplicationContextException;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.*;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.SourceFilteringListener;
 import org.springframework.context.i18n.LocaleContext;
@@ -69,6 +49,20 @@ import org.springframework.web.context.support.XmlWebApplicationContext;
 import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.util.NestedServletException;
 import org.springframework.web.util.WebUtils;
+
+import javax.servlet.DispatcherType;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
+import java.io.IOException;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 /**
  * Base servlet for Spring's web framework. Provides integration with
@@ -214,6 +208,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	private boolean enableLoggingRequestDetails = false;
 
 	/** WebApplicationContext for this servlet. */
+	// DispatcherServlet 中包含一个 IoC 容器
 	@Nullable
 	private WebApplicationContext webApplicationContext;
 
@@ -527,6 +522,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		long startTime = System.currentTimeMillis();
 
 		try {
+			// 初始化 DispatcherServlet 中关联的 IoC 容器
 			this.webApplicationContext = initWebApplicationContext();
 			initFrameworkServlet();
 		}
@@ -564,17 +560,20 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 
 		if (this.webApplicationContext != null) {
 			// A context instance was injected at construction time -> use it
+			// 获得子容器
 			wac = this.webApplicationContext;
 			if (wac instanceof ConfigurableWebApplicationContext) {
 				ConfigurableWebApplicationContext cwac = (ConfigurableWebApplicationContext) wac;
 				if (!cwac.isActive()) {
 					// The context has not yet been refreshed -> provide services such as
 					// setting the parent context, setting the application context id, etc
+					// 如果没有设置父容器，spring doGetBean()
 					if (cwac.getParent() == null) {
 						// The context instance was injected without an explicit parent -> set
 						// the root application context (if any; may be null) as the parent
 						cwac.setParent(rootContext);
 					}
+					// 配置并且加载子容器
 					configureAndRefreshWebApplicationContext(cwac);
 				}
 			}
@@ -584,13 +583,17 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 			// has been registered in the servlet context. If one exists, it is assumed
 			// that the parent context (if any) has already been set and that the
 			// user has performed any initialization such as setting the context id
+			// 从 servlet 上下文根据 <contextAttribute> 名字从域里获取
 			wac = findWebApplicationContext();
 		}
 		if (wac == null) {
 			// No context instance is defined for this servlet -> create a local one
+			// spring.xml 会从这里创建
 			wac = createWebApplicationContext(rootContext);
 		}
 
+		// refreshEventReceived 它会在容器加载完设置为 true(通过事件 onApplicationEvent)
+		// springboot 在这初始化组件
 		if (!this.refreshEventReceived) {
 			// Either the context is not a ConfigurableApplicationContext with refresh
 			// support or the context injected at construction time had already been
@@ -602,6 +605,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 
 		if (this.publishContext) {
 			// Publish the context as a servlet context attribute.
+			// 将当前容器放到 servlet 域中，可以再创建子容器
 			String attrName = getServletContextAttributeName();
 			getServletContext().setAttribute(attrName, wac);
 		}
@@ -648,7 +652,9 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	 * @return the WebApplicationContext for this servlet
 	 * @see org.springframework.web.context.support.XmlWebApplicationContext
 	 */
+	// 创建 spring IoC web 容器
 	protected WebApplicationContext createWebApplicationContext(@Nullable ApplicationContext parent) {
+		// 拿到默认值是 XmlWebApplicationContext
 		Class<?> contextClass = getContextClass();
 		if (!ConfigurableWebApplicationContext.class.isAssignableFrom(contextClass)) {
 			throw new ApplicationContextException(
@@ -656,20 +662,28 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 					"': custom WebApplicationContext class [" + contextClass.getName() +
 					"] is not of type ConfigurableWebApplicationContext");
 		}
+		// 创建了一个实例对象，默认创建的是 XmlWebApplicationContext
 		ConfigurableWebApplicationContext wac =
 				(ConfigurableWebApplicationContext) BeanUtils.instantiateClass(contextClass);
 
 		wac.setEnvironment(getEnvironment());
 		wac.setParent(parent);
-		String configLocation = getContextConfigLocation();
+		// 读取 web.xml 中配置的 spring.xml 的资源位置
+		// <context-param>
+		//        <param-name>contextConfigLocation</param-name>
+		//        <param-value>/WEB-INF/spring.xml</param-value>
+		// </context-param>
+		String configLocation = getContextConfigLocation(); // /WEB-INF/spring.xml
 		if (configLocation != null) {
 			wac.setConfigLocation(configLocation);
 		}
+		// 扫描 spring.xml 装载 bean
 		configureAndRefreshWebApplicationContext(wac);
 
 		return wac;
 	}
 
+	// 装载 spring.xml 中配置的 bean,比如里边的 <context:component-scan package=""/> 等
 	protected void configureAndRefreshWebApplicationContext(ConfigurableWebApplicationContext wac) {
 		if (ObjectUtils.identityToString(wac).equals(wac.getId())) {
 			// The application context id is still set to its original default value
@@ -712,6 +726,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	 * @see org.springframework.web.context.support.XmlWebApplicationContext
 	 * @see #createWebApplicationContext(ApplicationContext)
 	 */
+	// 创建 web IoC 容器
 	protected WebApplicationContext createWebApplicationContext(@Nullable WebApplicationContext parent) {
 		return createWebApplicationContext((ApplicationContext) parent);
 	}

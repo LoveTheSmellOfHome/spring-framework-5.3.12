@@ -16,15 +16,14 @@
 
 package org.springframework.web.servlet.i18n;
 
-import java.util.Locale;
-import java.util.TimeZone;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.context.i18n.LocaleContext;
 import org.springframework.context.i18n.TimeZoneAwareLocaleContext;
 import org.springframework.lang.Nullable;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * {@link org.springframework.web.servlet.LocaleResolver} implementation
@@ -39,6 +38,10 @@ import org.springframework.lang.Nullable;
  * @see #setDefaultLocale
  * @see #setDefaultTimeZone
  */
+// org.springframework.web.servlet.LocaleResolver实现总是返回一个固定的默认语言环境和可选的时区。
+// Default 是当前 JVM 的默认语言环境。
+//
+// 注意：不支持setLocale(Context) ，因为固定的语言环境和时区无法更改
 public class FixedLocaleResolver extends AbstractLocaleContextResolver {
 
 	/**
@@ -47,6 +50,7 @@ public class FixedLocaleResolver extends AbstractLocaleContextResolver {
 	 * @see #setDefaultLocale
 	 * @see #setDefaultTimeZone
 	 */
+	// 创建一个默认的 FixedLocaleResolver，公开配置的默认语言环境（或 JVM 的默认语言环境作为后备）
 	public FixedLocaleResolver() {
 		setDefaultLocale(Locale.getDefault());
 	}

@@ -45,6 +45,15 @@ import org.springframework.util.Assert;
  * @see ConverterFactory
  * @see ConditionalConverter
  */
+// 用于在两种或多种类型之间进行转换的通用转换器接口
+//
+// <p>这是最灵活的转换器 SPI 接口，但也是最复杂的。它的灵活性在于 GenericConverter 可以支持多个 sourcetarget 类型对
+// 之间的转换（请参阅 {@link getConvertibleTypes()}。此外，GenericConverter 实现在类型转换过程中可以访问 sourcetarget
+// {@link TypeDescriptor field context}。这允许解析源和目标字段元数据，例如注解和泛型信息，可用于影响转换逻辑。
+//
+// <p>当更简单的 {@link Converter} 或 {@link ConverterFactory} 接口就足够时，通常不应使用此接口。
+// <p>实现可能会另外实现 {@link ConditionalConverter}。
+// 复合类型转换器
 public interface GenericConverter {
 
 	/**
@@ -53,6 +62,9 @@ public interface GenericConverter {
 	 * <p>For {@link ConditionalConverter conditional converters} this method may return
 	 * {@code null} to indicate all source-to-target pairs should be considered.
 	 */
+	// 返回此转换器可以在其间转换的源类型和目标类型。
+	// <p>每个条目都是一个可转换的源到目标类型对。
+	// <p>对于 {@link ConditionalConverter 条件转换器}，此方法可能返回 {@code null} 以指示应考虑所有源到目标对。
 	@Nullable
 	Set<ConvertiblePair> getConvertibleTypes();
 
@@ -63,6 +75,10 @@ public interface GenericConverter {
 	 * @param targetType the type descriptor of the field we are converting to
 	 * @return the converted object
 	 */
+	// 将源对象转换为 {@code TypeDescriptor} 描述的 targetType
+	// @param source 要转换的源对象（可能是 {@code null}）
+	// @param sourceType 我们正在转换的字段的类型描述符
+	// @param targetType 我们要转换后的字段的类型描述符
 	@Nullable
 	Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType);
 
@@ -70,6 +86,7 @@ public interface GenericConverter {
 	/**
 	 * Holder for a source-to-target class pair.
 	 */
+	// 源到目标类对(source-to-target)的持有者
 	final class ConvertiblePair {
 
 		private final Class<?> sourceType;

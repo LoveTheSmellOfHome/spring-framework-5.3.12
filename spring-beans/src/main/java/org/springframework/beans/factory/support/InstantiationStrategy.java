@@ -33,6 +33,8 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 1.1
  */
+// 负责创建对应于rootBeanDefinition的实例的接口。
+// <p>由于各种方法都是可能的，因此将其纳入策略中，包括使用 CGLIB 动态创建子类以支持方法注入。
 public interface InstantiationStrategy {
 
 	/**
@@ -45,6 +47,12 @@ public interface InstantiationStrategy {
 	 * @return a bean instance for this bean definition
 	 * @throws BeansException if the instantiation attempt failed
 	 */
+	// 返回此工厂中具有给定名称的 bean 实例。
+	// @param bd bean 定义
+	// @param beanName 在此上下文中创建 bean 时的名称。如果我们自动装配一个不属于工厂的 bean，名称可以是 {@code null}。
+	// @param owner 拥有的 BeanFactory
+	// @return 这个 bean 定义的 bean 实例
+	// @throws BeansException 如果实例化尝试失败
 	Object instantiate(RootBeanDefinition bd, @Nullable String beanName, BeanFactory owner)
 			throws BeansException;
 
@@ -61,6 +69,14 @@ public interface InstantiationStrategy {
 	 * @return a bean instance for this bean definition
 	 * @throws BeansException if the instantiation attempt failed
 	 */
+	// 返回此工厂中具有给定名称的 bean 实例，通过给定的构造函数创建它。
+	// @param bd bean 定义
+	// @param beanName 在此上下文中创建 bean 时的名称。如果我们自动装配一个不属于工厂的 bean，名称可以是 {@code null}。
+	// @param owner 拥有 BeanFactory
+	// @param ctor 构造函数以使用
+	// @param args 构造函数参数来应用
+	// @return 这个 bean 定义的 bean 实例
+	// @throws BeansException 如果实例化尝试失败
 	Object instantiate(RootBeanDefinition bd, @Nullable String beanName, BeanFactory owner,
 			Constructor<?> ctor, Object... args) throws BeansException;
 
@@ -79,6 +95,15 @@ public interface InstantiationStrategy {
 	 * @return a bean instance for this bean definition
 	 * @throws BeansException if the instantiation attempt failed
 	 */
+	// 返回此工厂中具有给定名称的 bean 的实例，通过给定的工厂方法创建它。
+	// @param bd bean 定义
+	// @param beanName 在此上下文中创建 bean 时的名称。如果我们自动装配一个不属于工厂的 bean，名称可以是 {@code null}。
+	// @param owner 拥有 BeanFactory
+	// @param factoryBean 调用工厂方法的工厂 bean 实例，或者 {@code null} 在静态工厂方法的情况下
+	// @param factoryMethod 使用工厂方法
+	// @param args 要应用的工厂方法参数
+	// @return 此 bean 定义的 bean 实例
+	// @throws BeansException 如果实例化尝试失败
 	Object instantiate(RootBeanDefinition bd, @Nullable String beanName, BeanFactory owner,
 			@Nullable Object factoryBean, Method factoryMethod, Object... args)
 			throws BeansException;

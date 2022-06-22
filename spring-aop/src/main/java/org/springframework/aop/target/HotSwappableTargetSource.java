@@ -35,6 +35,10 @@ import org.springframework.util.Assert;
  * @author Rod Johnson
  * @author Juergen Hoeller
  */
+// TargetSource 实现缓存本地目标对象，但允许在应用程序运行时交换目标。
+// 如果在 Spring IoC 容器中配置此类的对象，请使用构造函数注入。
+// 如果目标在序列化时，则此 TargetSource 是可序列化的
+// 热交换目标源，动态替换目标源是线程安全的
 public class HotSwappableTargetSource implements TargetSource, Serializable {
 
 	/** use serialVersionUID from Spring 1.2 for interoperability. */
@@ -42,6 +46,7 @@ public class HotSwappableTargetSource implements TargetSource, Serializable {
 
 
 	/** The current target object. */
+	// 当前目标对象。
 	private Object target;
 
 
@@ -49,6 +54,8 @@ public class HotSwappableTargetSource implements TargetSource, Serializable {
 	 * Create a new HotSwappableTargetSource with the given initial target object.
 	 * @param initialTarget the initial target object
 	 */
+	// 使用给定的初始目标对象创建一个新的 HotSwappableTargetSource。
+	// 参形：initialTarget – 初始目标对象
 	public HotSwappableTargetSource(Object initialTarget) {
 		Assert.notNull(initialTarget, "Target object must not be null");
 		this.target = initialTarget;
@@ -59,6 +66,8 @@ public class HotSwappableTargetSource implements TargetSource, Serializable {
 	 * Return the type of the current target object.
 	 * <p>The returned type should usually be constant across all target objects.
 	 */
+	// 返回当前目标对象的类型。
+	// 返回的类型通常应该在所有目标对象中保持不变
 	@Override
 	public synchronized Class<?> getTargetClass() {
 		return this.target.getClass();
@@ -86,6 +95,14 @@ public class HotSwappableTargetSource implements TargetSource, Serializable {
 	 * @return the old target object
 	 * @throws IllegalArgumentException if the new target is invalid
 	 */
+	// 交换目标，返回旧的目标对象。
+	// 参形：
+	//			newTarget – 新的目标对象
+	// 返回值：
+	//			旧的目标对象
+	// 抛出：
+	//			IllegalArgumentException – 如果新目标无效
+	// 动态替换目标对象
 	public synchronized Object swap(Object newTarget) throws IllegalArgumentException {
 		Assert.notNull(newTarget, "Target object must not be null");
 		Object old = this.target;
@@ -98,6 +115,7 @@ public class HotSwappableTargetSource implements TargetSource, Serializable {
 	 * Two HotSwappableTargetSources are equal if the current target
 	 * objects are equal.
 	 */
+	// 如果当前目标对象相等，则两个 HotSwappableTargetSource 相等
 	@Override
 	public boolean equals(Object other) {
 		return (this == other || (other instanceof HotSwappableTargetSource &&

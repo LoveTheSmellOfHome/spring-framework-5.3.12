@@ -16,13 +16,13 @@
 
 package org.springframework.scheduling.concurrent;
 
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
-
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.lang.Nullable;
+
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A Spring {@link FactoryBean} that builds and exposes a preconfigured {@link ForkJoinPool}.
@@ -30,6 +30,7 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 3.1
  */
+// Fork/Join 框架（JSR 166）
 public class ForkJoinPoolFactoryBean implements FactoryBean<ForkJoinPool>, InitializingBean, DisposableBean {
 
 	private boolean commonPool = false;

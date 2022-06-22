@@ -50,6 +50,8 @@ import org.springframework.util.StringValueResolver;
  * @author Juergen Hoeller
  * @since 3.0
  */
+// 旨在配置为 {@link FormatterRegistry} 的 {@link org.springframework.core.convert.ConversionService} 实现
+// 通用 Formatter + GenericConversionService 实现，不内置转化器和 Formatter 实现，提供了模块实现
 public class FormattingConversionService extends GenericConversionService
 		implements FormatterRegistry, EmbeddedValueResolverAware {
 

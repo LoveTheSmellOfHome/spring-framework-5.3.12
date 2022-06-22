@@ -16,10 +16,10 @@
 
 package org.springframework.jndi;
 
-import javax.naming.NamingException;
-
 import org.springframework.core.env.PropertySource;
 import org.springframework.lang.Nullable;
+
+import javax.naming.NamingException;
 
 /**
  * {@link PropertySource} implementation that reads properties from an underlying Spring
@@ -51,6 +51,17 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.web.WebApplicationInitializer
  * @see org.springframework.web.context.support.StandardServletEnvironment
  */
+// 从底层 {@link JndiLocatorDelegate} 读取属性的 {@link PropertySource} 实现。
+//
+// <p>默认情况下，底层JndiLocatorDelegate将被配置为将其"resourceRef"属性设置为true ，这意味着查找的名称将
+// 自动以“java:comp/env/”为前缀，与已发布的JNDI 命名约定保持一致 。 要覆盖此设置或更改前缀，请手动配置
+// {@code JndiLocatorDelegate}并将其提供给此处接受它的构造函数之一。 这同样适用于提供自定义 JNDI 属性时。 这些应该在
+// 构造JndiPropertySource之前使用JndiLocatorDelegate.setJndiEnvironment(java.util.Properties)指定。
+//
+// <p>请注意， StandardServletEnvironment默认包含JndiPropertySource ，底层JndiLocatorDelegate任何自定义
+// 都可以在ApplicationContextInitializer或WebApplicationInitializer 。
+//
+// Spring 內建的配置属性源 - JDNI 配置属性源
 public class JndiPropertySource extends PropertySource<JndiLocatorDelegate> {
 
 	/**
@@ -58,6 +69,7 @@ public class JndiPropertySource extends PropertySource<JndiLocatorDelegate> {
 	 * and a {@link JndiLocatorDelegate} configured to prefix any names with
 	 * "java:comp/env/".
 	 */
+	// 使用给定的名称和JndiLocatorDelegate创建一个新的JndiPropertySource ，配置为在任何名称前加上“java:comp/env/”
 	public JndiPropertySource(String name) {
 		this(name, JndiLocatorDelegate.createDefaultResourceRefLocator());
 	}
@@ -66,6 +78,7 @@ public class JndiPropertySource extends PropertySource<JndiLocatorDelegate> {
 	 * Create a new {@code JndiPropertySource} with the given name and the given
 	 * {@code JndiLocatorDelegate}.
 	 */
+	// 创建一个新的JndiPropertySource与给定的名称和给定JndiLocatorDelegate
 	public JndiPropertySource(String name, JndiLocatorDelegate jndiLocator) {
 		super(name, jndiLocator);
 	}
@@ -77,6 +90,8 @@ public class JndiPropertySource extends PropertySource<JndiLocatorDelegate> {
 	 * is thrown during the call to {@link JndiLocatorDelegate#lookup(String)}, returns
 	 * {@code null} and issues a DEBUG-level log statement with the exception message.
 	 */
+	// 此实现从底层JndiLocatorDelegate查找并返回与给定名称关联的值。 如果在调用JndiLocatorDelegate.lookup(String)
+	// 期间抛出NamingException ，则返回null并发出带有异常消息的调试级日志语句。
 	@Override
 	@Nullable
 	public Object getProperty(String name) {

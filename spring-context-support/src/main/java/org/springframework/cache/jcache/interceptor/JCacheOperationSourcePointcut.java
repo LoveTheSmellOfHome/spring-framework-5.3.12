@@ -30,9 +30,11 @@ import org.springframework.util.ObjectUtils;
  * @author Stephane Nicoll
  * @since 4.1
  */
+// 如果底层 JCacheOperationSource 具有给定方法的操作，则匹配的切入点。
 @SuppressWarnings("serial")
 public abstract class JCacheOperationSourcePointcut extends StaticMethodMatcherPointcut implements Serializable {
 
+	// 匹配条件
 	@Override
 	public boolean matches(Method method, Class<?> targetClass) {
 		JCacheOperationSource cas = getCacheOperationSource();
@@ -43,6 +45,7 @@ public abstract class JCacheOperationSourcePointcut extends StaticMethodMatcherP
 	 * Obtain the underlying {@link JCacheOperationSource} (may be {@code null}).
 	 * To be implemented by subclasses.
 	 */
+	// 获取底层JCacheOperationSource （可能为null ）。由子类实现。
 	@Nullable
 	protected abstract JCacheOperationSource getCacheOperationSource();
 

@@ -16,17 +16,12 @@
 
 package org.springframework.scheduling.annotation;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
+
+import java.lang.annotation.*;
 
 /**
  * Enables Spring's asynchronous method execution capability, similar to functionality
@@ -156,6 +151,83 @@ import org.springframework.core.Ordered;
  * @see AsyncConfigurer
  * @see AsyncConfigurationSelector
  */
+// 启用 Spring 的异步方法执行功能，类似于 Spring 中 XML 命名空间的功能 <task:*>
+// 要配合 @Configuration 使用，如下类，使注解驱动异步处理对整个 Spring 应用程序上下文生效：
+//   @Configuration
+//   @EnableAsync
+//   public class AppConfig {
+//
+//   }
+// MyAsyncBean 是一种用户自定义类型，具有一个或多个使用诸如 Spring 的 @Async 注解、
+// EJB 3.1 @javax.ejb.Asynchronous 注解或通过 annotation 属性指定的任何自定义注解
+// 进行批注的方法。对于任何已注册的 bean，该切面都是透明地添加的，例如通过以下配置：
+// 	 @Configuration
+//   public class AnotherAppConfig {
+//
+//       @Bean
+//       public MyAsyncBean asyncBean() {
+//           return new MyAsyncBean();
+//       }
+//   }
+// 默认情况下，Spring 将搜索关联的线程池定义：上下文中唯一的
+// org.springframework.core.task.TaskExecutor bean，或者名为“taskExecutor”的
+// java.util.concurrent.Executor bean。如果两者都不可解析，则将使用
+// org.springframework.core.task.SimpleAsyncTaskExecutor 来处理异步方法调用。
+// 此外，具有 void 返回类型的带注解的方法不能将任何异常传输回调用者。
+// 默认情况下，仅记录此类未捕获的异常。
+// 要自定义所有这些，请实现 AsyncConfigurer 并提供：
+// <li>你自己的{@link java.util.concurrent.Executor Executor}通过
+// {@link AsyncConfigurergetAsyncExecutor #getAsyncExecutor()}方法，以及<li>
+// <li>你自己的{@link org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler
+// AsyncUncaughtExceptionHandler} 通过 {@link AsyncConfigurergetAsyncUncaughtExceptionHandler
+// #getAsyncUncaughtExceptionHandler()} 方法。<li> <ul>
+// 注意： AsyncConfigurer 配置类在应用程序上下文引导程序的早期被初始化。如果您需要对其他 bean 的任何依赖，
+// 请确保尽可能将它们声明为“惰性”，以便让它们也通过其他后处理器
+//   @Configuration
+//   @EnableAsync
+//   public class AppConfig implements AsyncConfigurer {
+//
+//       @Override
+//       public Executor getAsyncExecutor() {
+//           ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+//           executor.setCorePoolSize(7);
+//           executor.setMaxPoolSize(42);
+//           executor.setQueueCapacity(11);
+//           executor.setThreadNamePrefix("MyExecutor-");
+//           executor.initialize();
+//           return executor;
+//       }
+//
+//       @Override
+//       public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
+//           return new MyAsyncUncaughtExceptionHandler();
+//       }
+//   }
+// 如果只需要定制一项，可以返回null，保持默认设置。如果可能，还考虑从 AsyncConfigurerSupport 扩展。
+// 注意：在上面的例子中，ThreadPoolTaskExecutor 不是一个完全托管的 Spring bean。如果需要完全托管的 bean，
+// 请将 @Bean 注释添加到 getAsyncExecutor() 方法。在这种情况下，不再需要手动调用 executor.initialize() 方法，
+// 因为它会在 bean 初始化时自动调用。
+// 作为参考，可以将上面的示例与以下 Spring XML 配置进行比较：
+// <beans>
+//
+//       <task:annotation-driven executor="myExecutor" exception-handler="exceptionHandler"/>
+//
+//       <task:executor id="myExecutor" pool-size="7-42" queue-capacity="11"/>
+//
+//       <bean id="asyncBean" class="com.foo.MyAsyncBean"/>
+//
+//       <bean id="exceptionHandler" class="com.foo.MyAsyncUncaughtExceptionHandler"/>
+//
+//   </beans>
+// 上面基于XML和基于JavaConfig的例子是等价的，只是设置了 Executor 的线程名前缀；这是因为该元素没有公开这样的属性。
+// 这演示了基于 JavaConfig 的方法如何通过直接访问实际组件来实现最大的可配置性。
+// mode 属性控制如何应用建议：如果模式是 AdviceMode.PROXY（默认），则其他属性控制代理的行为。
+// 请注意，代理模式只允许通过代理拦截调用；不能以这种方式拦截同一类中的本地调用。
+// 请注意，如果模式设置为 AdviceMode.ASPECTJ，则 proxyTargetClass 属性的值将被忽略。
+// 还要注意，在这种情况下，spring-aspects 模块 JAR 必须存在于类路径中，编译时编织或加载时编织将方面应用于受影响的类。
+// 这种场景不涉及代理；本地调用也会被拦截。
+//
+// 核心 API :激活异步
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -171,6 +243,9 @@ public @interface EnableAsync {
 	 * custom annotation type to indicate that a method (or all methods of
 	 * a given class) should be invoked asynchronously.
 	 */
+	// 指示要在类或方法级别检测到的“异步”注释类型
+	// 默认情况下，Spring 的 @Async注释和 EJB 3.1 @javax.ejb.Asynchronous注解都会被检测到。
+	// 存在此属性，以便开发人员可以提供自己的自定义注释类型，以指示应异步调用方法（或给定类的所有方法）。
 	Class<? extends Annotation> annotation() default Annotation.class;
 
 	/**
@@ -185,6 +260,12 @@ public @interface EnableAsync {
 	 * negative impact in practice unless one is explicitly expecting one type of proxy
 	 * vs. another &mdash; for example, in tests.
 	 */
+	// 指示是否要创建基于子类 (CGLIB) 的代理，而不是基于标准 Java 接口的代理。
+	// 仅当mode设置为AdviceMode.PROXY
+	// 默认值为false 。
+	// 请注意，将此属性设置为true将影响所有需要代理的 Spring 管理的 bean，而不仅仅是那些标记为@Async 。
+	// 例如，其他标注了 Spring 的@Transactional注解的 bean 会同时升级为子类代理。
+	// 这种方法在实践中没有负面影响，除非人们明确期望一种类型的代理与另一种类型的代理——例如，在测试中。
 	boolean proxyTargetClass() default false;
 
 	/**
@@ -197,6 +278,10 @@ public @interface EnableAsync {
 	 * For a more advanced mode of interception, consider switching this to
 	 * {@link AdviceMode#ASPECTJ}.
 	 */
+	// 指示应如何应用异步建议
+	// 默认值为AdviceMode.PROXY 。 请注意，代理模式只允许通过代理拦截调用。 不能以这种方式拦截同一类中的本地调用；
+	// 本地调用中此类方法上的 @Async 注解将被忽略，因为 Spring 的拦截器甚至不会针对此类运行时场景启动。
+	// 对于更高级的拦截模式，请考虑将其切换为AdviceMode.ASPECTJ 。
 	AdviceMode mode() default AdviceMode.PROXY;
 
 	/**
@@ -206,6 +291,7 @@ public @interface EnableAsync {
 	 * after all other post-processors, so that it can add an advisor to
 	 * existing proxies rather than double-proxy.
 	 */
+	// 指示应应用 AsyncAnnotationBeanPostProcessor 的顺序。
 	int order() default Ordered.LOWEST_PRECEDENCE;
 
 }

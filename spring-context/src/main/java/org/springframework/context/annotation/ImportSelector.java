@@ -58,6 +58,21 @@ import org.springframework.lang.Nullable;
  * @see ImportBeanDefinitionRegistrar
  * @see Configuration
  */
+// 由类型实现的接口，这些类型根据给定的选择标准（通常是一个或多个注释属性）确定应该导入哪个 Configuration 类。
+//
+// ImportSelector可以实现以下任何 Aware 接口，它们各自的方法将在 selectImports 之前调用：
+//  >EnvironmentAware
+//  >BeanFactoryAware
+//  >BeanClassLoaderAware
+//  >ResourceLoaderAware
+//
+// 或者，该类可以提供具有以下一种或多种支持的参数类型的单个构造函数：
+//  >Environment
+//  >BeanFactory
+//  >ClassLoader
+//  >ResourceLoader
+// ImportSelector 实现通常以与常规 @Import 注解相同的方式处理，但是，也可以延迟选择导入，
+// 直到处理完所有 @Configuration类（有关详细信息，请参阅 DeferredImportSelector ）。
 public interface ImportSelector {
 
 	/**
@@ -65,6 +80,9 @@ public interface ImportSelector {
 	 * the {@link AnnotationMetadata} of the importing @{@link Configuration} class.
 	 * @return the class names, or an empty array if none
 	 */
+	// 根据导入 @Configuration 类的 AnnotationMetadata Configuration并返回应导入的类的名称。
+	// 返回值：
+	//			类名，如果没有，则为空数组
 	String[] selectImports(AnnotationMetadata importingClassMetadata);
 
 	/**
@@ -77,6 +95,10 @@ public interface ImportSelector {
 	 * of transitively imported configuration classes, or {@code null} if none
 	 * @since 5.2.4
 	 */
+	// 返回一个从导入候选中排除类的断言，以传递地应用于通过此选择器的导入找到的所有类。
+	// 如果该谓词对给定的完全限定类名返回true ，则该类将不会被视为导入的配置类，从而绕过类文件加载以及元数据自省。
+	// 返回值：
+	//			传递导入配置类的完全限定候选类名称的过滤谓词，如果没有，则为null
 	@Nullable
 	default Predicate<String> getExclusionFilter() {
 		return null;

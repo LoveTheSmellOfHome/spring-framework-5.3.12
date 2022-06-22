@@ -27,9 +27,17 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 2.0.7
  */
+// 仅考虑基础架构顾问 bean 的自动代理创建者，忽略任何应用程序定义的顾问
+// 自动代理的第三种实现：Infrastructure Bean 实现
+//
+// 具有探寻 Advisor bean 的能力，如果指定了就用指定的，没有指定它通过
+// 应用上下文的方式来进行查找相应的 Advisor 对象
+//
+// 基于 XML 配置的通用组件，<aop:config/> 元素进行注解的
 @SuppressWarnings("serial")
 public class InfrastructureAdvisorAutoProxyCreator extends AbstractAdvisorAutoProxyCreator {
 
+	// 和 IoC 容器整合
 	@Nullable
 	private ConfigurableListableBeanFactory beanFactory;
 
@@ -40,6 +48,7 @@ public class InfrastructureAdvisorAutoProxyCreator extends AbstractAdvisorAutoPr
 		this.beanFactory = beanFactory;
 	}
 
+	// 筛选操作 filter，根据 BeanDefinition 的属性 Role 来进行筛选
 	@Override
 	protected boolean isEligibleAdvisorBean(String beanName) {
 		return (this.beanFactory != null && this.beanFactory.containsBeanDefinition(beanName) &&

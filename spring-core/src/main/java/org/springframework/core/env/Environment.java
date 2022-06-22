@@ -68,6 +68,38 @@ package org.springframework.core.env;
  * @see org.springframework.context.ConfigurableApplicationContext#setEnvironment
  * @see org.springframework.context.support.AbstractApplicationContext#createEnvironment
  */
+// 表示当前应用程序运行环境的接口。对应用程序环境的两个关键方面进行建模：<em>profiles<em> 和 <em>properties<em>。
+// 与属性访问相关的方法通过 {@link PropertyResolver} 超接口公开。
+//
+// <p><em>profile<em> 是一个命名的、逻辑​​的 bean 定义组，仅当给定的配置文件是 <em>active<em> 时才向容器注册。
+// Bean 可以分配给配置文件，无论是在 XML 中定义还是通过注释；有关语法详细信息，请参阅 spring-beans 3.1 架构或
+// {@link org.springframework.context.annotation.Profile @Profile} 注释。
+// 与配置文件相关的 {@code Environment} 对象的作用是确定哪些配置文件（如果有）当前是 {@linkplain getActiveProfiles active}，
+// 哪些配置文件（如果有）应该是 {@linkplain getDefaultProfiles active by default}。
+//
+// <p><em>Properties<em>在几乎所有应用程序中都扮演着重要的角色，并且可能来源于多种来源：Properties文件、JVM 系统Properties、
+// 系统环境变量、JNDI、servlet 上下文参数、ad-hoc 属性对象、地图等。与属性相关的环境对象的作用是为用户提供方便的服务接口，
+// 用于配置属性源并从中解析属性。
+//
+// <p>在 {@code ApplicationContext} 中管理的 Bean 可以注册为
+// {@link org.springframework.context.EnvironmentAware EnvironmentAware} 或 {@code @Inject} {@code Environment}，
+// 以便直接地查询配置文件状态或解析属性
+//
+// p>然而，在大多数情况下，应用程序级 bean 不需要直接与 {@code Environment} 交互，而是可能必须将 {@code {...}} 属性值
+// 替换为属性占位符配置器，例如作为
+// {@link org.springframework.context.support.PropertySourcesPlaceholderConfigurer
+// PropertySourcesPlaceholderConfigurer}，它本身是 {@code EnvironmentAware} 并且从 Spring 3.1 开始，
+// 在使用 {@code <context:property-placeholder>} 时默认注册。
+//
+// <p>环境对象的配置必须通过 {@code ConfigurableEnvironment} 接口完成，从所有 {@code AbstractApplicationContext}
+// 子类 {@code getEnvironment()} 方法返回。请参阅 {@link ConfigurableEnvironment} Javadoc 以获取演示在应用程序上下文
+// {@code refresh()} 之前操作属性源的用法示例。
+//
+// Environment 对象隶属于 ApplicationContext,通过注册单例的方式把外部对象注册到 BeanFactory 中
+// 所以我们可以同过依赖查找和依赖注入的方式能够找到 Environment 对象的原因.
+// {@link AbstractApplicationContext}#prepareBeanFactory
+//
+// 职责：管理 Spring 配置属性源 PropertySource; 管理 Profiles
 public interface Environment extends PropertyResolver {
 
 	/**
@@ -83,6 +115,10 @@ public interface Environment extends PropertyResolver {
 	 * @see ConfigurableEnvironment#setActiveProfiles
 	 * @see AbstractEnvironment#ACTIVE_PROFILES_PROPERTY_NAME
 	 */
+	// 返回为此环境明确激活的配置文件集。配置文件用于创建有条件注册的 bean 定义的逻辑分组，例如基于部署环境。
+	// 可以通过将 {@linkplain AbstractEnvironmentACTIVE_PROFILES_PROPERTY_NAME "spring.profiles.active"}
+	// 设置为系统属性或调用 {@link ConfigurableEnvironmentsetActiveProfiles(String...)} 来激活配置文件。
+	// <p>如果没有明确指定为活动的配置文件，则任何{@linkplain getDefaultProfiles() 默认配置文件}将自动被激活。
 	String[] getActiveProfiles();
 
 	/**
@@ -92,6 +128,7 @@ public interface Environment extends PropertyResolver {
 	 * @see ConfigurableEnvironment#setDefaultProfiles
 	 * @see AbstractEnvironment#DEFAULT_PROFILES_PROPERTY_NAME
 	 */
+	// 当没有明确设置活动配置文件时，默认情况下返回要激活的配置文件集
 	String[] getDefaultProfiles();
 
 	/**
@@ -108,6 +145,10 @@ public interface Environment extends PropertyResolver {
 	 * @see #acceptsProfiles(Profiles)
 	 * @deprecated as of 5.1 in favor of {@link #acceptsProfiles(Profiles)}
 	 */
+	// 返回一个或多个给定的配置文件是否处于活动状态，或者在没有明确的活动配置文件的情况下，
+	// 一个或多个给定的配置文件是否包含在一组默认配置文件中。如果配置文件以“！”开头逻辑是相反的，即如果给定的配置文件 <em>not<em> 活动，
+	// 该方法将返回 {@code true}。例如，{@code env.acceptsProfiles("p1", "!p2")} 将返回 {@code true}
+	// 如果配置文件 'p1' 处于活动状态或 'p2' 未处于活动状态。
 	@Deprecated
 	boolean acceptsProfiles(String... profiles);
 
@@ -115,6 +156,7 @@ public interface Environment extends PropertyResolver {
 	 * Return whether the {@linkplain #getActiveProfiles() active profiles}
 	 * match the given {@link Profiles} predicate.
 	 */
+	// 返回 {@linkplain getActiveProfiles() 活动配置文件}是否与给定的 {@link Profiles} 谓词匹配
 	boolean acceptsProfiles(Profiles profiles);
 
 }

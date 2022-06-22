@@ -25,6 +25,7 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @author Phillip Webb
  */
+// @Component 已导入的注册中心
 interface ImportRegistry {
 
 	@Nullable

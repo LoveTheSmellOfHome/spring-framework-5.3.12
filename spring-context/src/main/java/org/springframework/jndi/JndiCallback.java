@@ -36,6 +36,10 @@ import org.springframework.lang.Nullable;
  * @see JndiTemplate
  * @see org.springframework.jdbc.core.JdbcTemplate
  */
+// 回调接口由需要在 JNDI 上下文中执行操作（例如查找）的类实现。这种回调方法对于简化
+// 由 JndiTemplate 类执行的错误处理很有价值。这类似于 JdbcTemplate 的方法。
+//
+// <p>请注意，几乎不需要实现此回调接口，因为 JndiTemplate 通过便捷方法提供了所有常用的 JNDI 操作
 @FunctionalInterface
 public interface JndiCallback<T> {
 
@@ -47,6 +51,10 @@ public interface JndiCallback<T> {
 	 * @return a result object, or {@code null}
 	 * @throws NamingException if thrown by JNDI methods
 	 */
+	// 使用给定的 JNDI 上下文做一些事情
+	// <p>实现不需要担心错误处理或清理，因为 JndiTemplate 类会处理这个
+	// @param ctx 当前 JNDI 上下文
+	// @return  结果对象，或 {@code null}
 	@Nullable
 	T doInContext(Context ctx) throws NamingException;
 

@@ -27,6 +27,7 @@ import java.lang.reflect.Method;
  * @author Phillip Webb
  * @since 3.1
  */
+// 缓存密钥生成器。用于根据给定的方法（用作上下文）及其参数创建密钥。
 @FunctionalInterface
 public interface KeyGenerator {
 
@@ -37,6 +38,13 @@ public interface KeyGenerator {
 	 * @param params the method parameters (with any var-args expanded)
 	 * @return a generated key
 	 */
+	// 为给定方法及其参数生成密钥。
+	// 参形：
+	//			target – 目标实例
+	//			method - 被调用的方法
+	//			params – 方法参数（扩展任何 var-args）
+	// 返回值：
+	//			生成的密钥
 	Object generate(Object target, Method method, Object... params);
 
 }

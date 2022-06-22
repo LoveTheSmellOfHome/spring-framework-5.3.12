@@ -84,6 +84,47 @@ import java.lang.annotation.Target;
  * @author Stephane Nicoll
  * @since 5.0
  */
+// 指示带注释的元素表示索引的模型
+//
+// <p>{@code CandidateComponentsIndex} 是类路径扫描的替代方法，它使用在编译时生成的元数据文件。该索引允许基于范式
+// 检索候选组件（即完全限定名称）。该注解指示生成器索引带有注解元素的元素，或者它是否实现或扩展自注解元素。范式是带注释元素的完全限定名称。
+//
+// <p>考虑使用此注解进行元注解的默认 {@link Component} 注解。如果一个组件用 {@link Component} 注解，该组件的条目将使用
+// {@code org.springframework.stereotype.Component} 模式注解添加到索引中。
+//
+// 此注释也适用于元注释。 考虑这个自定义注释：
+//   package com.example;
+//
+//   @Target(ElementType.TYPE)
+//   @Retention(RetentionPolicy.RUNTIME)
+//   @Documented
+//   @Indexed
+//   @Service
+//   public @interface PrivilegedService { ... }
+//
+//如果上面的注解存在于一个类型上，它将被两个模式注解索引： org.springframework.stereotype.Component和
+// com.example.PrivilegedService 。虽然 {@link @Service} 没有直接用 {@code @Indexed} 进行注解，但它是用 {@link @Component} 进行元注解的。
+//
+// 还可以通过在其上添加 {@code @Indexed}来索引某个接口的所有实现或给定类的所有子类。 考虑这个基本接口：
+//   package com.example;
+//
+//   @Indexed
+//   public interface AdminService { ... }
+//
+// 现在，考虑在某处实现这个AdminService ：
+//   package com.example.foo;
+//
+//   import com.example.AdminService;
+//
+//   public class ConfigurationAdminService implements AdminService { ... }
+//
+// 因为这个类实现了一个被索引的接口，它会自动包含在 {@code com.example.AdminService} 模式注解中。
+// 如果层次结构中有更多 {@code @Indexed} 接口和/或超类，则该类将映射到它们的所有模式注解。
+//
+// 通过 APT(Annotation Processor Tools)工具进行在编译时生成元信息，帮助我们减少性能损耗
+// (比如类的扫描，ComponentScan以及无论是字节码也好，还是反射来进行读取元信息)，在编译时能确定的事情那么就会减少运行时的损耗。
+// 对 Spring 的启动势必有帮助，所以在 Spring Boot 中启动会比 Sping 1 启动性能要好，因为在 Spring Boot 内部大量组件都被
+// 进行静态化操作。
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

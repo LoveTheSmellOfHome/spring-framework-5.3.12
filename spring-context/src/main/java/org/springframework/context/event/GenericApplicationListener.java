@@ -36,12 +36,18 @@ import org.springframework.core.ResolvableType;
  * @see SmartApplicationListener
  * @see GenericApplicationListenerAdapter
  */
+// 标准 ApplicationListener 接口的扩展变体，公开更多元数据，例如支持的事件和源类型。
+//
+// 从 Spring Framework 4.2 开始，该接口取代了基于类的 SmartApplicationListener 并全面处理了通用事件类型。
+// 从 5.3.5 开始，它正式扩展 SmartApplicationListener ，使用默认方法将 supportsEventType(Class) 适配
+// 为 supportsEventType(ResolvableType) 。
 public interface GenericApplicationListener extends SmartApplicationListener {
 
 	/**
 	 * Overrides {@link SmartApplicationListener#supportsEventType(Class)} with
 	 * delegation to {@link #supportsEventType(ResolvableType)}.
 	 */
+	// 覆盖 SmartApplicationListener.supportsEventType(Class) 并委托至 supportsEventType(ResolvableType)
 	@Override
 	default boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
 		return supportsEventType(ResolvableType.forClass(eventType));
@@ -51,6 +57,8 @@ public interface GenericApplicationListener extends SmartApplicationListener {
 	 * Determine whether this listener actually supports the given event type.
 	 * @param eventType the event type (never {@code null})
 	 */
+	// 确定此侦听器是否真正支持给定的事件类型。
+	// 参形：eventType – 事件类型（从不为null ）
 	boolean supportsEventType(ResolvableType eventType);
 
 }

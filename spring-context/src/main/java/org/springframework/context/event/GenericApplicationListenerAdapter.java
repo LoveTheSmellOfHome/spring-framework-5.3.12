@@ -36,13 +36,17 @@ import org.springframework.util.ConcurrentReferenceHashMap;
  * @since 3.0
  * @see org.springframework.context.ApplicationListener#onApplicationEvent
  */
+// GenericApplicationListener 适配器，通过自省目标侦听器的一般声明类型来确定支持的事件类型
 public class GenericApplicationListenerAdapter implements GenericApplicationListener {
 
+	// 事件类型缓存
 	private static final Map<Class<?>, ResolvableType> eventTypeCache = new ConcurrentReferenceHashMap<>();
 
 
+	// 业务事件监听器
 	private final ApplicationListener<ApplicationEvent> delegate;
 
+	// 可解析类型
 	@Nullable
 	private final ResolvableType declaredEventType;
 
@@ -51,6 +55,9 @@ public class GenericApplicationListenerAdapter implements GenericApplicationList
 	 * Create a new GenericApplicationListener for the given delegate.
 	 * @param delegate the delegate listener to be invoked
 	 */
+	// 为给定的委托创建一个新的 GenericApplicationListener。
+	// 参形：
+	//			delegate - 要调用的委托侦听器
 	@SuppressWarnings("unchecked")
 	public GenericApplicationListenerAdapter(ApplicationListener<?> delegate) {
 		Assert.notNull(delegate, "Delegate listener must not be null");
@@ -59,11 +66,13 @@ public class GenericApplicationListenerAdapter implements GenericApplicationList
 	}
 
 
+	// 处理应用程序事件。
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
 		this.delegate.onApplicationEvent(event);
 	}
 
+	// 支持的事件类型
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean supportsEventType(ResolvableType eventType) {

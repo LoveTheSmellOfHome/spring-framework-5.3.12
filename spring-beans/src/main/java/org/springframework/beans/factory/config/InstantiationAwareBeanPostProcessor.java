@@ -16,11 +16,11 @@
 
 package org.springframework.beans.factory.config;
 
-import java.beans.PropertyDescriptor;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyValues;
 import org.springframework.lang.Nullable;
+
+import java.beans.PropertyDescriptor;
 
 /**
  * Subinterface of {@link BeanPostProcessor} that adds a before-instantiation callback,
@@ -44,6 +44,12 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator#setCustomTargetSourceCreators
  * @see org.springframework.aop.framework.autoproxy.target.LazyInitTargetSourceCreator
  */
+// {@link BeanPostProcessor} Bean的后处理器子接口，它添加了实例化前回调，以及实例化后但在设置显式属性或自动装配之前的回调。
+// <p>通常用于抑制特定目标 bean 的默认实例化，例如创建具有特殊 TargetSources 的代理（池化目标、延迟初始化目标等），或实现额外的注入策略，
+// 例如字段注入。 <p><b>注意：<b>这个接口是一个特殊用途的接口，主要供框架内部使用。
+// 建议尽量实现普通的{@link BeanPostProcessor}接口，或者派生自{@link InstantiationAwareBeanPostProcessorAdapter}，
+// 以屏蔽对该接口的扩展。
+// 生命周期处理：实例化意识 bean 的后继处理器
 public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 
 	/**
@@ -70,6 +76,17 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	 * @see org.springframework.beans.factory.support.AbstractBeanDefinition#getBeanClass()
 	 * @see org.springframework.beans.factory.support.AbstractBeanDefinition#getFactoryMethodName()
 	 */
+	// 在目标 bean 被实例化之前<i>应用这个 BeanPostProcessor<i>。返回的 bean 对象可能是一个代理来代替目标 bean，
+	// 有效地抑制目标 bean 的默认实例化。
+	// <p>如果这个方法返回了一个非空的对象，那么bean的创建过程就会短路。
+	// 唯一应用的进一步处理是来自配置的 {@link BeanPostProcessor BeanPostProcessors} 的
+	// {@link postProcessAfterInitialization}回调。
+	// <p>此回调将应用于带有 bean 类的 bean 定义，以及工厂方法定义，在这种情况下，将在此处传递返回的 bean 类型。
+	// <p>后处理器可以实现扩展的 {@link SmartInstantiationAwareBeanPostProcessor} 接口，以预测它们将在此处返回的 bean 对象的类型。
+	// <p>默认实现返回 {@code null}。 @param beanClass 要实例化的 bean 的类 @param beanName bean 的名称 @return 要公
+	// 开的 bean 对象而不是目标 bean 的默认实例，或者 {@code null} 继续默认实例化
+
+    // bean实例化前调用，如果返回 null 则保持 Spring IoC 容器的实例化操作，否则后续处理中返回新对象来替代目标 bean
 	@Nullable
 	default Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
 		return null;
@@ -80,7 +97,8 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	 * but before Spring property population (from explicit properties or autowiring) occurs.
 	 * <p>This is the ideal callback for performing custom field injection on the given bean
 	 * instance, right before Spring's autowiring kicks in.
-	 * <p>The default implementation returns {@code true}.
+	 * <p>The default implemen
+	 * tation returns {@code true}.
 	 * @param bean the bean instance created, with properties not having been set yet
 	 * @param beanName the name of the bean
 	 * @return {@code true} if properties should be set on the bean; {@code false}
@@ -90,6 +108,13 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	 * @throws org.springframework.beans.BeansException in case of errors
 	 * @see #postProcessBeforeInstantiation
 	 */
+
+	// bean实例化后调用 在 bean 被实例化之后，通过构造函数或工厂方法，但在 Spring 属性填充（从显式属性或自动装配）发生之前执行操作。
+	// <p>这是在 Spring 的自动装配开始之前对给定 bean 实例执行自定义字段注入的理想回调。
+	// <p>默认实现返回 {@code true}。 @param bean 创建的 bean 实例，尚未设置属性 @param beanName bean 的名称
+	// @return {@code true} 如果应该在 bean 上设置属性； {@code false} 如果应跳过属性填充。正常的实现应该返回 {@code true}。
+	// 返回 {@code false} 还将阻止在此 bean 实例上调用任何后续 InstantiationAwareBeanPostProcessor 实例
+	// bean实例化后调用
 	default boolean postProcessAfterInstantiation(Object bean, String beanName) throws BeansException {
 		return true;
 	}
@@ -112,6 +137,17 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	 * @since 5.1
 	 * @see #postProcessPropertyValues
 	 */
+	// 在工厂将给定的属性值应用于给定的 bean 之前对给定的属性值进行后处理，无需任何属性描述符。
+	// <p>如果实现提供自定义 {@link postProcessPropertyValues} 实现，则应返回 {@code null}（默认值），否则返回 {@code pvs}。
+	// 在此接口的未来版本中（删除了 {@link postProcessPropertyValues}），默认实现将直接返回给定的 {@code pvs}。
+	// @param pvs 工厂即将应用的属性值（从不{@code null}）
+	// @param bean 创建的 bean 实例，但尚未设置其属性
+	// @param beanName bean 的名称
+	// @return 要应用于给定 bean 的实际属性值（可以是传入的 PropertyValues 实例），
+	// 或者 {@code null} 继续处理现有属性，但特别继续调用 {@link postProcessPropertyValues}
+	// （需要初始化{@code PropertyDescriptor} 用于当前 bean 类）
+	// 读入的值是 pvs ,返回 null 不必要去修改这个值，这个方法的意义在于可以拦截并修改给定的值
+	// 供 AbstractAutowireCapableBeanFactory#applyPropertyValues 设置属性值给 beanRapper
 	@Nullable
 	default PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName)
 			throws BeansException {
@@ -139,6 +175,11 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	 * @see org.springframework.beans.MutablePropertyValues
 	 * @deprecated as of 5.1, in favor of {@link #postProcessProperties(PropertyValues, Object, String)}
 	 */
+	// 在工厂将给定的属性值应用于给定的 bean 之前对给定的属性值进行后处理。允许检查是否所有依赖项都已满足，
+	// 例如基于 bean 属性设置器上的“Required”注释。
+	// <p>还允许替换要应用的属性值，通常通过基于原始 PropertyValues 创建新的 MutablePropertyValues 实例，添加或删除特定值。
+	// <p>默认实现按原样返回给定的 {@code pvs}
+	// 读入和返回的值都是同一个
 	@Deprecated
 	@Nullable
 	default PropertyValues postProcessPropertyValues(

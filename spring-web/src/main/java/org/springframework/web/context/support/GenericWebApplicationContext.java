@@ -149,10 +149,17 @@ public class GenericWebApplicationContext extends GenericApplicationContext
 	@Override
 	protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
 		if (this.servletContext != null) {
+			// 增加 ServletContextAwareProcessor 回调
+			// Aware编程模型：通过 BeanFactory 的后置处理，增加 Aware 的方式，
+			// 这种方式通常通过 BeanPostProcessor 来实现自定义回调。
+			// 1. 增加 addBeanPostProcessor() 接口AwareProcessor
+			// 2. 忽略 ignoreDependencyInterface() 依赖的Aware接口
 			beanFactory.addBeanPostProcessor(new ServletContextAwareProcessor(this.servletContext));
 			beanFactory.ignoreDependencyInterface(ServletContextAware.class);
 		}
+		// 注册 webApplication 作用域
 		WebApplicationContextUtils.registerWebApplicationScopes(beanFactory, this.servletContext);
+		// 注册 EnvironmentBeans，注册 Servlet 引擎相关的环境信息作为 bean 注册到 当前上下文
 		WebApplicationContextUtils.registerEnvironmentBeans(beanFactory, this.servletContext);
 	}
 
@@ -178,6 +185,7 @@ public class GenericWebApplicationContext extends GenericApplicationContext
 	/**
 	 * Initialize the theme capability.
 	 */
+	// 个性化主题切换
 	@Override
 	protected void onRefresh() {
 		this.themeSource = UiApplicationContextUtils.initThemeSource(this);

@@ -55,6 +55,12 @@ import org.springframework.util.StringUtils;
  * @see java.io.File
  * @see java.nio.file.Files
  */
+// {@code java.io.File} 和 {@code java.nio.file.Path} 的 {@link Resource} 实现处理文件系统目标。
+// 支持解析为 {@code File} 和 {@code URL}。实现扩展的 {@link WritableResource} 接口
+//
+// <p>注意：从 Spring Framework 5.0 开始，这个 {@link Resource} 实现使用 NIO.2 API 进行读写交互。从 5.1 开始，
+// 它可以用 {@link java.nio.file.Path} 引用构造，在这种情况下它将通过 NIO.2 执行所有文件系统交互，
+// 仅在 {@link getFile 上诉诸 {@link File} ()}。
 public class FileSystemResource extends AbstractResource implements WritableResource {
 
 	private final String path;
@@ -62,7 +68,7 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	@Nullable
 	private final File file;
 
-	private final Path filePath;
+	private final Path filePath; // 依赖于 JDK 1.7：Jdk 7 将文件路径 Path 和 文件内容 File 进行了分离
 
 
 	/**
@@ -76,6 +82,10 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	 * @param path a file path
 	 * @see #FileSystemResource(Path)
 	 */
+	// 从文件路径创建一个新的 {@code FileSystemResource}。
+	// <p>注意：通过{@link createRelative}构建相对资源时，这里指定的资源基路径是否以斜线结尾是有区别的。
+	// 在“C:dir1”的情况下，将在该根目录下构建相对路径：例如相对路径“dir2”→“C:dir1dir2”。在“C:/dir1/”的情况下，
+	// 相对路径将应用于相同的目录级别：相对路径“dir2”→“C:/dir2”。
 	public FileSystemResource(String path) {
 		Assert.notNull(path, "Path must not be null");
 		this.path = StringUtils.cleanPath(path);
@@ -180,9 +190,11 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	 * This implementation opens a NIO file stream for the underlying file.
 	 * @see java.io.FileInputStream
 	 */
+	// 此实现为底层文件打开一个 NIO 文件流
 	@Override
 	public InputStream getInputStream() throws IOException {
 		try {
+			// 使用 JDK 自带的创建一个 NIO 文件流，在多线程下 线程安全
 			return Files.newInputStream(this.filePath);
 		}
 		catch (NoSuchFileException ex) {

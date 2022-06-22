@@ -32,6 +32,7 @@ import org.springframework.util.ObjectUtils;
  * @since 10.03.2003
  * @see DefaultMessageCodesResolver
  */
+// 封装一个字段错误，即拒绝特定字段值的原因,它继承了 ObjectError ，添加了字段属性
 @SuppressWarnings("serial")
 public class FieldError extends ObjectError {
 
@@ -49,6 +50,7 @@ public class FieldError extends ObjectError {
 	 * @param field the affected field of the object
 	 * @param defaultMessage the default message to be used to resolve this message
 	 */
+	// 创建一个新的 FieldError 实例。
 	public FieldError(String objectName, String field, String defaultMessage) {
 		this(objectName, field, null, false, null, null, defaultMessage);
 	}

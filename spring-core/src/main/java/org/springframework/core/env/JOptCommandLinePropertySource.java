@@ -58,6 +58,19 @@ import org.springframework.util.StringUtils;
  * @see joptsimple.OptionParser
  * @see joptsimple.OptionSet
  */
+// 由 JOpt OptionSet支持的CommandLinePropertySource实现。
+//典型用法
+//针对提供给main方法的参数的String[]配置并执行OptionParser ，并使用生成的OptionSet对象创建一个JOptCommandLinePropertySource ：
+//   public static void main(String[] args) {
+//       OptionParser parser = new OptionParser();
+//       parser.accepts("option1");
+//       parser.accepts("option2").withRequiredArg();
+//       OptionSet options = parser.parse(args);
+//       PropertySource<?> ps = new JOptCommandLinePropertySource(options);
+//       // ...
+//   }
+//有关完整的一般用法示例，请参阅CommandLinePropertySource 。
+//需要 JOpt Simple 4.3 或更高版本。 在 5.0 之前针对 JOpt 进行了测试。
 public class JOptCommandLinePropertySource extends CommandLinePropertySource<OptionSet> {
 
 	/**
@@ -66,6 +79,7 @@ public class JOptCommandLinePropertySource extends CommandLinePropertySource<Opt
 	 * @see CommandLinePropertySource#COMMAND_LINE_PROPERTY_SOURCE_NAME
 	 * @see CommandLinePropertySource#CommandLinePropertySource(Object)
 	 */
+	// 创建一个具有默认名称并由给定 OptionSet 支持的新 JOptCommandLinePropertySource。
 	public JOptCommandLinePropertySource(OptionSet options) {
 		super(options);
 	}
@@ -74,6 +88,7 @@ public class JOptCommandLinePropertySource extends CommandLinePropertySource<Opt
 	 * Create a new {@code JOptCommandLinePropertySource} having the given name
 	 * and backed by the given {@code OptionSet}.
 	 */
+	// 创建一个具有给定名称并由给定 OptionSet 支持的新 JOptCommandLinePropertySource
 	public JOptCommandLinePropertySource(String name, OptionSet options) {
 		super(name, options);
 	}

@@ -41,6 +41,9 @@ import org.springframework.util.ConcurrentReferenceHashMap;
  * @author Phillip Webb
  * @since 2.5.2
  */
+// 用于针对类型变量解析泛型类型的助手类
+// <p>主要用于框架内的使用，解析方法参数类型，即使它们是泛型声明的
+// Spring 泛型类型辅助类
 public final class GenericTypeResolver {
 
 	/** Cache from Class to TypeVariable Map. */
@@ -74,6 +77,11 @@ public final class GenericTypeResolver {
 	 * @param clazz the class to resolve type variables against
 	 * @return the corresponding generic parameter or return type
 	 */
+	// 确定给定方法的泛型返回类型的目标类型，其中在给定类上声明了正式类型变量
+	// @param method 内省的方法
+	// @param clazz 用于解析类型变量的类
+	// @return 对应的泛型参数或返回类型
+	// 处理 类型[Type]相关的方法
 	public static Class<?> resolveReturnType(Method method, Class<?> clazz) {
 		Assert.notNull(method, "Method must not be null");
 		Assert.notNull(clazz, "Class must not be null");
@@ -89,10 +97,21 @@ public final class GenericTypeResolver {
 	 * @return the resolved parameter type of the method return type, or {@code null}
 	 * if not resolvable or if the single argument is of type {@link WildcardType}.
 	 */
+	// 针对给定的目标方法解析给定泛型接口的单一类型参数，该方法假定返回给定接口或其实现
+	// 处理泛型参数类型（ParameterizedType）相关方法 如：Collection<E>
+	// @param method 检查返回类型的目标方法
+	// @param genericIfc 解析类型参数 ParameterizedType(如：List<Object>) 的泛型接口或超类，即泛型所在的类型 List，
+	//                   genericIfc 就是 List.(在比如 String 本身不带泛型，但是它继承 Comparable<String> 带有泛型，
+	//                   因此 String 的泛型接口或者父类 genericIfc 就是 Comparable。class)
+	// @return 方法返回类型的已解析参数类型（如：List<Object> 中的泛型Object），
+	// 		   如果不可解析或单个参数为 {@link WildcardType} 类型，则为 {@code null}。
 	@Nullable
 	public static Class<?> resolveReturnTypeArgument(Method method, Class<?> genericIfc) {
 		Assert.notNull(method, "Method must not be null");
+		// 获取指定 method，指定泛型接口的泛型参数类型(返回值类型带泛型)
+		// resolvableType：java.lang.Comparable<java.lang.String>
 		ResolvableType resolvableType = ResolvableType.forMethodReturnType(method).as(genericIfc);
+		// 是否不包含泛型 || 泛型参数类型是泛型通配类型 resolvableType.getType()：java.lang.Comparable<java.lang.String>
 		if (!resolvableType.hasGenerics() || resolvableType.getType() instanceof WildcardType) {
 			return null;
 		}
@@ -107,6 +126,8 @@ public final class GenericTypeResolver {
 	 * @param genericIfc the generic interface or superclass to resolve the type argument from
 	 * @return the resolved type of the argument, or {@code null} if not resolvable
 	 */
+	// 针对给定的目标类解析给定泛型接口的单个类型参数，该类假定实现泛型接口并可能为其类型变量声明具体类型。
+	// 处理泛型参数类型（ParameterizedType）相关方法，如：Collection<E>
 	@Nullable
 	public static Class<?> resolveTypeArgument(Class<?> clazz, Class<?> genericIfc) {
 		ResolvableType resolvableType = ResolvableType.forClass(clazz).as(genericIfc);
@@ -134,6 +155,8 @@ public final class GenericTypeResolver {
 	 * @return the resolved type of each argument, with the array size matching the
 	 * number of actual type arguments, or {@code null} if not resolvable
 	 */
+	// 针对给定的目标类解析给定泛型接口的类型参数，该类假定实现泛型接口并可能为其类型变量声明具体类型。
+	// 处理泛型参数类型（ParameterizedType）相关方法，如：Collection<E>
 	@Nullable
 	public static Class<?>[] resolveTypeArguments(Class<?> clazz, Class<?> genericIfc) {
 		ResolvableType type = ResolvableType.forClass(clazz).as(genericIfc);
@@ -152,6 +175,11 @@ public final class GenericTypeResolver {
 	 * @return the resolved type (possibly the given generic type as-is)
 	 * @since 5.0
 	 */
+	// 针对给定的上下文类解析给定的泛型类型，尽可能替换类型变量
+	// @param genericType（可能）泛型类型
+	// @param contextClass 目标类型的上下文类，例如目标类型出现在方法签名中的类（可以是{@code null}）
+	// @return 解析的类型（可能是给定的泛型类型
+	// 处理类型[Type] 相关方法
 	public static Type resolveType(Type genericType, @Nullable Class<?> contextClass) {
 		if (contextClass != null) {
 			if (genericType instanceof TypeVariable) {
@@ -240,6 +268,9 @@ public final class GenericTypeResolver {
 	 * Searches all super types, enclosing types and interfaces.
 	 * @see #resolveType(Type, Map)
 	 */
+	// 为指定的 {@link Class} 构建 {@link TypeVariablegetName TypeVariable names} 到 {@link Class 具体类}的映射。
+	// 搜索所有超类型、封闭类型和接口。
+	// 处理泛型类型变量（TypeVariable）相关方法 E
 	@SuppressWarnings("rawtypes")
 	public static Map<TypeVariable, Type> getTypeVariableMap(Class<?> clazz) {
 		Map<TypeVariable, Type> typeVariableMap = typeVariableCache.get(clazz);

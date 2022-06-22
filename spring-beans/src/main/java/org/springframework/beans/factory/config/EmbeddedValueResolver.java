@@ -34,6 +34,10 @@ import org.springframework.util.StringValueResolver;
  * @see ConfigurableBeanFactory#getBeanExpressionResolver()
  * @see BeanExpressionContext
  */
+// {@link StringValueResolver} 的提升适配器，用于针对 {@link ConfigurableBeanFactory} 解析占位符和表达式。
+//
+// <p>请注意，与 {@link ConfigurableBeanFactory#resolveEmbeddedValue} 方法相反，此适配器也解析表达式。
+// 使用的 {@link BeanExpressionContext} 用于普通 bean 工厂，没有为任何要访问的上下文对象指定范围。
 public class EmbeddedValueResolver implements StringValueResolver {
 
 	private final BeanExpressionContext exprContext;
