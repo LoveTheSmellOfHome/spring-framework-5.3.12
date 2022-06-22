@@ -148,12 +148,14 @@ public abstract class AbstractMessageSource extends MessageSourceSupport impleme
 		return renderDefaultMessage(defaultMessage, args, locale);
 	}
 
+	// code 在 MessageFormat 中传递的是 Pattern,Pattern 是一段文本，code 就是文本的 key,key 是来自于 ResourceBundle
 	@Override
 	public final String getMessage(String code, @Nullable Object[] args, Locale locale) throws NoSuchMessageException {
 		String msg = getMessageInternal(code, args, locale);
 		if (msg != null) {
 			return msg;
 		}
+		// 默认实现：传递默认消息作为补偿，提供兜底方案
 		String fallback = getDefaultMessage(code);
 		if (fallback != null) {
 			return fallback;
@@ -221,9 +223,12 @@ public abstract class AbstractMessageSource extends MessageSourceSupport impleme
 			// are defined in the child MessageSource.
 			argsToUse = resolveArguments(args, locale);
 
+			// 通过 code 关联到文本的模板，MessageFormat 是一个非线程安全的实现，
 			MessageFormat messageFormat = resolveCode(code, locale);
 			if (messageFormat != null) {
 				synchronized (messageFormat) {
+					// 再把模板进行参数翻译，变成我们需要的结果，实现二合一，把ResourceBundle 作为一个存储仓库，MessageFormat 是它的格式
+					// 把 MessageFormat 里的 Pattern 配置到 把ResourceBundle 里去
 					return messageFormat.format(argsToUse);
 				}
 			}
