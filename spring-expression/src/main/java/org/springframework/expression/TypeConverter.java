@@ -29,6 +29,8 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 3.0
  */
+// 类型转换器可以在表达式计算期间遇到的不同类型之间转换值。 这是表达式解析器的 SPI；
+// 有关 Spring 转换工具的主要 API，请参阅org.springframework.core.convert.ConversionService 。
 public interface TypeConverter {
 
 	/**
@@ -38,6 +40,7 @@ public interface TypeConverter {
 	 * @param targetType a type descriptor that describes the requested result type
 	 * @return {@code true} if that conversion can be performed
 	 */
+	// 如果类型转换器可以将指定类型转换为所需的目标类型，则返回true
 	boolean canConvert(@Nullable TypeDescriptor sourceType, TypeDescriptor targetType);
 
 	/**
@@ -54,6 +57,13 @@ public interface TypeConverter {
 	 * @return the converted value
 	 * @throws EvaluationException if conversion failed or is not possible to begin with
 	 */
+	// 将值从一种类型转换（或强制）到另一种类型，例如从 {@code boolean} 到 {@code String}。
+	// <p>{@link TypeDescriptor} 参数支持类型化集合：例如，调用者可能更喜欢 {@code List<Integer>}，
+	// 而不是简单的任何 {@code List}。
+	// @param value 要转换的值
+	// @param sourceType 提供有关源对象的额外信息的类型描述符
+	// @param targetType 提供有关请求的结果类型的额外信息的类型描述符
+	// @return 转换后的值
 	@Nullable
 	Object convertValue(@Nullable Object value, @Nullable TypeDescriptor sourceType, TypeDescriptor targetType);
 

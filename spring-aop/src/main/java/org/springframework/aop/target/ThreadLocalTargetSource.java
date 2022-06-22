@@ -48,6 +48,16 @@ import org.springframework.core.NamedThreadLocal;
  * @see ThreadLocalTargetSourceStats
  * @see org.springframework.beans.factory.DisposableBean#destroy()
  */
+// 对象池的替代方案。 这个org.springframework.aop.TargetSource 使用线程模型，其中每个线程都有自己的目标副本。
+// 目标不存在竞争。 目标对象的创建在运行的服务器上保持在最低限度。
+//
+// 应用程序代码编写为普通池； 调用者不能假设他们将在不同线程的调用中处理相同的实例。 但是，在单个线程的操作过程中可以
+// 依赖状态：例如，如果一个调用者对 AOP 代理进行重复调用。
+//
+// 线程绑定对象的清理在 BeanFactory 销毁时执行，如果可用，调用它们的 DisposableBean.destroy() 方法。 请注意，
+// 在应用程序实际关闭之前，可能存在许多线程绑定对象。
+//
+// 基于线程级别的缓存 ThreadLocal
 @SuppressWarnings("serial")
 public class ThreadLocalTargetSource extends AbstractPrototypeBasedTargetSource
 		implements ThreadLocalTargetSourceStats, DisposableBean {
@@ -57,16 +67,21 @@ public class ThreadLocalTargetSource extends AbstractPrototypeBasedTargetSource
 	 * thread. Unlike most ThreadLocals, which are static, this variable
 	 * is meant to be per thread per instance of the ThreadLocalTargetSource class.
 	 */
+	// ThreadLocal 持有与当前线程关联的目标。 与大多数静态的 ThreadLocals 不同，此变量意味着
+	// 每个线程每个 ThreadLocalTargetSource 类的实例
 	private final ThreadLocal<Object> targetInThread =
 			new NamedThreadLocal<>("Thread-local instance of bean '" + getTargetBeanName() + "'");
 
 	/**
 	 * Set of managed targets, enabling us to keep track of the targets we've created.
 	 */
+	// 一组托管目标，使我们能够跟踪我们创建的目标
 	private final Set<Object> targetSet = new HashSet<>();
 
+	// 调用次数
 	private int invocationCount;
 
+	// 命中计数
 	private int hitCount;
 
 
@@ -75,6 +90,8 @@ public class ThreadLocalTargetSource extends AbstractPrototypeBasedTargetSource
 	 * We look for a target held in a ThreadLocal. If we don't find one,
 	 * we create one and bind it to the thread. No synchronization is required.
 	 */
+	// 抽象 getTarget() 方法的实现。 我们寻找保存在 ThreadLocal 中的目标。
+	// 如果找不到，我们创建一个并将其绑定到线程。 不需要同步
 	@Override
 	public Object getTarget() throws BeansException {
 		++this.invocationCount;
@@ -85,10 +102,11 @@ public class ThreadLocalTargetSource extends AbstractPrototypeBasedTargetSource
 						"creating one and binding it to thread '" + Thread.currentThread().getName() + "'");
 			}
 			// Associate target with ThreadLocal.
+			// 将目标与 ThreadLocal 关联，通过依赖查找来创建原型实例。保证每个线程都关联一个独立对象
 			target = newPrototypeInstance();
 			this.targetInThread.set(target);
 			synchronized (this.targetSet) {
-				this.targetSet.add(target);
+				this.targetSet.add(target); // targetSet 使用final 修饰保证集合只能添加一次
 			}
 		}
 		else {

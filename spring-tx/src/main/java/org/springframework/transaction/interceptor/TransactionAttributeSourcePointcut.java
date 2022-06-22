@@ -33,14 +33,18 @@ import org.springframework.util.ObjectUtils;
  * @author Juergen Hoeller
  * @since 2.5.5
  */
+// 如果底层 TransactionAttributeSource 具有给定方法的属性，则实现匹配的切入点的抽象类
 @SuppressWarnings("serial")
 abstract class TransactionAttributeSourcePointcut extends StaticMethodMatcherPointcut implements Serializable {
 
 	protected TransactionAttributeSourcePointcut() {
+		// 设置类过滤器
 		setClassFilter(new TransactionAttributeSourceClassFilter());
 	}
 
 
+	// 判断条件：方法能解析出 TransactionAttributeSource 就可以，即无论是方法还是类上
+	// 只要有 3 种类型的事务注解即可
 	@Override
 	public boolean matches(Method method, Class<?> targetClass) {
 		TransactionAttributeSource tas = getTransactionAttributeSource();
@@ -55,6 +59,7 @@ abstract class TransactionAttributeSourcePointcut extends StaticMethodMatcherPoi
 		if (!(other instanceof TransactionAttributeSourcePointcut)) {
 			return false;
 		}
+		//
 		TransactionAttributeSourcePointcut otherPc = (TransactionAttributeSourcePointcut) other;
 		return ObjectUtils.nullSafeEquals(getTransactionAttributeSource(), otherPc.getTransactionAttributeSource());
 	}
@@ -74,6 +79,7 @@ abstract class TransactionAttributeSourcePointcut extends StaticMethodMatcherPoi
 	 * Obtain the underlying TransactionAttributeSource (may be {@code null}).
 	 * To be implemented by subclasses.
 	 */
+	// 获取底层 TransactionAttributeSource（可能为null ）。由子类实现
 	@Nullable
 	protected abstract TransactionAttributeSource getTransactionAttributeSource();
 
@@ -82,6 +88,7 @@ abstract class TransactionAttributeSourcePointcut extends StaticMethodMatcherPoi
 	 * {@link ClassFilter} that delegates to {@link TransactionAttributeSource#isCandidateClass}
 	 * for filtering classes whose methods are not worth searching to begin with.
 	 */
+	// 委托给 TransactionAttributeSource.isCandidateClass 的 ClassFilter ，用于过滤其方法不值得一开始搜索的类
 	private class TransactionAttributeSourceClassFilter implements ClassFilter {
 
 		@Override

@@ -29,12 +29,15 @@ import org.springframework.context.MessageSource;
  * @see ThemeSource
  * @see org.springframework.web.servlet.ThemeResolver
  */
+// 主题可以解析特定于主题的消息、代码、文件路径等（例如 Web 环境中的 CSS 和图像文件）。 公开的 MessageSource
+// 支持特定于主题的参数化和国际化。
 public interface Theme {
 
 	/**
 	 * Return the name of the theme.
 	 * @return the name of the theme (never {@code null})
 	 */
+	// 返回主题的名称
 	String getName();
 
 	/**
@@ -42,6 +45,7 @@ public interface Theme {
 	 * with respect to this theme.
 	 * @return the theme-specific MessageSource (never {@code null})
 	 */
+	// 返回解析与此主题相关的消息的特定 MessageSource
 	MessageSource getMessageSource();
 
 }

@@ -26,6 +26,7 @@ import org.springframework.lang.Nullable;
  * @since 3.0
  * @see java.lang.Comparable
  */
+// 类型比较器的实例应该能够比较对象对的相等性。 返回值的规范与Comparable相同。
 public interface TypeComparator {
 
 	/**
@@ -34,6 +35,11 @@ public interface TypeComparator {
 	 * @param secondObject the second object
 	 * @return {@code true} if the comparator can compare these objects
 	 */
+	// 如果比较器可以比较这两个对象，则返回true 。
+	// 形参：
+	// firstObject – 第一个对象
+	// secondObject – 第二个对象
+	// a返回值：如果比较器可以比较这些对象，则为true
 	boolean canCompare(@Nullable Object firstObject, @Nullable Object secondObject);
 
 	/**

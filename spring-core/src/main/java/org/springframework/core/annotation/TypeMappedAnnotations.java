@@ -16,20 +16,15 @@
 
 package org.springframework.core.annotation;
 
+import org.springframework.lang.Nullable;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-
-import org.springframework.lang.Nullable;
 
 /**
  * {@link MergedAnnotations} implementation that searches for and adapts
@@ -38,11 +33,13 @@ import org.springframework.lang.Nullable;
  * @author Phillip Webb
  * @since 5.2
  */
+// 使用 {@link MergedAnnotations} 搜索和调整注解和元注解的 {@link AnnotationTypeMappings} 实现
 final class TypeMappedAnnotations implements MergedAnnotations {
 
 	/**
 	 * Shared instance that can be used when there are no annotations.
 	 */
+	// 没有注解时可以使用的共享实例
 	static final MergedAnnotations NONE = new TypeMappedAnnotations(
 			null, new Annotation[0], RepeatableContainers.none(), AnnotationFilter.ALL);
 
@@ -239,6 +236,7 @@ final class TypeMappedAnnotations implements MergedAnnotations {
 			return processor.finish(result);
 		}
 		if (this.element != null && this.searchStrategy != null) {
+			// criteria 注解, element, 注解所在属性的 containg class, searchStrategy, INHERITED_ANNOTATIONS 常量
 			return AnnotationsScanner.scan(criteria, this.element, this.searchStrategy, processor);
 		}
 		return null;

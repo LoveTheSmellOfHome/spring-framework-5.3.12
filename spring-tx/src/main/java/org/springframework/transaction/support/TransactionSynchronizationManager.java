@@ -71,29 +71,50 @@ import org.springframework.util.Assert;
  * @see org.springframework.jdbc.datasource.DataSourceTransactionManager
  * @see org.springframework.jdbc.datasource.DataSourceUtils#getConnection
  */
+// 管理每个线程的资源和事务同步的中央委托。供资源管理代码使用，但不供典型应用程序代码使用。
+//
+// <p>支持 每个key一个资源 而这个资源不被覆盖，即需要删除一个资源才能为同一个key设置新的资源。如果同步处于活动状态，则支持事务同步列表
+//
+// <p>资源管理代码应该检查线程绑定的资源，例如 JDBC Connections or Hibernate Sessions，通过 {@code getResource}。
+// 这样的代码通常不应该将资源绑定到线程，因为这是事务管理器的责任。
+// 如果事务同步处于活动状态，则另一个选项是在第一次使用时延迟绑定，以执行跨越任意数量资源的事务。
+//
+// <p>事务同步必须由事务管理器通过 {@link #initSynchronization()} 和 {@link #clearSynchronization()} 激活和停用。
+// 这由 {@link AbstractPlatformTransactionManager} 自动支持，因此由所有标准 Spring 事务管理器支持，
+// 例如 {@link org.springframework.transaction.jta.JtaTransactionManager} 和
+// {@link org.springframework.jdbc.datasource.DataSourceTransactionManager}。
+//
+// 事务同步管理器：将数据库使用到的资源绑定到线程上
 public abstract class TransactionSynchronizationManager {
 
+	// 定义 事务资源，使用线程封装数据源
 	private static final ThreadLocal<Map<Object, Object>> resources =
 			new NamedThreadLocal<>("Transactional resources");
 
+	// 定义 同步事务
 	private static final ThreadLocal<Set<TransactionSynchronization>> synchronizations =
 			new NamedThreadLocal<>("Transaction synchronizations");
 
+	// 定义 当前事务名称
 	private static final ThreadLocal<String> currentTransactionName =
 			new NamedThreadLocal<>("Current transaction name");
 
+	// 定义 当前只读状态事务
 	private static final ThreadLocal<Boolean> currentTransactionReadOnly =
 			new NamedThreadLocal<>("Current transaction read-only status");
 
+	// 定义 当前事务隔离级别
 	private static final ThreadLocal<Integer> currentTransactionIsolationLevel =
 			new NamedThreadLocal<>("Current transaction isolation level");
 
+	// 定义 实际激活事务
 	private static final ThreadLocal<Boolean> actualTransactionActive =
 			new NamedThreadLocal<>("Actual transaction active");
 
 
 	//-------------------------------------------------------------------------
 	// Management of transaction-associated resource handles
+	// 事务相关资源句柄的管理
 	//-------------------------------------------------------------------------
 
 	/**
@@ -105,6 +126,9 @@ public abstract class TransactionSynchronizationManager {
 	 * currently no resources bound
 	 * @see #hasResource
 	 */
+	// 返回绑定到当前线程的所有资源。
+	// <p>主要用于调试目的。资源管理器应该总是为他们感兴趣的特定资源键调用 {@code hasResource}。
+	// @return 一个带有资源键（通常是资源工厂）和资源值（通常是活动资源对象）的 Map，或者一个空 Map，如果目前没有资源绑定
 	public static Map<Object, Object> getResourceMap() {
 		Map<Object, Object> map = resources.get();
 		return (map != null ? Collections.unmodifiableMap(map) : Collections.emptyMap());
@@ -116,6 +140,9 @@ public abstract class TransactionSynchronizationManager {
 	 * @return if there is a value bound to the current thread
 	 * @see ResourceTransactionManager#getResourceFactory()
 	 */
+	// 检查是否存在绑定到当前线程的给定键的资源
+	// @param key 要检查的键（通常是资源工厂）
+	// @return 如果有绑定到当前线程的值
 	public static boolean hasResource(Object key) {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
 		Object value = doGetResource(actualKey);
@@ -129,6 +156,9 @@ public abstract class TransactionSynchronizationManager {
 	 * resource object), or {@code null} if none
 	 * @see ResourceTransactionManager#getResourceFactory()
 	 */
+	// 检索绑定到当前线程的给定键的资源。
+	// @param key 要检查的键（通常是资源工厂）
+	// @return 绑定到当前线程（通常是活动资源对象）的值，或者 {@code null} 如果没有
 	@Nullable
 	public static Object getResource(Object key) {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
@@ -138,6 +168,7 @@ public abstract class TransactionSynchronizationManager {
 	/**
 	 * Actually check the value of the resource that is bound for the given key.
 	 */
+	// 实际检查给定键绑定的资源的值。
 	@Nullable
 	private static Object doGetResource(Object actualKey) {
 		Map<Object, Object> map = resources.get();
@@ -146,9 +177,11 @@ public abstract class TransactionSynchronizationManager {
 		}
 		Object value = map.get(actualKey);
 		// Transparently remove ResourceHolder that was marked as void...
+		// 透明地删除标记为无效的 ResourceHolder...
 		if (value instanceof ResourceHolder && ((ResourceHolder) value).isVoid()) {
 			map.remove(actualKey);
 			// Remove entire ThreadLocal if empty...
+			// 如果为空，则删除整个 ThreadLocal...
 			if (map.isEmpty()) {
 				resources.remove();
 			}
@@ -164,17 +197,24 @@ public abstract class TransactionSynchronizationManager {
 	 * @throws IllegalStateException if there is already a value bound to the thread
 	 * @see ResourceTransactionManager#getResourceFactory()
 	 */
+	// 将给定键的给定资源绑定到当前线程
+	// @param key 将值绑定到的键（通常是资源工厂）数据源
+	// @param value 要绑定的值（通常是活动资源对象）
+	// @throws IllegalStateException 如果已经有绑定到线程的值
 	public static void bindResource(Object key, Object value) throws IllegalStateException {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
 		Assert.notNull(value, "Value must not be null");
+		// 获取数据源
 		Map<Object, Object> map = resources.get();
 		// set ThreadLocal Map if none found
+		// 如果没有找到，则设置 ThreadLocal Map
 		if (map == null) {
 			map = new HashMap<>();
 			resources.set(map);
 		}
 		Object oldValue = map.put(actualKey, value);
 		// Transparently suppress a ResourceHolder that was marked as void...
+		// 透明地抑制标记为无效的 ResourceHolder...
 		if (oldValue instanceof ResourceHolder && ((ResourceHolder) oldValue).isVoid()) {
 			oldValue = null;
 		}
@@ -191,6 +231,8 @@ public abstract class TransactionSynchronizationManager {
 	 * @throws IllegalStateException if there is no value bound to the thread
 	 * @see ResourceTransactionManager#getResourceFactory()
 	 */
+	// 从当前线程解除给定键的资源绑定
+	// @param key 解除绑定的键（通常是资源工厂）
 	public static Object unbindResource(Object key) throws IllegalStateException {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
 		Object value = doUnbindResource(actualKey);
@@ -205,6 +247,9 @@ public abstract class TransactionSynchronizationManager {
 	 * @param key the key to unbind (usually the resource factory)
 	 * @return the previously bound value, or {@code null} if none bound
 	 */
+	// 从当前线程解除给定键的资源绑定
+	// @param key 解除绑定的键（通常是资源工厂）
+	// @return 之前绑定的值，或者 {@code null} 如果没有绑定
 	@Nullable
 	public static Object unbindResourceIfPossible(Object key) {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
@@ -214,6 +259,7 @@ public abstract class TransactionSynchronizationManager {
 	/**
 	 * Actually remove the value of the resource that is bound for the given key.
 	 */
+	// 实际删除为给定键绑定的资源的值
 	@Nullable
 	private static Object doUnbindResource(Object actualKey) {
 		Map<Object, Object> map = resources.get();
@@ -222,10 +268,12 @@ public abstract class TransactionSynchronizationManager {
 		}
 		Object value = map.remove(actualKey);
 		// Remove entire ThreadLocal if empty...
+		// 如果为空，则删除整个 ThreadLocal...
 		if (map.isEmpty()) {
 			resources.remove();
 		}
 		// Transparently suppress a ResourceHolder that was marked as void...
+		// 透明地抑制标记为无效的 ResourceHolder...
 		if (value instanceof ResourceHolder && ((ResourceHolder) value).isVoid()) {
 			value = null;
 		}
@@ -235,6 +283,7 @@ public abstract class TransactionSynchronizationManager {
 
 	//-------------------------------------------------------------------------
 	// Management of transaction synchronizations
+	// 事务同步管理
 	//-------------------------------------------------------------------------
 
 	/**
@@ -242,6 +291,7 @@ public abstract class TransactionSynchronizationManager {
 	 * Can be called before register to avoid unnecessary instance creation.
 	 * @see #registerSynchronization
 	 */
+	// 如果当前线程的事务同步处于活动状态，则返回。可以在注册前调用以避免不必要的实例创建。
 	public static boolean isSynchronizationActive() {
 		return (synchronizations.get() != null);
 	}
@@ -251,6 +301,8 @@ public abstract class TransactionSynchronizationManager {
 	 * Called by a transaction manager on transaction begin.
 	 * @throws IllegalStateException if synchronization is already active
 	 */
+	// 为当前线程激活事务同步
+	// 由事务管理器在事务开始时调用
 	public static void initSynchronization() throws IllegalStateException {
 		if (isSynchronizationActive()) {
 			throw new IllegalStateException("Cannot activate transaction synchronization - already active");
@@ -268,6 +320,11 @@ public abstract class TransactionSynchronizationManager {
 	 * @throws IllegalStateException if transaction synchronization is not active
 	 * @see org.springframework.core.Ordered
 	 */
+	// 为当前线程注册一个新的同步事务。通常由资源管理代码调用。
+	//
+	// 请注意，同步可以实现 {@link org.springframework.core.Ordered} 接口。它们将根据其 order value（如果有）按顺序执行。
+	// @param synchronization 要注册的同步对象
+	// @throws IllegalStateException 如果事务同步未激活
 	public static void registerSynchronization(TransactionSynchronization synchronization)
 			throws IllegalStateException {
 
@@ -286,6 +343,9 @@ public abstract class TransactionSynchronizationManager {
 	 * @throws IllegalStateException if synchronization is not active
 	 * @see TransactionSynchronization
 	 */
+	// 返回当前线程的所有已注册同步的不可修改快照列表
+	// @return 不可修改的 TransactionSynchronization 实例列表
+	// @throws IllegalStateException 如果同步未激活
 	public static List<TransactionSynchronization> getSynchronizations() throws IllegalStateException {
 		Set<TransactionSynchronization> synchs = synchronizations.get();
 		if (synchs == null) {
@@ -294,11 +354,13 @@ public abstract class TransactionSynchronizationManager {
 		// Return unmodifiable snapshot, to avoid ConcurrentModificationExceptions
 		// while iterating and invoking synchronization callbacks that in turn
 		// might register further synchronizations.
+		// 返回不可修改的快照，以避免在迭代和调用同步回调时出现 ConcurrentModificationExceptions，而同步回调又可能注册进一步的同步。
 		if (synchs.isEmpty()) {
 			return Collections.emptyList();
 		}
 		else {
 			// Sort lazily here, not in registerSynchronization.
+			// 在这里懒惰地排序，而不是在 registerSynchronization 中
 			List<TransactionSynchronization> sortedSynchs = new ArrayList<>(synchs);
 			OrderComparator.sort(sortedSynchs);
 			return Collections.unmodifiableList(sortedSynchs);
@@ -310,6 +372,7 @@ public abstract class TransactionSynchronizationManager {
 	 * Called by the transaction manager on transaction cleanup.
 	 * @throws IllegalStateException if synchronization is not active
 	 */
+	// 停用当前线程的事务同步。由事务管理器在事务清理时调用。
 	public static void clearSynchronization() throws IllegalStateException {
 		if (!isSynchronizationActive()) {
 			throw new IllegalStateException("Cannot deactivate transaction synchronization - not active");
@@ -320,6 +383,7 @@ public abstract class TransactionSynchronizationManager {
 
 	//-------------------------------------------------------------------------
 	// Exposure of transaction characteristics
+	// 交易特征暴露
 	//-------------------------------------------------------------------------
 
 	/**
@@ -328,6 +392,8 @@ public abstract class TransactionSynchronizationManager {
 	 * @param name the name of the transaction, or {@code null} to reset it
 	 * @see org.springframework.transaction.TransactionDefinition#getName()
 	 */
+	// 公开当前事务的名称（如果有）。由事务管理器在事务开始和清理时调用。
+	// @param name 交易名称，或者 {@code null} 重置它
 	public static void setCurrentTransactionName(@Nullable String name) {
 		currentTransactionName.set(name);
 	}
@@ -338,6 +404,7 @@ public abstract class TransactionSynchronizationManager {
 	 * for example to optimize fetch strategies for specific named transactions.
 	 * @see org.springframework.transaction.TransactionDefinition#getName()
 	 */
+	// 返回当前交易的名称，如果没有设置，则返回 {@code null}。由资源管理代码调用以优化每个用例，例如优化特定命名事务的获取策略。
 	@Nullable
 	public static String getCurrentTransactionName() {
 		return currentTransactionName.get();
@@ -350,6 +417,8 @@ public abstract class TransactionSynchronizationManager {
 	 * as read-only; {@code false} to reset such a read-only marker
 	 * @see org.springframework.transaction.TransactionDefinition#isReadOnly()
 	 */
+	// 为当前事务公开一个只读标志。由事务管理器在事务开始和清理时调用。
+	// @param readOnly {@code true} 将当前事务标记为只读； {@code false} 重置这样的只读标记
 	public static void setCurrentTransactionReadOnly(boolean readOnly) {
 		currentTransactionReadOnly.set(readOnly ? Boolean.TRUE : null);
 	}
@@ -366,6 +435,9 @@ public abstract class TransactionSynchronizationManager {
 	 * @see org.springframework.transaction.TransactionDefinition#isReadOnly()
 	 * @see TransactionSynchronization#beforeCommit(boolean)
 	 */
+	// 返回当前事务是否标记为只读。在准备新创建的资源（例如，休眠会话）时由资源管理代码调用。
+	// <p>请注意，事务同步接收只读标志作为 {@code beforeCommit} 回调的参数，以便能够抑制提交时的更改检测。
+	// 本方法旨在用于早期的只读检查，例如将休眠会话的刷新模式预先设置为“FlushMode.MANUAL”。
 	public static boolean isCurrentTransactionReadOnly() {
 		return (currentTransactionReadOnly.get() != null);
 	}
@@ -386,6 +458,9 @@ public abstract class TransactionSynchronizationManager {
 	 * @see org.springframework.transaction.TransactionDefinition#ISOLATION_SERIALIZABLE
 	 * @see org.springframework.transaction.TransactionDefinition#getIsolationLevel()
 	 */
+	// 公开当前事务的隔离级别。由事务管理器在事务开始和清理时调用。
+	// @param isolationLevel 要暴露的隔离级别，根据 JDBC Connection 常量（相当于对应的 Spring TransactionDefinition 常量），
+	// 或者 {@code null} 重置它
 	public static void setCurrentTransactionIsolationLevel(@Nullable Integer isolationLevel) {
 		currentTransactionIsolationLevel.set(isolationLevel);
 	}
@@ -407,6 +482,9 @@ public abstract class TransactionSynchronizationManager {
 	 * @see org.springframework.transaction.TransactionDefinition#ISOLATION_SERIALIZABLE
 	 * @see org.springframework.transaction.TransactionDefinition#getIsolationLevel()
 	 */
+	// 返回当前事务的隔离级别（如果有）。在准备新创建的资源（例如，JDBC 连接）时由资源管理代码调用。
+	// @return 当前暴露的隔离级别，根据 JDBC Connection 常量（相当于对应的 Spring TransactionDefinition 常量），
+	// 或者 {@code null} 如果没有
 	@Nullable
 	public static Integer getCurrentTransactionIsolationLevel() {
 		return currentTransactionIsolationLevel.get();
@@ -418,6 +496,8 @@ public abstract class TransactionSynchronizationManager {
 	 * @param active {@code true} to mark the current thread as being associated
 	 * with an actual transaction; {@code false} to reset that marker
 	 */
+	// 公开当前是否有实际的交易活动。由事务管理器在事务开始和清理时调用。
+	// @param active {@code true} 将当前线程标记为与实际事务相关联； {@code false} 重置该标记
 	public static void setActualTransactionActive(boolean active) {
 		actualTransactionActive.set(active ? Boolean.TRUE : null);
 	}
@@ -433,6 +513,9 @@ public abstract class TransactionSynchronizationManager {
 	 * on PROPAGATION_REQUIRED, PROPAGATION_REQUIRES_NEW, etc).
 	 * @see #isSynchronizationActive()
 	 */
+	// 返回当前是否有实际事务活动。这表明当前线程是否与实际事务相关联，而不仅仅是与活动事务同步相关联。
+	// <p>由想要区分活动事务同步（有或没有支持资源事务；也在 PROPAGATION_SUPPORTS 上）和
+	// 实际处于活动状态的事务（有支持资源事务；在 PROPAGATION_REQUIRED、PROPAGATION_REQUIRES_NEW 等上）的资源管理代码调用
 	public static boolean isActualTransactionActive() {
 		return (actualTransactionActive.get() != null);
 	}
@@ -447,6 +530,7 @@ public abstract class TransactionSynchronizationManager {
 	 * @see #setCurrentTransactionIsolationLevel
 	 * @see #setActualTransactionActive
 	 */
+	// 清除当前线程的整个事务同步状态：已注册的同步以及各种事务特性。
 	public static void clear() {
 		synchronizations.remove();
 		currentTransactionName.remove();

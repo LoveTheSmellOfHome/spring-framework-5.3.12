@@ -59,6 +59,9 @@ import org.springframework.util.Assert;
  * @see StandardTypeComparator
  * @see StandardOperatorOverloader
  */
+// 一个强大且高度可配置的EvaluationContext实现。 此上下文使用所有适用策略的标准实现，基于反射来解析属性、方法和字段。
+// 对于用于数据绑定目的的更简单的构建器样式上下文变体，请考虑使用 SimpleEvaluationContext 代替，
+// 它允许根据特定评估案例的需要选择多个 SpEL 功能。
 public class StandardEvaluationContext implements EvaluationContext {
 
 	private TypedValue rootObject;
@@ -94,6 +97,7 @@ public class StandardEvaluationContext implements EvaluationContext {
 	/**
 	 * Create a {@code StandardEvaluationContext} with a null root object.
 	 */
+	// 创建一个带有空根对象的StandardEvaluationContext 。
 	public StandardEvaluationContext() {
 		this.rootObject = TypedValue.NULL;
 	}
@@ -103,6 +107,7 @@ public class StandardEvaluationContext implements EvaluationContext {
 	 * @param rootObject the root object to use
 	 * @see #setRootObject
 	 */
+	// 使用给定的根对象创建一个StandardEvaluationContext
 	public StandardEvaluationContext(@Nullable Object rootObject) {
 		this.rootObject = new TypedValue(rootObject);
 	}
@@ -266,6 +271,11 @@ public class StandardEvaluationContext implements EvaluationContext {
 	 * @param filter a {@code MethodFilter}, or {@code null} to unregister a filter for the type
 	 * @throws IllegalStateException if the {@link ReflectiveMethodResolver} is not in use
 	 */
+	// 注册一个MethodFilter ，它将在指定类型的方法解析期间调用。
+	// MethodFilter可以删除方法和/或对方法进行排序，然后 SpEL 将使用这些方法作为查找匹配项的候选者。
+	// @param type - 应为其调用过滤器的类型
+	// @param filter – 一个MethodFilter ，或者为null以取消注册该类型的过滤器
+	// @throws IllegalStateException – 如果未使用ReflectiveMethodResolver
 	public void registerMethodFilter(Class<?> type, MethodFilter filter) throws IllegalStateException {
 		initMethodResolvers();
 		ReflectiveMethodResolver resolver = this.reflectiveMethodResolver;

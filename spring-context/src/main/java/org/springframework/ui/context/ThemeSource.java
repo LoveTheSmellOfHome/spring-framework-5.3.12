@@ -27,6 +27,7 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @see Theme
  */
+// 由可以解析Themes对象实现的接口。 这可以为给定的“主题”实现消息的参数化和国际化。
 public interface ThemeSource {
 
 	/**
@@ -40,6 +41,8 @@ public interface ThemeSource {
 	 * return default Themes for other theme names.
 	 * @see org.springframework.web.servlet.theme.AbstractThemeResolver#ORIGINAL_DEFAULT_THEME_NAME
 	 */
+	// 返回给定主题名称的 Theme 实例
+	// 返回的 Theme 将解析特定于主题的消息、代码、文件路径等（例如 Web 环境中的 CSS 和图像文件）。
 	@Nullable
 	Theme getTheme(String themeName);
 

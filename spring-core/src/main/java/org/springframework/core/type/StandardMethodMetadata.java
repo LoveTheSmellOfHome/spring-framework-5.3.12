@@ -39,12 +39,16 @@ import org.springframework.util.MultiValueMap;
  * @author Sam Brannen
  * @since 3.0
  */
+// 标准方法元数据：MethodMetadata 实现，它使用标准反射来内省给定的 Method 。
 public class StandardMethodMetadata implements MethodMetadata {
 
+	// 标准 Java Method
 	private final Method introspectedMethod;
 
+	// 嵌套的注解集作为 Map
 	private final boolean nestedAnnotationsAsMap;
 
+	// 合并的注解集
 	private final MergedAnnotations mergedAnnotations;
 
 
@@ -53,6 +57,8 @@ public class StandardMethodMetadata implements MethodMetadata {
 	 * @param introspectedMethod the Method to introspect
 	 * @deprecated since 5.2 in favor of obtaining instances via {@link AnnotationMetadata}
 	 */
+	// 为给定的方法创建一个新的 StandardMethodMetadata 包装器。
+	// 已弃用从 5.2 开始支持通过AnnotationMetadata获取实例
 	@Deprecated
 	public StandardMethodMetadata(Method introspectedMethod) {
 		this(introspectedMethod, false);
@@ -70,6 +76,15 @@ public class StandardMethodMetadata implements MethodMetadata {
 	 * @since 3.1.1
 	 * @deprecated since 5.2 in favor of obtaining instances via {@link AnnotationMetadata}
 	 */
+	// 为给定的方法创建一个新的 StandardMethodMetadata 包装器，提供选项以
+	// org.springframework.core.annotation.AnnotationAttributes的形式返回任何嵌套的注解或注解数组，
+	// 而不是实际的 annotation.Annotation 实例。
+	// 已弃用从 5.2 开始支持通过 AnnotationMetadata 获取实例
+	// 形参：
+	// 			introspectedMethod –内省的方法
+	//			NestedAnnotationsAsMap – 将嵌套的注解和注解数组作为
+	//			org.springframework.core.annotation.AnnotationAttributes ，
+	//			以与基于 ASM 的AnnotationMetadata实现兼容
 	@Deprecated
 	public StandardMethodMetadata(Method introspectedMethod, boolean nestedAnnotationsAsMap) {
 		Assert.notNull(introspectedMethod, "Method must not be null");
@@ -88,6 +103,7 @@ public class StandardMethodMetadata implements MethodMetadata {
 	/**
 	 * Return the underlying Method.
 	 */
+	// 返回底层方法。
 	public final Method getIntrospectedMethod() {
 		return this.introspectedMethod;
 	}

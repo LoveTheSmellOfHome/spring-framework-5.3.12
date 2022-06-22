@@ -33,6 +33,8 @@ import org.springframework.transaction.TransactionDefinition;
  * @see DefaultTransactionAttribute
  * @see RuleBasedTransactionAttribute
  */
+// 该接口向 {@link TransactionDefinition} 添加了一个 {@code rollbackOn} 规范。
+// 由于自定义 {@code rollbackOn} 仅适用于 AOP，因此它驻留在与 AOP 相关的事务子包中
 public interface TransactionAttribute extends TransactionDefinition {
 
 	/**
@@ -41,6 +43,9 @@ public interface TransactionAttribute extends TransactionDefinition {
 	 * to process this specific transaction.
 	 * @since 3.0
 	 */
+	// 返回与此事务属性关联的限定符值。
+	// 这可用于选择相应的事务管理器来处理此特定事务。
+	// @Transactional 的 value 属性，TransactionManager bean 的名称
 	@Nullable
 	String getQualifier();
 
@@ -50,6 +55,8 @@ public interface TransactionAttribute extends TransactionDefinition {
 	 * or follow a purely descriptive nature.
 	 * @since 5.3
 	 */
+	// 返回与此交易属性关联的标签。
+	// <p>这可用于应用特定的交易行为或遵循纯粹的描述性质。
 	Collection<String> getLabels();
 
 	/**
@@ -57,6 +64,9 @@ public interface TransactionAttribute extends TransactionDefinition {
 	 * @param ex the exception to evaluate
 	 * @return whether to perform a rollback or not
 	 */
+	// 我们应该根据给定的异常回滚吗？
+	// @param ex 要评估的异常
+	// @return 是否执行回滚
 	boolean rollbackOn(Throwable ex);
 
 }

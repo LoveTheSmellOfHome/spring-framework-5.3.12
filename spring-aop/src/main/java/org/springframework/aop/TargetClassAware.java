@@ -29,6 +29,9 @@ import org.springframework.lang.Nullable;
  * @since 2.0.3
  * @see org.springframework.aop.support.AopUtils#getTargetClass(Object)
  */
+// 用于在代理后面公开目标类的最小接口。
+// 由 AOP 代理对象和代理工厂（通过org.springframework.aop.framework.Advised ）以及 TargetSources
+// Spring AOP 用作特殊使用，和传统的 Spring IoC 的 Aware 不一样，用于 Spring AOP 特殊场景，因此它没有实现 Aware 接口
 public interface TargetClassAware {
 
 	/**
@@ -36,6 +39,8 @@ public interface TargetClassAware {
 	 * (typically a proxy configuration or an actual proxy).
 	 * @return the target Class, or {@code null} if not known
 	 */
+	// 返回实现对象后面的目标类（通常是代理配置或实际代理）。
+	// 返回值：目标类，如果未知，则为null
 	@Nullable
 	Class<?> getTargetClass();
 

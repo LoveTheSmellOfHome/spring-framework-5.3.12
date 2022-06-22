@@ -81,6 +81,11 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 4.1
  */
+// 从 YAML 源读取的 {@link java.util.Properties} 工厂，公开字符串属性值的平面结构。
+// <p>YAML 是一种很好的人类可读的配置格式，它有一些有用的层次属性。它或多或少是 JSON 的超集，因此它具有许多相似的功能。
+// <p><b>注意：所有公开的值都是 {@code String}<b> 类型，用于通过常见的 {@link PropertiesgetProperty}
+// 方法访问（例如，通过 {@link PropertyResourceConfigurersetProperties(Properties)} 进行配置属性解析）。
+// 如果这是不可取的，请改用 {@link YamlMapFactoryBean}。 <p>此工厂创建的属性具有分层对象的嵌套路径，例如此 YAML
 public class YamlPropertiesFactoryBean extends YamlProcessor implements FactoryBean<Properties>, InitializingBean {
 
 	private boolean singleton = true;
@@ -93,6 +98,7 @@ public class YamlPropertiesFactoryBean extends YamlProcessor implements FactoryB
 	 * Set if a singleton should be created, or a new object on each request
 	 * otherwise. Default is {@code true} (a singleton).
 	 */
+	// 设置是否应创建单例，否则为每个请求创建一个新对象。默认为 {@code true}（单例）。
 	public void setSingleton(boolean singleton) {
 		this.singleton = singleton;
 	}
@@ -130,6 +136,9 @@ public class YamlPropertiesFactoryBean extends YamlProcessor implements FactoryB
 	 * @return the object returned by this factory
 	 * @see #process(MatchCallback)
 	 */
+	// 子类可以重写以构造此工厂返回的对象的模板方法。默认实现返回一个包含所有资源内容的属性
+	// <p>在共享单例的情况下第一次调用 {@link getObject()} 时延迟调用；否则，在每个 {@link getObject()} 调用中。
+	// @return 这个工厂返回的对象
 	protected Properties createProperties() {
 		Properties result = CollectionFactory.createStringAdaptingProperties();
 		process((properties, map) -> result.putAll(properties));

@@ -40,17 +40,20 @@ import org.springframework.util.StringUtils;
  * @since 28.12.2003
  * @see java.net.URL
  */
+// java.net.URL定位器的Resource实现。 支持分辨率为URL ，也可以作为File中的情况下， "file:"协议
 public class UrlResource extends AbstractFileResolvingResource {
 
 	/**
 	 * Original URI, if available; used for URI and File access.
 	 */
+	// 原始 URI（如果可用）； 用于 URI 和文件访问。可以与URL相互转化
 	@Nullable
 	private final URI uri;
 
 	/**
 	 * Original URL, used for actual access.
 	 */
+	// 原始URL，用于实际访问。可以与 URI 相互转化
 	private final URL url;
 
 	/**
@@ -178,6 +181,8 @@ public class UrlResource extends AbstractFileResolvingResource {
 	 * @see java.net.URLConnection#setUseCaches(boolean)
 	 * @see java.net.URLConnection#getInputStream()
 	 */
+	// 此实现为给定的 URL 打开一个 InputStream。
+	//它将useCaches标志设置为false ，主要是为了避免 Windows 上的 jar 文件锁定
 	@Override
 	public InputStream getInputStream() throws IOException {
 		URLConnection con = this.url.openConnection();

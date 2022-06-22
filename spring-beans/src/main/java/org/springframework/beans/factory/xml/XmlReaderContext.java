@@ -16,11 +16,6 @@
 
 package org.springframework.beans.factory.xml;
 
-import java.io.StringReader;
-
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
-
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.parsing.ProblemReporter;
@@ -32,6 +27,10 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.lang.Nullable;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+
+import java.io.StringReader;
 
 /**
  * Extension of {@link org.springframework.beans.factory.parsing.ReaderContext},
@@ -42,6 +41,8 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// {@link org.springframework.beans.factory.parsing.ReaderContext} 的扩展，专门用于 {@link XmlBeanDefinitionReader}。
+// 提供对 {@link XmlBeanDefinitionReader} 中配置的 {@link NamespaceHandlerResolver} 的访问。
 public class XmlReaderContext extends ReaderContext {
 
 	private final XmlBeanDefinitionReader reader;
@@ -72,6 +73,7 @@ public class XmlReaderContext extends ReaderContext {
 	/**
 	 * Return the XML bean definition reader in use.
 	 */
+	// 返回正在使用的 XML bean 定义读取器
 	public final XmlBeanDefinitionReader getReader() {
 		return this.reader;
 	}
@@ -80,6 +82,7 @@ public class XmlReaderContext extends ReaderContext {
 	 * Return the bean definition registry to use.
 	 * @see XmlBeanDefinitionReader#XmlBeanDefinitionReader(BeanDefinitionRegistry)
 	 */
+	// 返回要使用的 bean 定义注册表
 	public final BeanDefinitionRegistry getRegistry() {
 		return this.reader.getRegistry();
 	}
@@ -91,6 +94,8 @@ public class XmlReaderContext extends ReaderContext {
 	 * @see XmlBeanDefinitionReader#setResourceLoader
 	 * @see ResourceLoader#getClassLoader()
 	 */
+	// 返回要使用的资源加载器（如果有）。
+	// <p>这在常规场景中为非空，也允许访问资源类加载器。
 	@Nullable
 	public final ResourceLoader getResourceLoader() {
 		return this.reader.getResourceLoader();
@@ -102,6 +107,8 @@ public class XmlReaderContext extends ReaderContext {
 	 * as an indication to lazily resolve bean classes.
 	 * @see XmlBeanDefinitionReader#setBeanClassLoader
 	 */
+	// 返回要使用的 bean 类加载器（如果有）。
+	// <p>请注意，这在常规场景中将为 null，作为延迟解析 bean 类的指示。
 	@Nullable
 	public final ClassLoader getBeanClassLoader() {
 		return this.reader.getBeanClassLoader();
@@ -111,6 +118,7 @@ public class XmlReaderContext extends ReaderContext {
 	 * Return the environment to use.
 	 * @see XmlBeanDefinitionReader#setEnvironment
 	 */
+	// 返回环境使用
 	public final Environment getEnvironment() {
 		return this.reader.getEnvironment();
 	}
@@ -119,6 +127,7 @@ public class XmlReaderContext extends ReaderContext {
 	 * Return the namespace resolver.
 	 * @see XmlBeanDefinitionReader#setNamespaceHandlerResolver
 	 */
+	// 返回命名空间解析器。
 	public final NamespaceHandlerResolver getNamespaceHandlerResolver() {
 		return this.namespaceHandlerResolver;
 	}
@@ -131,6 +140,7 @@ public class XmlReaderContext extends ReaderContext {
 	 * @see XmlBeanDefinitionReader#getBeanNameGenerator()
 	 * @see org.springframework.beans.factory.support.BeanNameGenerator#generateBeanName
 	 */
+	// 为给定的 bean 定义调用 bean 名称生成器
 	public String generateBeanName(BeanDefinition beanDefinition) {
 		return this.reader.getBeanNameGenerator().generateBeanName(beanDefinition, getRegistry());
 	}
@@ -142,6 +152,7 @@ public class XmlReaderContext extends ReaderContext {
 	 * @see org.springframework.beans.factory.support.BeanNameGenerator#generateBeanName
 	 * @see BeanDefinitionRegistry#registerBeanDefinition
 	 */
+	// 为给定的 bean 定义调用 bean 名称生成器，并在生成的名称下注册 bean 定义
 	public String registerWithGeneratedName(BeanDefinition beanDefinition) {
 		String generatedName = generateBeanName(beanDefinition);
 		getRegistry().registerBeanDefinition(generatedName, beanDefinition);
@@ -152,6 +163,7 @@ public class XmlReaderContext extends ReaderContext {
 	 * Read an XML document from the given String.
 	 * @see #getReader()
 	 */
+	// 从给定的字符串读取 XML 文档
 	public Document readDocumentFromString(String documentContent) {
 		InputSource is = new InputSource(new StringReader(documentContent));
 		try {

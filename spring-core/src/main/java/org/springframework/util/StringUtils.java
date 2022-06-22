@@ -16,6 +16,8 @@
 
 package org.springframework.util;
 
+import org.springframework.lang.Nullable;
+
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayDeque;
@@ -34,8 +36,6 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
-
-import org.springframework.lang.Nullable;
 
 /**
  * Miscellaneous {@link String} utility methods.
@@ -1034,6 +1034,7 @@ public abstract class StringUtils {
 	 * @param array the original {@code String} array (potentially empty)
 	 * @return the resulting array (of the same size) with trimmed elements
 	 */
+	// 修剪给定 {@code String} 数组的元素，在每个非空元素上调用 {@code String.trim()}。
 	public static String[] trimArrayElements(String[] array) {
 		if (ObjectUtils.isEmpty(array)) {
 			return array;
@@ -1153,6 +1154,14 @@ public abstract class StringUtils {
 	 * @see String#trim()
 	 * @see #delimitedListToStringArray
 	 */
+	// 通过 {@link StringTokenizer} 将给定的 {@code String} 标记为 {@code String} 数组。
+	// <p>修剪标记并省略空标记。
+	// <p>给定的 {@code delimiters} 字符串可以由任意数量的定界符组成。这些字符中的每一个都可用于分隔标记。
+	// 分隔符始终是单个字符；对于多字符分隔符，请考虑使用 {@link delimitedListToStringArray}。
+	//
+	// @param str 要标记化的 {@code String} （可能为 {@code null} 或为空）
+	// @param delimiters 分隔符，组装为 {@code String} （每个字符都被单独视为分隔符）
+	// @return 令牌数组
 	public static String[] tokenizeToStringArray(@Nullable String str, String delimiters) {
 		return tokenizeToStringArray(str, delimiters, true, true);
 	}

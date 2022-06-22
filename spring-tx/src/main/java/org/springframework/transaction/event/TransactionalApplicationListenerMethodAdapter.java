@@ -45,13 +45,21 @@ import org.springframework.util.Assert;
  * @see TransactionalApplicationListener
  * @see TransactionalApplicationListenerAdapter
  */
+// 将事件处理委托给 TransactionalEventListener 注解方法的 GenericApplicationListener适配器。
+// 支持与任何常规 EventListener 注解方法完全相同的功能，但了解事件发布者的事务上下文。
+//
+// 当启用 Spring 的事务管理时，会自动启用 TransactionalEventListener 的处理。对于其他情况，需要
+// 注册 TransactionalEventListenerFactory 类型的 bean。
 public class TransactionalApplicationListenerMethodAdapter extends ApplicationListenerMethodAdapter
 		implements TransactionalApplicationListener<ApplicationEvent> {
 
+	// 事务事件监听器
 	private final TransactionalEventListener annotation;
 
+	// 事务提交阶段
 	private final TransactionPhase transactionPhase;
 
+	// 在同步驱动的事件处理上调用回调
 	private final List<SynchronizationCallback> callbacks = new CopyOnWriteArrayList<>();
 
 
@@ -61,6 +69,11 @@ public class TransactionalApplicationListenerMethodAdapter extends ApplicationLi
 	 * @param targetClass the target class that the method is declared on
 	 * @param method the listener method to invoke
 	 */
+	// 构造一个新的 TransactionalApplicationListenerMethodAdapter。
+	// 参形：
+	//			beanName – 调用监听器方法的 bean 的名称
+	//			targetClass – 声明方法的目标类
+	//			method -- 要调用的侦听器方法
 	public TransactionalApplicationListenerMethodAdapter(String beanName, Class<?> targetClass, Method method) {
 		super(beanName, targetClass, method);
 		TransactionalEventListener ann =
@@ -78,6 +91,7 @@ public class TransactionalApplicationListenerMethodAdapter extends ApplicationLi
 		return this.transactionPhase;
 	}
 
+	// 添加同步回调
 	@Override
 	public void addCallback(SynchronizationCallback callback) {
 		Assert.notNull(callback, "SynchronizationCallback must not be null");
@@ -85,10 +99,12 @@ public class TransactionalApplicationListenerMethodAdapter extends ApplicationLi
 	}
 
 
+	// 发布事件
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
 		if (TransactionSynchronizationManager.isSynchronizationActive() &&
 				TransactionSynchronizationManager.isActualTransactionActive()) {
+			// 为当前线程注册一个新的同步事务
 			TransactionSynchronizationManager.registerSynchronization(
 					new TransactionalApplicationListenerSynchronization<>(event, this, this.callbacks));
 		}
@@ -96,10 +112,12 @@ public class TransactionalApplicationListenerMethodAdapter extends ApplicationLi
 			if (this.annotation.phase() == TransactionPhase.AFTER_ROLLBACK && logger.isWarnEnabled()) {
 				logger.warn("Processing " + event + " as a fallback execution on AFTER_ROLLBACK phase");
 			}
+			// 处理事件
 			processEvent(event);
 		}
 		else {
 			// No transactional event execution at all
+			// 根本没有事务性事件执行
 			if (logger.isDebugEnabled()) {
 				logger.debug("No transaction is active - skipping " + event);
 			}

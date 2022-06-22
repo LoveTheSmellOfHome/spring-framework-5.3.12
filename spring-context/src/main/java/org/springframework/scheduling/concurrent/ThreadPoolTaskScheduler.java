@@ -16,21 +16,6 @@
 
 package org.springframework.scheduling.concurrent;
 
-import java.time.Clock;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.lang.Nullable;
@@ -43,6 +28,11 @@ import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ErrorHandler;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureTask;
+
+import java.time.Clock;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.*;
 
 /**
  * Implementation of Spring's {@link TaskScheduler} interface, wrapping
@@ -58,16 +48,21 @@ import org.springframework.util.concurrent.ListenableFutureTask;
  * @see #setThreadFactory
  * @see #setErrorHandler
  */
+// Spring 的 {@link TaskScheduler} 任务调度接口的实现，包装了一个原生的
+// {@link java.util.concurrent.ScheduledThreadPoolExecutor}。
 @SuppressWarnings("serial")
 public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 		implements AsyncListenableTaskExecutor, SchedulingTaskExecutor, TaskScheduler {
 
 	private volatile int poolSize = 1;
 
+	// 是否删除取消策略
 	private volatile boolean removeOnCancelPolicy;
 
+	// 是否继续保留定时任务在关闭策略执行后
 	private volatile boolean continueExistingPeriodicTasksAfterShutdownPolicy;
 
+	// 是否执行保留延时任务在关闭策略执行之后
 	private volatile boolean executeExistingDelayedTasksAfterShutdownPolicy = true;
 
 	@Nullable
@@ -79,6 +74,7 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 	private ScheduledExecutorService scheduledExecutor;
 
 	// Underlying ScheduledFutureTask to user-level ListenableFuture handle, if any
+	// 底层 ScheduledFutureTask 到用户级 ListenableFuture 句柄（如果有）
 	private final Map<Object, ListenableFuture<?>> listenableFutureMap =
 			new ConcurrentReferenceHashMap<>(16, ConcurrentReferenceHashMap.ReferenceType.WEAK);
 
@@ -88,6 +84,8 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 	 * Default is 1.
 	 * <p><b>This setting can be modified at runtime, for example through JMX.</b>
 	 */
+	// 设置 ScheduledExecutorService 的池大小。默认值为 1。
+	// <p><b>可以在运行时修改此设置，例如通过 JMX。<b>
 	public void setPoolSize(int poolSize) {
 		Assert.isTrue(poolSize > 0, "'poolSize' must be 1 or higher");
 		if (this.scheduledExecutor instanceof ScheduledThreadPoolExecutor) {
@@ -103,6 +101,9 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 	 * <p><b>This setting can be modified at runtime, for example through JMX.</b>
 	 * @see ScheduledThreadPoolExecutor#setRemoveOnCancelPolicy
 	 */
+	// 在 {@link ScheduledThreadPoolExecutor} 上设置取消时删除模式。
+	// <p>默认为 {@code false}。如果设置为 {@code true}，目标执行程序将切换到取消时删除模式（如果可能）。
+	// <p><b>可以在运行时修改此设置，例如通过 JMX。<b>
 	public void setRemoveOnCancelPolicy(boolean flag) {
 		if (this.scheduledExecutor instanceof ScheduledThreadPoolExecutor) {
 			((ScheduledThreadPoolExecutor) this.scheduledExecutor).setRemoveOnCancelPolicy(flag);
@@ -118,6 +119,9 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 	 * @since 5.3.9
 	 * @see ScheduledThreadPoolExecutor#setContinueExistingPeriodicTasksAfterShutdownPolicy
 	 */
+	// 设置是否在此执行器已关闭时继续现有的周期性任务。
+	// <p>默认为 {@code false}。如果设置为 {@code true}，目标执行器将被切换到持续的周期性任务（如果可能）。
+	// <p><b>可以在运行时修改此设置，例如通过 JMX。<b>
 	public void setContinueExistingPeriodicTasksAfterShutdownPolicy(boolean flag) {
 		if (this.scheduledExecutor instanceof ScheduledThreadPoolExecutor) {
 			((ScheduledThreadPoolExecutor) this.scheduledExecutor).setContinueExistingPeriodicTasksAfterShutdownPolicy(flag);
@@ -133,6 +137,9 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 	 * @since 5.3.9
 	 * @see ScheduledThreadPoolExecutor#setExecuteExistingDelayedTasksAfterShutdownPolicy
 	 */
+	// 设置是否在此执行器已关闭时执行现有的延迟任务。
+	// <p>默认为 {@code true}。如果设置为 {@code false}，目标执行器将切换到丢弃剩余任务（如果可能）。
+	// <p><b>可以在运行时修改此设置，例如通过 JMX。<b>
 	public void setExecuteExistingDelayedTasksAfterShutdownPolicy(boolean flag) {
 		if (this.scheduledExecutor instanceof ScheduledThreadPoolExecutor) {
 			((ScheduledThreadPoolExecutor) this.scheduledExecutor).setExecuteExistingDelayedTasksAfterShutdownPolicy(flag);
@@ -143,6 +150,7 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 	/**
 	 * Set a custom {@link ErrorHandler} strategy.
 	 */
+	// 设置自定义 {@link ErrorHandler} 策略
 	public void setErrorHandler(ErrorHandler errorHandler) {
 		this.errorHandler = errorHandler;
 	}
@@ -153,6 +161,8 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 	 * @since 5.3
 	 * @see Clock#systemDefaultZone()
 	 */
+	// 设置时钟以用于调度目的。
+	// <p>默认时钟是默认时区的系统时钟
 	public void setClock(Clock clock) {
 		this.clock = clock;
 	}
@@ -196,6 +206,12 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 	 * @see #afterPropertiesSet()
 	 * @see java.util.concurrent.ScheduledThreadPoolExecutor
 	 */
+	// 创建一个新的 {@link ScheduledExecutorService} 实例。
+	// <p>默认实现创建一个 {@link ScheduledThreadPoolExecutor}。可以在子类中覆盖以提供自定义 {@link ScheduledExecutorService} 实例
+	// @param poolSize 指定的池大小
+	// @param threadFactory 要使用的 ThreadFactory
+	// @param rejectedExecutionHandler 要使用的 RejectedExecutionHandler
+	// @return 一个新的 ScheduledExecutorService 实例
 	protected ScheduledExecutorService createExecutor(
 			int poolSize, ThreadFactory threadFactory, RejectedExecutionHandler rejectedExecutionHandler) {
 
@@ -207,6 +223,9 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 	 * @return the underlying ScheduledExecutorService (never {@code null})
 	 * @throws IllegalStateException if the ThreadPoolTaskScheduler hasn't been initialized yet
 	 */
+	// 返回底层 ScheduledExecutorService 以进行本机访问。
+	// @return 底层的 ScheduledExecutorService（从不{@code null}）
+	// 如果 ThreadPoolTaskScheduler 尚未初始化，则 @throws IllegalStateException
 	public ScheduledExecutorService getScheduledExecutor() throws IllegalStateException {
 		Assert.state(this.scheduledExecutor != null, "ThreadPoolTaskScheduler not initialized");
 		return this.scheduledExecutor;
@@ -219,6 +238,10 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 	 * or if the underlying ScheduledExecutorService isn't a ScheduledThreadPoolExecutor
 	 * @see #getScheduledExecutor()
 	 */
+	// 如果可用，返回底层 ScheduledThreadPoolExecutor。
+	// @return 底层的 ScheduledExecutorService（从不{@code null}）
+	// @throws IllegalStateException 如果 ThreadPoolTaskScheduler 尚未初始化或者底层 ScheduledExecutorService
+	// 不是 ScheduledThreadPoolExecutor
 	public ScheduledThreadPoolExecutor getScheduledThreadPoolExecutor() throws IllegalStateException {
 		Assert.state(this.scheduledExecutor instanceof ScheduledThreadPoolExecutor,
 				"No ScheduledThreadPoolExecutor available");
@@ -231,6 +254,8 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 	 * @see #getScheduledThreadPoolExecutor()
 	 * @see java.util.concurrent.ScheduledThreadPoolExecutor#getPoolSize()
 	 */
+	// 返回当前池大小。
+	// <p>需要一个底层的 {@link ScheduledThreadPoolExecutor}。
 	public int getPoolSize() {
 		if (this.scheduledExecutor == null) {
 			// Not initialized yet: assume initial pool size.
@@ -245,9 +270,12 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 	 * @see #getScheduledThreadPoolExecutor()
 	 * @see java.util.concurrent.ScheduledThreadPoolExecutor#getActiveCount()
 	 */
+	// 返回当前活动线程的数量。
+	// <p>需要一个底层的 {@link ScheduledThreadPoolExecutor}。
 	public int getActiveCount() {
 		if (this.scheduledExecutor == null) {
 			// Not initialized yet: assume no active threads.
+			// 尚未初始化：假设没有活动线程。
 			return 0;
 		}
 		return getScheduledThreadPoolExecutor().getActiveCount();
@@ -259,10 +287,13 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 	 * @deprecated as of 5.3.9, in favor of direct
 	 * {@link #getScheduledThreadPoolExecutor()} access
 	 */
+	// 返回取消时删除模式的当前设置。
+	// <p>需要一个底层的 {@link ScheduledThreadPoolExecutor}。
 	@Deprecated
 	public boolean isRemoveOnCancelPolicy() {
 		if (this.scheduledExecutor == null) {
 			// Not initialized yet: return our setting for the time being.
+			// 尚未初始化：暂时返回我们的设置
 			return this.removeOnCancelPolicy;
 		}
 		return getScheduledThreadPoolExecutor().getRemoveOnCancelPolicy();
@@ -270,6 +301,7 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 
 
 	// SchedulingTaskExecutor implementation
+	// 调度TaskExecutor实现
 
 	@Override
 	public void execute(Runnable task) {
@@ -359,6 +391,7 @@ public class ThreadPoolTaskScheduler extends ExecutorConfigurationSupport
 
 
 	// TaskScheduler implementation
+	// 任务调度器实现
 
 	@Override
 	@Nullable

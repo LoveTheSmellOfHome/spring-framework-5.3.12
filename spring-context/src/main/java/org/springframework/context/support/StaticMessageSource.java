@@ -34,6 +34,8 @@ import org.springframework.util.Assert;
  * @author Rod Johnson
  * @author Juergen Hoeller
  */
+// org.springframework.context.MessageSource简单实现，它允许以编程方式注册消息。 此 MessageSource 支持基本国际化。
+// 和 ListResourceBundle 的实现非常类似，都是静态化实现，使用成本比较高
 public class StaticMessageSource extends AbstractMessageSource {
 
 	private final Map<String, Map<Locale, MessageHolder>> messageMap = new HashMap<>();
@@ -73,6 +75,7 @@ public class StaticMessageSource extends AbstractMessageSource {
 	 * @param locale the locale that the message should be found within
 	 * @param msg the message associated with this lookup code
 	 */
+	// 内存型的实现，往里边添加不同 key,locale,msg,它是以编程的方式在内存中添加，而不是通过外部化配置
 	public void addMessage(String code, Locale locale, String msg) {
 		Assert.notNull(code, "Code must not be null");
 		Assert.notNull(locale, "Locale must not be null");

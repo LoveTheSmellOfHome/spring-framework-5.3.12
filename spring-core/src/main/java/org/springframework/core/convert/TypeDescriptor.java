@@ -16,6 +16,14 @@
 
 package org.springframework.core.convert;
 
+import org.springframework.core.MethodParameter;
+import org.springframework.core.ResolvableType;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
+
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -26,14 +34,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
-
-import org.springframework.core.MethodParameter;
-import org.springframework.core.ResolvableType;
-import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.ObjectUtils;
 
 /**
  * Contextual descriptor about a type to convert from or to.
@@ -49,6 +49,11 @@ import org.springframework.util.ObjectUtils;
  * @see ConversionService#canConvert(TypeDescriptor, TypeDescriptor)
  * @see ConversionService#convert(Object, TypeDescriptor, TypeDescriptor)
  */
+// 关于要转换的类型的上下文描述符。能够表示数组和泛型集合类型。类型转换中的泛型处理
+//
+// 类型描述：既可以表示 原生类型，又可以表示 自定义类型或者 Java 中常见类型，
+// 它可以使用 ResolvableType 来处理泛型。它不限于某一种场景，比直接指定泛型 S 和 T 之间的转换更有弹性，
+// 使二者之间的转换的判断更加前置（有了预判）
 @SuppressWarnings("serial")
 public class TypeDescriptor implements Serializable {
 
@@ -81,6 +86,8 @@ public class TypeDescriptor implements Serializable {
 	 * constructor parameter, method parameter, or method return value.
 	 * @param methodParameter the method parameter
 	 */
+	// 从 {@link MethodParameter} 创建一个新的类型描述符。
+	// <p>当源或目标转换点是构造函数参数、方法参数或方法返回值时，使用此构造函数。
 	public TypeDescriptor(MethodParameter methodParameter) {
 		this.resolvableType = ResolvableType.forMethodParameter(methodParameter);
 		this.type = this.resolvableType.resolve(methodParameter.getNestedParameterType());
@@ -93,6 +100,8 @@ public class TypeDescriptor implements Serializable {
 	 * <p>Use this constructor when a source or target conversion point is a field.
 	 * @param field the field
 	 */
+	// 从 {@link Field} 创建一个新的类型描述符。
+	// <p>当源或目标转换点是一个字段时使用此构造函数。
 	public TypeDescriptor(Field field) {
 		this.resolvableType = ResolvableType.forField(field);
 		this.type = this.resolvableType.resolve(field.getType());
@@ -105,6 +114,8 @@ public class TypeDescriptor implements Serializable {
 	 * property on a Java class.
 	 * @param property the property
 	 */
+	// 从 {@link Property} 创建一个新的类型描述符。
+	// 当源或目标转换点是 Java 类上的属性时，使用此构造函数。
 	public TypeDescriptor(Property property) {
 		Assert.notNull(property, "Property must not be null");
 		this.resolvableType = ResolvableType.forMethodParameter(property.getMethodParameter());
@@ -122,6 +133,11 @@ public class TypeDescriptor implements Serializable {
 	 * @param annotations the type annotations
 	 * @since 4.0
 	 */
+	// 从 {@link ResolvableType} 创建一个新的类型描述符。
+	// <p>此构造函数在内部使用，也可由支持具有扩展类型系统的非 Java 语言的子类使用。从 5.1.4 开始，它是公开的，而之前是受保护的。
+	// @param resolvableType 可解析类型
+	// @param 输入支持类型（或 {@code null} 如果它应该得到解决）
+	// @param annotations 类型注解
 	public TypeDescriptor(ResolvableType resolvableType, @Nullable Class<?> type, @Nullable Annotation[] annotations) {
 		this.resolvableType = resolvableType;
 		this.type = (type != null ? type : resolvableType.toClass());
@@ -135,6 +151,10 @@ public class TypeDescriptor implements Serializable {
 	 * <p>This is useful for conversion service implementations that wish to
 	 * normalize to object-based types and not work with primitive types directly.
 	 */
+	// {@link getType()} 的变体，通过返回其对象包装器类型来解释原始类型。
+	//
+	// 这对于希望规范化为基于对象的类型而不直接使用原始类型的转换服务实现很有用。
+	// 获取包装类型
 	public Class<?> getObjectType() {
 		return ClassUtils.resolvePrimitiveIfNecessary(getType());
 	}
@@ -147,6 +167,10 @@ public class TypeDescriptor implements Serializable {
 	 * corresponding Object types if necessary.
 	 * @see #getObjectType()
 	 */
+	// 此 TypeDescriptor 描述的支持类、方法参数、字段或属性的类型。
+	//
+	// 按原样返回原始类型。有关此操作的变体，请参阅 {@link getObjectType()}，必要时将原始类型解析为其相应的对象类型。
+	// 返回原始类型
 	public Class<?> getType() {
 		return this.type;
 	}
@@ -155,6 +179,7 @@ public class TypeDescriptor implements Serializable {
 	 * Return the underlying {@link ResolvableType}.
 	 * @since 4.0
 	 */
+	// 返回底层 {@link ResolvableType}。
 	public ResolvableType getResolvableType() {
 		return this.resolvableType;
 	}
@@ -166,6 +191,9 @@ public class TypeDescriptor implements Serializable {
 	 * type information or meta-data that alternative JVM languages may provide.
 	 * @since 4.0
 	 */
+	// 返回描述符的底层源。将根据 {@link TypeDescriptor} 的构造方式返回
+	// {@link Field}、{@link MethodParameter} 或 {@link Type}。
+	// 此方法主要用于提供对其他 JVM 语言可能提供的附加类型信息或元数据的访问。
 	public Object getSource() {
 		return this.resolvableType.getSource();
 	}
@@ -186,6 +214,14 @@ public class TypeDescriptor implements Serializable {
 	 * @return this TypeDescriptor narrowed (returns a copy with its type updated to the
 	 * class of the provided value)
 	 */
+	// 通过将其类型设置为所提供值的类来缩小此 {@link TypeDescriptor}。
+	//
+	// 如果值为 {@code null}，则不进行缩小，并且此 TypeDescriptor 原样返回。
+	//
+	// 设计为在绑定框架读取属性、字段或方法返回值时由它们调用。允许此类框架缩小从声明的属性、字段或方法返回值类型构建的 TypeDescriptor。
+	// 例如，声明为 {@code java.lang.Object} 的字段如果设置为 {@code java.util.HashMap} 值，
+	// 则会缩小为 {@code java.util.HashMap}。然后可以使用缩小的 TypeDescriptor 将 HashMap 转换为其他类型。
+	// 注j解和嵌套类型上下文由缩小的副本保留。
 	public TypeDescriptor narrow(@Nullable Object value) {
 		if (value == null) {
 			return this;
@@ -202,6 +238,9 @@ public class TypeDescriptor implements Serializable {
 	 * @throws IllegalArgumentException if this type is not assignable to the super-type
 	 * @since 3.2
 	 */
+	// 将此 {@link TypeDescriptor} 转换为超类或实现的接口，保留注解和嵌套类型上下文
+	// @param superType 要强制转换的超类型（可以是 {@code null}）
+	// @return 向上转换类型的新 TypeDescriptor
 	@Nullable
 	public TypeDescriptor upcast(@Nullable Class<?> superType) {
 		if (superType == null) {
@@ -214,6 +253,7 @@ public class TypeDescriptor implements Serializable {
 	/**
 	 * Return the name of this type: the fully qualified class name.
 	 */
+	// 返回此类型的名称：完全限定的类名
 	public String getName() {
 		return ClassUtils.getQualifiedName(getType());
 	}
@@ -221,6 +261,7 @@ public class TypeDescriptor implements Serializable {
 	/**
 	 * Is this type a primitive type?
 	 */
+	// 这种类型是原始类型吗？
 	public boolean isPrimitive() {
 		return getType().isPrimitive();
 	}
@@ -229,6 +270,7 @@ public class TypeDescriptor implements Serializable {
 	 * Return the annotations associated with this type descriptor, if any.
 	 * @return the annotations, or an empty array if none
 	 */
+	// 返回与此类型描述符关联的注释（如果有）。 @return 注释，如果没有则返回一个空数组
 	public Annotation[] getAnnotations() {
 		return this.annotatedElement.getAnnotations();
 	}
@@ -240,10 +282,15 @@ public class TypeDescriptor implements Serializable {
 	 * @param annotationType the annotation type
 	 * @return <tt>true</tt> if the annotation is present
 	 */
+	// 确定此类型描述符是否具有指定的注解。
+	// <p>从 Spring Framework 4.2 开始，此方法支持任意级别的元注释。
+	// @param annotationType 注释类型
 	public boolean hasAnnotation(Class<? extends Annotation> annotationType) {
 		if (this.annotatedElement.isEmpty()) {
 			// Shortcut: AnnotatedElementUtils would have to expect AnnotatedElement.getAnnotations()
 			// to return a copy of the array, whereas we can do it more efficiently here.
+			// 捷径： AnnotatedElementUtils 必须期望 AnnotatedElement.getAnnotations() 返回数组的副本，
+			// 而我们可以在这里更有效地做到这一点。
 			return false;
 		}
 		return AnnotatedElementUtils.isAnnotated(this.annotatedElement, annotationType);
@@ -255,11 +302,15 @@ public class TypeDescriptor implements Serializable {
 	 * @param annotationType the annotation type
 	 * @return the annotation, or {@code null} if no such annotation exists on this type descriptor
 	 */
+	// 获取此类型描述符上指定的 {@code annotationType} 的注解。
+	// <p>从 Spring Framework 4.2 开始，此方法支持任意级别的元注释。
 	@Nullable
 	public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
 		if (this.annotatedElement.isEmpty()) {
 			// Shortcut: AnnotatedElementUtils would have to expect AnnotatedElement.getAnnotations()
 			// to return a copy of the array, whereas we can do it more efficiently here.
+			// 捷径： AnnotatedElementUtils 必须期望 AnnotatedElement.getAnnotations() 返回数组的副本，
+			// 而我们可以在这里更有效地做到这一点。
 			return null;
 		}
 		return AnnotatedElementUtils.getMergedAnnotation(this.annotatedElement, annotationType);
@@ -279,6 +330,12 @@ public class TypeDescriptor implements Serializable {
 	 * type descriptor
 	 * @see #getObjectType()
 	 */
+	// 如果此类型描述符的对象可以分配给给定类型描述符所描述的位置，则返回 true。
+	// 例如， valueOf(String.class).isAssignableTo(valueOf(CharSequence.class))返回true因为可以将
+	// String 值分配给 CharSequence 变量。 另一方面，
+	// valueOf(Number.class).isAssignableTo(valueOf(Integer.class))返回false因为，虽然所有整数都是数字，
+	// 但并非所有数字都是整数。
+	// Spring 添加了 子类.isAssignableTo(父类);  JDK Class 中只有 父类.isAssignableFrom(子类)
 	public boolean isAssignableTo(TypeDescriptor typeDescriptor) {
 		boolean typesAssignable = typeDescriptor.getObjectType().isAssignableFrom(getObjectType());
 		if (!typesAssignable) {
@@ -309,6 +366,7 @@ public class TypeDescriptor implements Serializable {
 	/**
 	 * Is this type a {@link Collection} type?
 	 */
+	// 这种类型是Collection类型吗？
 	public boolean isCollection() {
 		return Collection.class.isAssignableFrom(getType());
 	}
@@ -316,6 +374,7 @@ public class TypeDescriptor implements Serializable {
 	/**
 	 * Is this type an array type?
 	 */
+	// 这种类型是数组类型吗？
 	public boolean isArray() {
 		return getType().isArray();
 	}
@@ -329,6 +388,8 @@ public class TypeDescriptor implements Serializable {
 	 * an array type or a {@code java.util.Collection} or if its element type is not parameterized
 	 * @see #elementTypeDescriptor(Object)
 	 */
+	// 如果此类型是数组，则返回数组的组件类型。如果此类型是流，则返回流的组件类型。如果此类型是 Collection 并且已参数化，
+	// 则返回 Collection 的元素类型。如果 Collection 未参数化，则返回 null 指示未声明元素类型。
 	@Nullable
 	public TypeDescriptor getElementTypeDescriptor() {
 		if (getResolvableType().isArray()) {
@@ -357,6 +418,12 @@ public class TypeDescriptor implements Serializable {
 	 * @see #getElementTypeDescriptor()
 	 * @see #narrow(Object)
 	 */
+	// 如果此类型是Collection或数组，则从提供的集合或数组元素创建元素 TypeDescriptor。
+	// 将elementType属性elementType到提供的集合或数组元素的类。 例如，如果它描述的是java.util.
+	// List<java.lang.Number<并且元素参数是java.lang.Integer ，则返回的 TypeDescriptor 将是java.
+	// lang.Integer 。 如果它描述的是java.util.List<?>并且元素参数是java.lang.Integer ，则返回的
+	// TypeDescriptor 也将是java.lang.Integer 。
+	// 注解和嵌套类型上下文将保留在返回的缩小的 TypeDescriptor 中。
 	@Nullable
 	public TypeDescriptor elementTypeDescriptor(Object element) {
 		return narrow(element, getElementTypeDescriptor());
@@ -365,6 +432,7 @@ public class TypeDescriptor implements Serializable {
 	/**
 	 * Is this type a {@link Map} type?
 	 */
+	// 这种类型是Map类型吗
 	public boolean isMap() {
 		return Map.class.isAssignableFrom(getType());
 	}
@@ -377,6 +445,7 @@ public class TypeDescriptor implements Serializable {
 	 * but its key type is not parameterized
 	 * @throws IllegalStateException if this type is not a {@code java.util.Map}
 	 */
+	// 如果此类型是Map并且其键类型已参数化，则返回映射的键类型。 如果 Map 的键类型未参数化，则返回null表示未声明键类型。
 	@Nullable
 	public TypeDescriptor getMapKeyTypeDescriptor() {
 		Assert.state(isMap(), "Not a [java.util.Map]");
@@ -400,6 +469,12 @@ public class TypeDescriptor implements Serializable {
 	 * @throws IllegalStateException if this type is not a {@code java.util.Map}
 	 * @see #narrow(Object)
 	 */
+	// 如果此类型是Map ，则从提供的地图键创建一个 mapKey TypeDescriptor 。
+	// 将mapKeyType属性mapKeyType到提供的映射键的类。 例如，如果它描述了java.util.Map<java.lang.
+	// Number, java.lang.String<并且关键参数是java.lang.Integer ，则返回的 TypeDescriptor 将是java.
+	// lang.Integer 。 如果它描述了java.util.Map<?, ?>并且关键参数是java.lang.Integer ，则返回的
+	// TypeDescriptor 也将是java.lang.Integer 。
+	// 注解和嵌套类型上下文将保留在返回的缩小的 TypeDescriptor 中
 	@Nullable
 	public TypeDescriptor getMapKeyTypeDescriptor(Object mapKey) {
 		return narrow(mapKey, getMapKeyTypeDescriptor());
@@ -414,6 +489,7 @@ public class TypeDescriptor implements Serializable {
 	 * but its value type is not parameterized
 	 * @throws IllegalStateException if this type is not a {@code java.util.Map}
 	 */
+	// 如果此类型是 Map 并且其值类型已参数化，则返回映射的值类型。如果 Map 的值类型未参数化，则返回 null 指示未声明值类型
 	@Nullable
 	public TypeDescriptor getMapValueTypeDescriptor() {
 		Assert.state(isMap(), "Not a [java.util.Map]");
@@ -437,6 +513,11 @@ public class TypeDescriptor implements Serializable {
 	 * @throws IllegalStateException if this type is not a {@code java.util.Map}
 	 * @see #narrow(Object)
 	 */
+	// 如果此类型是地图，则从提供的地图值创建一个 mapValue TypeDescriptor。将 mapValueType 属性缩小到提供的地图值的类。
+	// 例如，如果它描述了 java.util.Map<java.lang.String, java.lang.Number< 并且 value 参数是 java.lang.Integer，
+	// 则返回的 TypeDescriptor 将是 java.lang.Integer。如果它描述的是 java.util.Map<?, ?> 并且 value 参数是
+	// java.lang.Integer，则返回的 TypeDescriptor 也将是 java.lang.Integer。注解和嵌套类型上下文将保留在返回的
+	// 缩小的 TypeDescriptor 中。
 	@Nullable
 	public TypeDescriptor getMapValueTypeDescriptor(Object mapValue) {
 		return narrow(mapValue, getMapValueTypeDescriptor());
@@ -501,6 +582,7 @@ public class TypeDescriptor implements Serializable {
 
 	private boolean annotationEquals(Annotation ann, Annotation otherAnn) {
 		// Annotation.equals is reflective and pretty slow, so let's check identity and proxy type first.
+		// Annotation.equals 是反射性的并且非常慢，所以让我们先检查身份和代理类型。
 		return (ann == otherAnn || (ann.getClass() == otherAnn.getClass() && ann.equals(otherAnn)));
 	}
 
@@ -529,6 +611,9 @@ public class TypeDescriptor implements Serializable {
 	 * @param source the source object
 	 * @return the type descriptor
 	 */
+	// 对象创建一个新的类型描述符。
+	// 在要求转换系统将其转换为其他类型之前，使用此工厂方法自省源对象。如果提供的对象为 null，则返回 null，
+	// 否则调用 valueOf(Class) 从对象的类构建 TypeDescriptor。
 	@Nullable
 	public static TypeDescriptor forObject(@Nullable Object source) {
 		return (source != null ? valueOf(source.getClass()) : null);
@@ -544,6 +629,9 @@ public class TypeDescriptor implements Serializable {
 	 * @param type the class (may be {@code null} to indicate {@code Object.class})
 	 * @return the corresponding type descriptor
 	 */
+	// 从给定的类型创建一个新的类型描述符。当没有类型位置（如方法参数或字段）可用于提供额外的转换上下文时，
+	// 使用它来指示转换系统将对象转换为特定的目标类型。通常更喜欢使用 forObject(Object) 从源对象构造类型描述符，
+	// 因为它处理空对象的情况。
 	public static TypeDescriptor valueOf(@Nullable Class<?> type) {
 		if (type == null) {
 			type = Object.class;
@@ -564,6 +652,10 @@ public class TypeDescriptor implements Serializable {
 	 * used to convert collection elements
 	 * @return the collection type descriptor
 	 */
+	// 从 {@link java.util.Collection} 类型创建一个新的类型描述符。
+	// <p>用于转换为类型化集合。 <p>例如，通过转换为使用此方法构建的 targetType，可以将 {@code List<String>} 转换为
+	// {@code List<EmailAddress>}。构造这样一个 {@code TypeDescriptor} 的方法调用看起来像：
+	// {@code collection(List.class, TypeDescriptor.valueOf(EmailAddress.class));}
 	public static TypeDescriptor collection(Class<?> collectionType, @Nullable TypeDescriptor elementTypeDescriptor) {
 		Assert.notNull(collectionType, "Collection type must not be null");
 		if (!Collection.class.isAssignableFrom(collectionType)) {
@@ -587,6 +679,13 @@ public class TypeDescriptor implements Serializable {
 	 * @param valueTypeDescriptor the map's value type, used to convert map values
 	 * @return the map type descriptor
 	 */
+	// 从 {@link java.util.Map} 类型创建一个新的类型描述符。
+	// <p>用于转换为类型化地图。
+	// <p>例如，可以通过转换为使用此方法构建的 targetType 将 Map<String, String> 转换为 Map<Id, EmailAddress>：
+	// 构造此类 TypeDescriptor 的方法调用将类似于：
+	// <pre class ="code">
+	// 	 map(Map.class, TypeDescriptor.valueOf(Id.class), TypeDescriptor.valueOf(EmailAddress.class));
+	// </pre>
 	public static TypeDescriptor map(Class<?> mapType, @Nullable TypeDescriptor keyTypeDescriptor,
 			@Nullable TypeDescriptor valueTypeDescriptor) {
 
@@ -609,6 +708,12 @@ public class TypeDescriptor implements Serializable {
 	 * @return an array {@link TypeDescriptor} or {@code null} if {@code elementTypeDescriptor} is {@code null}
 	 * @since 3.2.1
 	 */
+	// 创建一个新的类型描述符作为指定类型的数组。
+	// <p>例如创建一个 {@code Map<String,String>[]} 使用：
+	// <pre class="code">
+	//	 TypeDescriptor.array(TypeDescriptor.map
+	//	 (Map.class, TypeDescriptor.value(String.class), TypeDescriptor.value(String.class)));
+	// </pre>
 	@Nullable
 	public static TypeDescriptor array(@Nullable TypeDescriptor elementTypeDescriptor) {
 		if (elementTypeDescriptor == null) {
@@ -640,6 +745,13 @@ public class TypeDescriptor implements Serializable {
 	 * {@link MethodParameter} argument is not 1, or if the types up to the
 	 * specified nesting level are not of collection, array, or map types
 	 */
+	// 为方法参数中声明的嵌套类型创建类型描述符。
+	// <p>例如，如果methodParameter 是一个{@code List<String>} 并且嵌套级别为1，则嵌套的类型描述符将为String.class。
+	// <p>如果methodParameter 是一个{@code List<List<String>>} 并且嵌套级别是2，那么嵌套的类型描述符也将是一个String.class。
+	// <p>如果 methodParameter 是 {@code Map<Integer, String>} 并且嵌套级别为 1，则嵌套类型描述符将为 String，从映射值派生。
+	// <p>如果 methodParameter 是 {@code List<Map<Integer, String>>} 并且嵌套级别为 2，则嵌套类型描述符将为 String，从映射值派生。
+	// <p>如果嵌套类型由于未声明而无法获取，则返回 {@code null}。例如，如果方法参数是{@code List<?>}，
+	// 则返回的嵌套类型描述符将为{@code null}。
 	@Nullable
 	public static TypeDescriptor nested(MethodParameter methodParameter, int nestingLevel) {
 		if (methodParameter.getNestingLevel() != 1) {
@@ -670,6 +782,13 @@ public class TypeDescriptor implements Serializable {
 	 * @throws IllegalArgumentException if the types up to the specified nesting
 	 * level are not of collection, array, or map types
 	 */
+	// 为方法参数中声明的嵌套类型创建类型描述符。
+	// <p>例如，如果methodParameter 是一个{@code List<String>} 并且嵌套级别为1，则嵌套的类型描述符将为String.class。
+	// <p>如果methodParameter 是一个{@code List<List<String>>} 并且嵌套级别是2，那么嵌套的类型描述符也将是一个String.class。
+	// <p>如果 methodParameter 是 {@code Map<Integer, String>} 并且嵌套级别为 1，则嵌套类型描述符将为 String，从映射值派生。
+	// <p>如果 methodParameter 是 {@code List<Map<Integer, String>>} 并且嵌套级别为 2，则嵌套类型描述符将为 String，从映射值派生。
+	// <p>如果嵌套类型由于未声明而无法获取，则返回 {@code null}。例如，如果方法参数是{@code List<?>}，
+	// 则返回的嵌套类型描述符将为{@code null}。
 	@Nullable
 	public static TypeDescriptor nested(Field field, int nestingLevel) {
 		return nested(new TypeDescriptor(field), nestingLevel);
@@ -734,6 +853,8 @@ public class TypeDescriptor implements Serializable {
 	 * @see AnnotatedElementUtils#isAnnotated(AnnotatedElement, Class)
 	 * @see AnnotatedElementUtils#getMergedAnnotation(AnnotatedElement, Class)
 	 */
+	// 用于将 {@code TypeDescriptor} 的注解公开为 {@link AnnotatedElement} 的适配器类，
+	// 特别是 {@link AnnotatedElementUtils}。
 	private class AnnotatedElementAdapter implements AnnotatedElement, Serializable {
 
 		@Nullable

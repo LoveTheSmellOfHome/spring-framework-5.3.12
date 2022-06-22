@@ -29,6 +29,7 @@ import org.springframework.lang.Nullable;
  * @see TaskScheduler#schedule(Runnable, Trigger)
  * @see org.springframework.scheduling.support.CronTrigger
  */
+// 用于确定与其关联的任务的下一次执行时间的触发器对象的通用接口。
 public interface Trigger {
 
 	/**
@@ -38,6 +39,9 @@ public interface Trigger {
 	 * @return the next execution time as defined by the trigger,
 	 * or {@code null} if the trigger won't fire anymore
 	 */
+	// 根据给定的触发上下文确定下一次执行时间。
+	// @param triggerContext 封装上次执行时间和上次完成时间的上下文对象
+	// @return 触发器定义的下一个执行时间，如果触发器不再触发，则返回 {@code null}
 	@Nullable
 	Date nextExecutionTime(TriggerContext triggerContext);
 

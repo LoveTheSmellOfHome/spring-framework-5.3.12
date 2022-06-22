@@ -52,6 +52,10 @@ import org.springframework.util.StringUtils;
  * @see BeanWrapperImpl
  * @see SimpleTypeConverter
  */
+// 用于将属性值转换为目标类型的内部助手类
+// <p>适用于给定的 {@link PropertyEditorRegistrySupport} 实例。
+// 被 {@link BeanWrapperImpl} 和 {@link SimpleTypeConverter}以及 {@link TypeConverterSupport} 用作委托。
+//
 class TypeConverterDelegate {
 
 	private static final Log logger = LogFactory.getLog(TypeConverterDelegate.class);
@@ -110,22 +114,34 @@ class TypeConverterDelegate {
 	 * @return the new value, possibly the result of type conversion
 	 * @throws IllegalArgumentException if type conversion failed
 	 */
+	// 对于指定的属性，将值转换为所需的类型（String -> 目标类型）
+	// @param propertyName 属性名称
+	// @param oldValue 前一个值，如果可用（可能是 {@code null}
+	// @param newValue 提议的新值
+	// @param requiredType 我们必须转换成的类型（或者 {@code null} 如果未知，例如在集合元素的情况下）
+	// @param typeDescriptor 目标属性或字段的描述符
+	// @return 新值，可能是类型转换的结果
 	@SuppressWarnings("unchecked")
 	@Nullable
 	public <T> T convertIfNecessary(@Nullable String propertyName, @Nullable Object oldValue, @Nullable Object newValue,
 			@Nullable Class<T> requiredType, @Nullable TypeDescriptor typeDescriptor) throws IllegalArgumentException {
 
 		// Custom editor for this type?
+		// 1.先去找 PropertyEditor 的转换实现（Spring 3.0 前的实现） 或 通过查找给定类型和属性的自定义属性编辑器实现类型转换
 		PropertyEditor editor = this.propertyEditorRegistry.findCustomEditor(requiredType, propertyName);
 
 		ConversionFailedException conversionAttemptEx = null;
 
 		// No custom editor but custom ConversionService specified?
+		// 2. 再去找 ConversionService 实现 （Spring 3.0 后的实现）
+		// 3. PropertyEditorRegistry 关联了 PropertyEditor 和 ConversionService
 		ConversionService conversionService = this.propertyEditorRegistry.getConversionService();
 		if (editor == null && conversionService != null && newValue != null && typeDescriptor != null) {
 			TypeDescriptor sourceTypeDesc = TypeDescriptor.forObject(newValue);
+			// 判断 conversionService 是否可以转换
 			if (conversionService.canConvert(sourceTypeDesc, typeDescriptor)) {
 				try {
+					// 4.ConversionService 直接转换
 					return (T) conversionService.convert(newValue, sourceTypeDesc, typeDescriptor);
 				}
 				catch (ConversionFailedException ex) {
@@ -152,6 +168,7 @@ class TypeConverterDelegate {
 			if (editor == null) {
 				editor = findDefaultEditor(requiredType);
 			}
+			// 5.PropertyEditor 真正的类型转换
 			convertedValue = doConvertValue(oldValue, convertedValue, requiredType, editor);
 		}
 
@@ -271,7 +288,7 @@ class TypeConverterDelegate {
 			logger.debug("Original ConversionService attempt failed - ignored since " +
 					"PropertyEditor based conversion eventually succeeded", conversionAttemptEx);
 		}
-
+		// 如果要转换的类型本身是 String 类型，则不需要上述转换
 		return (T) convertedValue;
 	}
 

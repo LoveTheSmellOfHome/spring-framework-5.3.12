@@ -63,6 +63,16 @@ package org.springframework.validation;
  * @see Errors
  * @see ValidationUtils
  */
+// 应用程序特定对象的校验器
+//
+// 这个接口完全脱离了任何基础设施或上下文；也就是说，它不只验证 Web 层、数据访问层或任何层中的对象。
+// 因此，它适用于应用程序的任何层，并支持封装验证逻辑作为其自身的一等公民。
+//
+// 在下面找到一个简单但完整的 Validator 实现，它验证 UserLogin 实例的各种 String 属性不为空（即它们不为空且不完全由空格组成），
+// 并且存在的任何密码至少为 ' MINIMUM_PASSWORD_LENGTH' 个字符的长度。
+//
+// 另请参阅 Spring 参考手册以更全面地讨论 Validator 接口及其在企业应用程序中的作用
+// Spring 内部校验接口，通过编程的方式校验目标对象
 public interface Validator {
 
 	/**
@@ -78,6 +88,9 @@ public interface Validator {
 	 * {@link #validate(Object, Errors) validate} instances of the
 	 * supplied {@code clazz}
 	 */
+	// 这个验证器可以验证提供的 clazz 的实例吗？
+	// 这个方法通常是这样实现的： return Foo.class.isAssignableFrom(clazz); （其中 Foo 是要验证的实际对象实例的类（或超类）。）
+	// 确认目标类能否被校验
 	boolean supports(Class<?> clazz);
 
 	/**
@@ -90,6 +103,9 @@ public interface Validator {
 	 * @param errors contextual state about the validation process
 	 * @see ValidationUtils
 	 */
+	// 验证提供的目标对象，该对象必须属于一个类，其支持（类）方法通常具有（或将）返回 true。
+	// 提供的错误实例可用于报告任何由此产生的验证错误
+	// 校验目标对象，并将校验失败的内容输出至 Errors 对象
 	void validate(Object target, Errors errors);
 
 }

@@ -31,8 +31,10 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
  * @since 4.2
  * @see TransactionalApplicationListenerMethodAdapter
  */
+// 处理 @TransactionalEventListener 注解方法的 EventListenerFactory 实现
 public class TransactionalEventListenerFactory implements EventListenerFactory, Ordered {
 
+	// 默认优先级
 	private int order = 50;
 
 
@@ -45,12 +47,13 @@ public class TransactionalEventListenerFactory implements EventListenerFactory, 
 		return this.order;
 	}
 
-
+	// 支持的方法
 	@Override
 	public boolean supportsMethod(Method method) {
 		return AnnotatedElementUtils.hasAnnotation(method, TransactionalEventListener.class);
 	}
 
+	// 创建应用监听器
 	@Override
 	public ApplicationListener<?> createApplicationListener(String beanName, Class<?> type, Method method) {
 		return new TransactionalApplicationListenerMethodAdapter(beanName, type, method);

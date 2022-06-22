@@ -27,6 +27,8 @@ package org.springframework.expression;
  * @author Andy Clement
  * @since 3.0
  */
+// 这个接口的实现者应该能够定位类型。
+// 然而他们希望使用自定义的 {@link ClassLoader} 来处理包前缀如(e.g. {@code java.lang})
 @FunctionalInterface
 public interface TypeLocator {
 
@@ -37,6 +39,10 @@ public interface TypeLocator {
 	 * @return the {@code Class} object representing that type
 	 * @throws EvaluationException if there is a problem finding the type
 	 */
+	// 按名称查找类型。该名称可能是也可能不是完全限定的（例如 {@code String} 或 {@code java.lang.String}）。
+	// @param typeName 要定位的类型
+	// @return 表示该类型的 {@code Class} 对象
+	// @throws EvaluationException 如果在查找类型时出现问题
 	Class<?> findType(String typeName) throws EvaluationException;
 
 }

@@ -30,8 +30,14 @@ import org.springframework.aop.Pointcut;
  * @author Rod Johnson
  * @author Juergen Hoeller
  */
+// 当我们想要强制子类实现MethodMatcher接口但子类希望成为切入点时，方便的超类。
+// 可以设置"classFilter"属性来自定义ClassFilter行为。 默认值为ClassFilter.TRUE 。
+//
+// Joinpoint 的便利实现，方便开发人员使用的，静态方法匹配判断器
 public abstract class StaticMethodMatcherPointcut extends StaticMethodMatcher implements Pointcut {
 
+	// 不对类惊醒判断，只针对方法进行判断，正常需要判断两个，这里默认类为 true,那么剩下只需要方法匹配就可以了
+	// matches(Method method, Class<?> targetClass, Object... args)
 	private ClassFilter classFilter = ClassFilter.TRUE;
 
 
@@ -39,6 +45,7 @@ public abstract class StaticMethodMatcherPointcut extends StaticMethodMatcher im
 	 * Set the {@link ClassFilter} to use for this pointcut.
 	 * Default is {@link ClassFilter#TRUE}.
 	 */
+	// 设置用于此切入点的 ClassFilter 。 默认为 ClassFilter.TRUE 。
 	public void setClassFilter(ClassFilter classFilter) {
 		this.classFilter = classFilter;
 	}
@@ -49,6 +56,7 @@ public abstract class StaticMethodMatcherPointcut extends StaticMethodMatcher im
 	}
 
 
+	// 获取方法匹配器
 	@Override
 	public final MethodMatcher getMethodMatcher() {
 		return this;

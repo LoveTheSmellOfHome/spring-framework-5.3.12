@@ -185,6 +185,7 @@ public class StaticWebApplicationContext extends StaticApplicationContext
 	/**
 	 * Initialize the theme capability.
 	 */
+	// 个性化主题切换
 	@Override
 	protected void onRefresh() {
 		this.themeSource = UiApplicationContextUtils.initThemeSource(this);

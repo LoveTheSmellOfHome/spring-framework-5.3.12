@@ -40,11 +40,13 @@ import org.springframework.util.StringUtils;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// {@code util} 命名空间的 {@link NamespaceHandler}。
 public class UtilNamespaceHandler extends NamespaceHandlerSupport {
 
 	private static final String SCOPE_ATTRIBUTE = "scope";
 
 
+	// 定义 Element 元素和 Java 类 解析器之间的关系
 	@Override
 	public void init() {
 		registerBeanDefinitionParser("constant", new ConstantBeanDefinitionParser());

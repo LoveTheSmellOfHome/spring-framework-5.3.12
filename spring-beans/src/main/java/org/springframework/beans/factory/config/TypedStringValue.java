@@ -35,6 +35,8 @@ import org.springframework.util.ObjectUtils;
  * @see BeanDefinition#getPropertyValues
  * @see org.springframework.beans.MutablePropertyValues#addPropertyValue
  */
+// 类型字符串值的持有者。可以添加到 bean 定义中，以便显式指定 String 值的目标类型，例如集合元素
+// <p>这个持有者将只存储字符串值和目标类型。实际转换将由 bean 工厂执行
 public class TypedStringValue implements BeanMetadataElement {
 
 	@Nullable
@@ -56,6 +58,7 @@ public class TypedStringValue implements BeanMetadataElement {
 	 * Create a new {@link TypedStringValue} for the given String value.
 	 * @param value the String value
 	 */
+	// 为给定的 String 值创建一个新的 {@link TypedStringValue}
 	public TypedStringValue(@Nullable String value) {
 		setValue(value);
 	}
@@ -66,6 +69,7 @@ public class TypedStringValue implements BeanMetadataElement {
 	 * @param value the String value
 	 * @param targetType the type to convert to
 	 */
+	// 为给定的字符串值和目标类型创建一个新的 {@link TypedStringValue}
 	public TypedStringValue(@Nullable String value, Class<?> targetType) {
 		setValue(value);
 		setTargetType(targetType);

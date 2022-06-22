@@ -31,12 +31,14 @@ import org.springframework.transaction.support.TransactionSynchronization;
  * @see TransactionalApplicationListener#getTransactionPhase()
  * @see TransactionalApplicationListener#forPayload(TransactionPhase, Consumer)
  */
+// 应用事务事件侦听器的阶段
 public enum TransactionPhase {
 
 	/**
 	 * Handle the event before transaction commit.
 	 * @see TransactionSynchronization#beforeCommit(boolean)
 	 */
+	// 在事务提交之前处理事件
 	BEFORE_COMMIT,
 
 	/**
@@ -50,6 +52,12 @@ public enum TransactionPhase {
 	 * @see TransactionSynchronization#afterCompletion(int)
 	 * @see TransactionSynchronization#STATUS_COMMITTED
 	 */
+	// 提交成功完成后处理事件。
+	//
+	// 注意：这是 AFTER_COMPLETION 的特化，因此以与 AFTER_COMPLETION 相同的事件序列执行
+	// （而不是在TransactionSynchronization.afterCommit()中）。
+	//
+	// 在此阶段不会提交与底层事务资源的交互。有关详细信息，请参阅 TransactionSynchronization.afterCompletion(int) 。
 	AFTER_COMMIT,
 
 	/**
@@ -62,6 +70,11 @@ public enum TransactionPhase {
 	 * @see TransactionSynchronization#afterCompletion(int)
 	 * @see TransactionSynchronization#STATUS_ROLLED_BACK
 	 */
+	// 如果事务已回滚，则处理该事件。
+	//
+	// 注意：这是 AFTER_COMPLETION 的一个特化，因此以与 AFTER_COMPLETION 相同的事件序列执行。
+	//
+	// 在此阶段不会提交与底层事务资源的交互。有关详细信息，请参阅 TransactionSynchronization.afterCompletion(int) 。
 	AFTER_ROLLBACK,
 
 	/**
@@ -74,6 +87,11 @@ public enum TransactionPhase {
 	 * {@link TransactionSynchronization#afterCompletion(int)} for details.
 	 * @see TransactionSynchronization#afterCompletion(int)
 	 */
+	// 事务完成后处理事件。
+	//
+	// 对于更细粒度的事件，使用 AFTER_COMMIT 或 AFTER_ROLLBACK 分别拦截事务提交或回滚。
+	//
+	// 在此阶段不会提交与底层事务资源的交互。有关详细信息，请参阅TransactionSynchronization.afterCompletion(int)
 	AFTER_COMPLETION
 
 }

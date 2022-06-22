@@ -52,12 +52,28 @@ package org.springframework.core.env;
  * @see SystemEnvironmentPropertySource
  * @see org.springframework.web.context.support.StandardServletEnvironment
  */
+// {@link Environment} 实现适用于“标准”（即非网络）应用程序
+//
+// <p>除了 {@link ConfigurableEnvironment} 的常用功能（例如属性解析和配置文件相关操作）之外，此实现还配置了两个默认属性源，按以下顺序搜索：
+// <ul>
+// <li>{@ linkplain AbstractEnvironment#getSystemProperties() 系统属性}
+// <li>{@linkplain AbstractEnvironment#getSystemEnvironment() 系统环境变量}
+// <ul>
+//
+// 也就是说，如果 JVM 系统属性以及当前进程的环境变量集中都存在 key “xyz”，则系统属性中的键“xyz”的值将从
+// {@code environment.getProperty("xyz")}。默认情况下选择此顺序是因为系统属性是针对每个 JVM 的，
+// 而给定系统上的许多 JVM 中的环境变量可能相同。赋予系统属性优先权允许在每个 JVM 的基础上覆盖环境变量。
+//
+// <p>请参阅 {@link SystemEnvironmentPropertySource} javadoc，了解有关在 shell 环境（例如 Bash）
+// 中不允许在变量名称中使用句点字符的属性名称的特殊处理的详细信息。
 public class StandardEnvironment extends AbstractEnvironment {
 
 	/** System environment property source name: {@value}. */
+	// 系统环境变量,优先级最高
 	public static final String SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME = "systemEnvironment";
 
 	/** JVM system properties property source name: {@value}. */
+	// Java 的 Properties 属性，优先级次之
 	public static final String SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME = "systemProperties";
 
 
@@ -65,6 +81,7 @@ public class StandardEnvironment extends AbstractEnvironment {
 	 * Create a new {@code StandardEnvironment} instance with a default
 	 * {@link MutablePropertySources} instance.
 	 */
+	// 使用默认的 {@link MutablePropertySources} 实例创建一个新的 {@code StandardEnvironment} 实例。
 	public StandardEnvironment() {
 	}
 
@@ -74,7 +91,11 @@ public class StandardEnvironment extends AbstractEnvironment {
 	 * @param propertySources property sources to use
 	 * @since 5.3.4
 	 */
+	// 使用特定的 {@link MutablePropertySources} 实例创建一个新的 {@code StandardEnvironment} 实例。
+	// @param propertySources 要使用的属性源
 	protected StandardEnvironment(MutablePropertySources propertySources) {
+		// propertySources 变化时候，propertyResolver =  new PropertySourcesPropertyResolver(propertySources);
+		// 也会跟着变化
 		super(propertySources);
 	}
 
@@ -92,6 +113,10 @@ public class StandardEnvironment extends AbstractEnvironment {
 	 * @see #getSystemProperties()
 	 * @see #getSystemEnvironment()
 	 */
+	// 使用适用于任何标准 Java 环境的属性源自定义一组属性源：
+	// 。"systemProperties"
+	// 。"systemEnvironment"
+	// “systemProperties”中的属性优先于“systemEnvironment”中的属性
 	@Override
 	protected void customizePropertySources(MutablePropertySources propertySources) {
 		propertySources.addLast(

@@ -70,6 +70,12 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 4.1
  */
+// 从 YAML 源读取的 {@code Map} 工厂，保留 YAML 声明的值类型及其结构
+// <p>YAML 是一种很好的人类可读的配置格式，它有一些有用的层次属性。它或多或少是 JSON 的超集，因此它具有许多相似的功能。
+// <p>如果提供了多个资源，后面的资源会分层覆盖前面的条目；也就是说，在任何深度具有相同嵌套键的 {@code Map} 类型的所有条目都被合并。例如：
+//
+// 请注意，第一个文档中“foo”的值不是简单地替换为第二个文档中的值，而是合并了其嵌套值。
+// <p>从 Spring Framework 5.0.6 开始，需要 SnakeYAML 1.18 或更高版本
 public class YamlMapFactoryBean extends YamlProcessor implements FactoryBean<Map<String, Object>>, InitializingBean {
 
 	private boolean singleton = true;
@@ -82,6 +88,7 @@ public class YamlMapFactoryBean extends YamlProcessor implements FactoryBean<Map
 	 * Set if a singleton should be created, or a new object on each request
 	 * otherwise. Default is {@code true} (a singleton).
 	 */
+	// 设置是否应创建单例，否则为每个请求创建一个新对象。默认为 {@code true}（单例）
 	public void setSingleton(boolean singleton) {
 		this.singleton = singleton;
 	}
@@ -119,6 +126,9 @@ public class YamlMapFactoryBean extends YamlProcessor implements FactoryBean<Map
 	 * @return the object returned by this factory
 	 * @see #process(MatchCallback)
 	 */
+	// 子类可以重写以构造此工厂返回的对象的模板方法。
+	// <p>在共享单例的情况下第一次调用 {@link getObject()} 时延迟调用；否则，在每个 {@link getObject()} 调用中。
+	// <p>默认实现返回合并后的 {@code Map} 实例。
 	protected Map<String, Object> createMap() {
 		Map<String, Object> result = new LinkedHashMap<>();
 		process((properties, map) -> merge(result, map));

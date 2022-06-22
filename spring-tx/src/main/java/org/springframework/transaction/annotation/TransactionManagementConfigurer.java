@@ -45,6 +45,16 @@ import org.springframework.transaction.TransactionManager;
  * @see org.springframework.transaction.PlatformTransactionManager
  * @see org.springframework.transaction.ReactiveTransactionManager
  */
+// 由带有 @Configuration 注解的 @Configuration 类实现的接口 EnableTransactionManagement 这些类
+// 希望（或需要）显式指定用于注解驱动的事务管理的默认 PlatformTransactionManager bean
+// （或 ReactiveTransactionManager bean），而不是通过类型查找。这可能是必要的一个原因是容器中是否存在
+// 两个 PlatformTransactionManager bean（或两个ReactiveTransactionManager bean）。
+//
+// 一般示例和上下文见 EnableTransactionManagement ；有关详细说明，请参阅 annotationDrivenTransactionManager() 。
+//
+// 请注意，在按类型查找消歧的情况下，实现此接口的另一种方法是简单地将有问题的 PlatformTransactionManager @Bean方法
+// （或 ReactiveTransactionManager @Bean方法）标记为 @Primary 。这甚至通常是首选，因为它不会
+// 导致 TransactionManager bean 的早期初始化。
 public interface TransactionManagementConfigurer {
 
 	/**
@@ -84,6 +94,34 @@ public interface TransactionManagementConfigurer {
 	 * @return a {@link org.springframework.transaction.PlatformTransactionManager} or
 	 * {@link org.springframework.transaction.ReactiveTransactionManager} implementation
 	 */
+	// 返回默认事务管理器 bean 以用于注解驱动的数据库事务管理，即在处理 @Transactional 方法时。
+	// 实现此方法有两种基本方法：
+	// 1.实现方法并用 @Bean 注解
+	// 在这种情况下，实现类 @Configuration 实现了这个方法，用 @Bean 标记它，并直接在方法体中配置和返回事务管理器：
+	//	   @Bean
+	//	   @Override
+	//	   public PlatformTransactionManager annotationDrivenTransactionManager() {
+	//	       return new DataSourceTransactionManager(dataSource());
+	//	   }
+	// 2. 实现不带 @Bean 的方法，并委托给另一个现有的@Bean方法
+	//	   @Bean
+	//	   public PlatformTransactionManager txManager() {
+	//	       return new DataSourceTransactionManager(dataSource());
+	//	   }
+	//	  
+	//	   @Override
+	//	   public PlatformTransactionManager annotationDrivenTransactionManager() {
+	//	       // 引用上面已有的 @Bean 方法
+	//	       return txManager(); // reference the existing @Bean method above
+	//	   }
+	// 如果采用方法#2，请确保只有一种方法标有 @Bean
+	// 在场景 #1 或 #2 中，重要的是 PlatformTransactionManager 实例在容器中作为 Spring bean 进行管理，
+	// 因为大多数 PlatformTransactionManager 实现都利用了 Spring 生命周期回调，例如 InitializingBean
+	// 和 BeanFactoryAware 。请注意，相同的准则适用于 ReactiveTransactionManager bean。
+	//
+	// 返回值：
+	//			org.springframework.transaction.PlatformTransactionManager 或
+	//			org.springframework.transaction.ReactiveTransactionManager 实现
 	TransactionManager annotationDrivenTransactionManager();
 
 }

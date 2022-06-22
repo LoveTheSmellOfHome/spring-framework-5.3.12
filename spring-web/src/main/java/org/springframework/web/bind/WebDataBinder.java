@@ -52,6 +52,9 @@ import org.springframework.web.multipart.MultipartFile;
  * @see #setFieldDefaultPrefix
  * @see ServletRequestDataBinder
  */
+// Spring WEB 数据绑定组件：绑定相关参数（key-value）到对象上去,
+// 如：Servlet 配置参数，ServletApplicationContext 配置参数，这些数据类型都是 key-value 型，这种类型能和我们的对象进行绑定
+// 绑定过程；配置元信息映射到我们相关 Bean 的属性上去
 public class WebDataBinder extends DataBinder {
 
 	/**

@@ -35,6 +35,11 @@ import org.springframework.lang.Nullable;
  * @see SimpleTypeConverter
  * @see BeanWrapperImpl
  */
+// 定义类型转换方法的接口。通常（但不一定）与 {@link PropertyEditorRegistry} 接口一起实现。
+// <p><b>注意：<b>由于 TypeConverter 实现通常基于不是线程安全的 {@link java.beans.PropertyEditor PropertyEditors}，
+// 因此 TypeConverter 本身<em>不<em>被视为线程安全的。
+// 抽象实现：{org.springframework.beans.TypeConverterSupport}
+// 简单实现：{org.springframework.beans.SimpleTypeConverter} 简单工具类
 public interface TypeConverter {
 
 	/**
@@ -51,6 +56,13 @@ public interface TypeConverter {
 	 * @see org.springframework.core.convert.ConversionService
 	 * @see org.springframework.core.convert.converter.Converter
 	 */
+	// 将值转换为所需的类型（从字符串 -> 目标类型）。
+	// <p>从 String 到任何类型的转换通常会使用 PropertyEditor 类的 {@code setAsText} 方法，
+	// 或 ConversionService 中的 Spring Converter。
+	// @param value 要转换的值
+	// @param requiredType 我们必须转换成的目标类型（或者 {@code null} 如果未知，例如在集合元素的情况下）
+	// 核心方法 convertIfNecessary 及重载方法(如果能够转换就转换，不能转换则属性保持原样)，
+	// 是 ConversionService#canConvert 和 ConversionService#convert 语义的结合
 	@Nullable
 	<T> T convertIfNecessary(@Nullable Object value, @Nullable Class<T> requiredType) throws TypeMismatchException;
 
@@ -70,6 +82,13 @@ public interface TypeConverter {
 	 * @see org.springframework.core.convert.ConversionService
 	 * @see org.springframework.core.convert.converter.Converter
 	 */
+	// 将值转换为所需的类型（从字符串 -> 目标类型）。
+	// <p>从 String 到任何类型的转换通常会使用 PropertyEditor 类的 {@code setAsText} 方法，
+	// 或 ConversionService 中的 Spring Converter。
+	// @param value 要转换的值
+	// @param requiredType 我们必须转换成的目标类型（或者 {@code null} 如果未知，例如在集合元素的情况下）
+	// @param methodParam 作为转换目标的方法参数（用于泛型分析；可能是{@code null}）
+	// @return 新值，可能是类型转换的结果
 	@Nullable
 	<T> T convertIfNecessary(@Nullable Object value, @Nullable Class<T> requiredType,
 			@Nullable MethodParameter methodParam) throws TypeMismatchException;
@@ -90,6 +109,7 @@ public interface TypeConverter {
 	 * @see org.springframework.core.convert.ConversionService
 	 * @see org.springframework.core.convert.converter.Converter
 	 */
+	// @param field 作为转换目标的反射字段（用于泛型类型的分析；可能是 {@code null}）
 	@Nullable
 	<T> T convertIfNecessary(@Nullable Object value, @Nullable Class<T> requiredType, @Nullable Field field)
 			throws TypeMismatchException;
@@ -110,6 +130,14 @@ public interface TypeConverter {
 	 * @see org.springframework.core.convert.ConversionService
 	 * @see org.springframework.core.convert.converter.Converter
 	 */
+	// 将值转换为所需的类型（如有必要，从字符串）。
+	// <p>从 String 到任何类型的转换通常会使用 PropertyEditor 类的 {@code setAsText} 方法，
+	// 或 ConversionService 中的 Spring Converter。
+	// @param typeDescriptor 要使用的类型描述符（可能是 {@code null}）
+	// @param requiredType 我们必须转换为的目标类型（或 {@code null} 如果未知，例如在集合元素的情况下）
+	// @param typeDescriptor 目标类型的上下文描述（可能是 {@code null}））
+	// @return 新值，可能是类型转换的结果
+	// @throws TypeMismatchException 如果类型转换失败
 	@Nullable
 	default <T> T convertIfNecessary(@Nullable Object value, @Nullable Class<T> requiredType,
 			@Nullable TypeDescriptor typeDescriptor) throws TypeMismatchException {

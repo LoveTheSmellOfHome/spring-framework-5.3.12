@@ -63,18 +63,34 @@ import org.springframework.lang.Nullable;
  * @see java.util.concurrent.Executors
  * @see java.util.concurrent.ThreadPoolExecutor
  */
+// JavaBean 允许以 bean 样式配置ThreadPoolExecutor （通过其“corePoolSize”、“maxPoolSize”、“keepAliveSeconds”、
+// “queueCapacity”属性）并将其公开为其本机ExecutorService类型的 bean 引用。
+//
+// 默认配置是核心池大小为 1，最大池大小无限制，队列容量无限制。这大致相当于 Executors.newSingleThreadExecutor() ，
+// 为所有任务共享一个线程。将"queueCapacity"设置为 0 模仿Executors.newCachedThreadPool() ，将池中的线程立即缩放到可能非常高的数量。还可以考虑在该点设置"maxPoolSize" ，以及可能更高的"corePoolSize" （另请参见"allowCoreThreadTimeOut"缩放模式）。
+//
+// 作为替代方案，您可以使用构造函数注入直接设置 ThreadPoolExecutor 实例，或者使用指向 Executors 类的工厂方法定义。
+// 特别是对于配置类中的常见@Bean方法，强烈建议这样做，在这种情况下，此 FactoryBean 变体将强制您返回 FactoryBean 类型
+// 而不是实际的 Executor 类型。
+//
+// 如果您需要基于时间的 java.util.concurrent.ScheduledExecutorService ，请考虑 ScheduledExecutorFactoryBean 。
 @SuppressWarnings("serial")
 public class ThreadPoolExecutorFactoryBean extends ExecutorConfigurationSupport
 		implements FactoryBean<ExecutorService>, InitializingBean, DisposableBean {
 
+	// 默认线程池大小 1
 	private int corePoolSize = 1;
 
+	// 最大线程池
 	private int maxPoolSize = Integer.MAX_VALUE;
 
+	// 存活 60s
 	private int keepAliveSeconds = 60;
 
+	// 是否允许核心线程超时
 	private boolean allowCoreThreadTimeOut = false;
 
+	// 查询容量
 	private int queueCapacity = Integer.MAX_VALUE;
 
 	private boolean exposeUnconfigurableExecutor = false;

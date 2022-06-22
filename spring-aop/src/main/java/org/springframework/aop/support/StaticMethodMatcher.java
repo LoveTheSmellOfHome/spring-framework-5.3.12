@@ -26,13 +26,18 @@ import org.springframework.aop.MethodMatcher;
  *
  * @author Rod Johnson
  */
+// 方便的静态方法匹配器抽象超类，它不关心运行时的参数，为静态方法提供了模板，isRuntime() = false
 public abstract class StaticMethodMatcher implements MethodMatcher {
 
+	// 这个方法本身已经存在了，它并不是一个运行时的方法
 	@Override
 	public final boolean isRuntime() {
 		return false;
 	}
 
+	// 如果 isRuntime() 时 true,那么match()方法就会去判断 args，那么这个方法就需要具体实现.
+	// 如果是false,match() 方法就不支持，需要抛出异常。两个方法
+	// 是二选一操作
 	@Override
 	public final boolean matches(Method method, Class<?> targetClass, Object... args) {
 		// should never be invoked because isRuntime() returns false

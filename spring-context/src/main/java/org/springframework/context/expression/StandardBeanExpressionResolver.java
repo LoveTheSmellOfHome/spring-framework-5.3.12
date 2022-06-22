@@ -16,9 +16,6 @@
 
 package org.springframework.context.expression;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanExpressionException;
 import org.springframework.beans.factory.config.BeanExpressionContext;
@@ -37,6 +34,9 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Standard implementation of the
  * {@link org.springframework.beans.factory.config.BeanExpressionResolver}
@@ -53,12 +53,17 @@ import org.springframework.util.StringUtils;
  * @see org.springframework.expression.spel.standard.SpelExpressionParser
  * @see org.springframework.expression.spel.support.StandardEvaluationContext
  */
+// BeanExpressionResolver 接口的标准实现，使用 Spring 的表达式模块解析和评估 Spring EL。
+// 包含 BeanFactory 中的所有 bean 都可用作具有公共 bean 名称的预定义变量，包括标准上下文 bean，
+// 例如“environment”、“systemProperties”和“systemEnvironment”。
 public class StandardBeanExpressionResolver implements BeanExpressionResolver {
 
 	/** Default expression prefix: "#{". */
+	// 默认表达式前缀：“#{”。
 	public static final String DEFAULT_EXPRESSION_PREFIX = "#{";
 
 	/** Default expression suffix: "}". */
+	// 默认表达式后缀：“}”
 	public static final String DEFAULT_EXPRESSION_SUFFIX = "}";
 
 

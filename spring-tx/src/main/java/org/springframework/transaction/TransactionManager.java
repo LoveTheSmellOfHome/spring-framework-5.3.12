@@ -25,6 +25,7 @@ package org.springframework.transaction;
  * @see PlatformTransactionManager
  * @see ReactiveTransactionManager
  */
+// Spring 事务管理器实现的标记接口，无论是传统的还是反应式的
 public interface TransactionManager {
 
 }

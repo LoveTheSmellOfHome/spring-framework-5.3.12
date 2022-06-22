@@ -33,8 +33,11 @@ import org.springframework.util.Assert;
  * @since 3.2
  * @see SimpleTypeConverter
  */
+// {@link TypeConverter} 接口的基本实现，使用包私有委托。主要作为 {@link BeanWrapperImpl} 的基类
+// PropertyEditorRegistrySupport：具备了注册 PropertyEditor(自定义 PropertyEditor) 的能力，
 public abstract class TypeConverterSupport extends PropertyEditorRegistrySupport implements TypeConverter {
 
+	// 委派实现：真正的实现在这里边
 	@Nullable
 	TypeConverterDelegate typeConverterDelegate;
 
@@ -63,6 +66,7 @@ public abstract class TypeConverterSupport extends PropertyEditorRegistrySupport
 				(field != null ? new TypeDescriptor(field) : TypeDescriptor.valueOf(requiredType)));
 	}
 
+	// 如果能转就转
 	@Nullable
 	@Override
 	public <T> T convertIfNecessary(@Nullable Object value, @Nullable Class<T> requiredType,
@@ -70,6 +74,7 @@ public abstract class TypeConverterSupport extends PropertyEditorRegistrySupport
 
 		Assert.state(this.typeConverterDelegate != null, "No TypeConverterDelegate");
 		try {
+			// 委派模式：实现类型转换
 			return this.typeConverterDelegate.convertIfNecessary(null, null, value, requiredType, typeDescriptor);
 		}
 		catch (ConverterNotFoundException | IllegalStateException ex) {

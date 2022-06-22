@@ -44,19 +44,28 @@ import org.springframework.web.context.ConfigurableWebEnvironment;
  * @since 3.1
  * @see StandardEnvironment
  */
+// {@link Environment} 实现将由基于 {@code Servlet} 的 Web 应用程序使用。默认情况下，
+// 所有与 Web 相关（基于 servlet）的 {@code ApplicationContext} 类都会初始化一个实例。
+//
+// <p>贡献 {@code ServletConfig}、{@code ServletContext} 和基于 JNDI 的 {@link PropertySource} 实例。
+// 有关详细信息，请参阅 {@link CustomizePropertySources} 方法文档。
 public class StandardServletEnvironment extends StandardEnvironment implements ConfigurableWebEnvironment {
 
 	/** Servlet context init parameters property source name: {@value}. */
+	// Servlet 上下文初始化参数属性源名称：{@value}
 	public static final String SERVLET_CONTEXT_PROPERTY_SOURCE_NAME = "servletContextInitParams";
 
 	/** Servlet config init parameters property source name: {@value}. */
+	// Servlet 配置初始化参数属性源名称：{@value}
 	public static final String SERVLET_CONFIG_PROPERTY_SOURCE_NAME = "servletConfigInitParams";
 
 	/** JNDI property source name: {@value}. */
+	// JNDI 属性源名称：{@value}
 	public static final String JNDI_PROPERTY_SOURCE_NAME = "jndiProperties";
 
 
 	// Defensive reference to JNDI API for JDK 9+ (optional java.naming module)
+	// JDK 9+ 的 JNDI API 防御性参考（可选的 java.naming 模块）
 	private static final boolean jndiPresent = ClassUtils.isPresent(
 			"javax.naming.InitialContext", StandardServletEnvironment.class.getClassLoader());
 
@@ -64,6 +73,7 @@ public class StandardServletEnvironment extends StandardEnvironment implements C
 	/**
 	 * Create a new {@code StandardServletEnvironment} instance.
 	 */
+	// 创建一个新的 {@code StandardServletEnvironment} 实例
 	public StandardServletEnvironment() {
 	}
 
@@ -72,6 +82,7 @@ public class StandardServletEnvironment extends StandardEnvironment implements C
 	 * @param propertySources property sources to use
 	 * @since 5.3.4
 	 */
+	// 使用特定的 {@link MutablePropertySources} 实例创建一个新的 {@code StandardServletEnvironment} 实例。
 	protected StandardServletEnvironment(MutablePropertySources propertySources) {
 		super(propertySources);
 	}
@@ -103,6 +114,14 @@ public class StandardServletEnvironment extends StandardEnvironment implements C
 	 * @see org.springframework.context.support.AbstractApplicationContext#initPropertySources
 	 * @see #initPropertySources(ServletContext, ServletConfig)
 	 */
+	// 使用超类提供的属性源以及适用于基于 servlet 的标准环境的属性源自定义一组属性源：
+	// 。“servletConfigInitParams”
+	// 。“servletContextInitParams”
+	// 。“jndi属性”
+	// 在本属性“servletConfigInitParams”将接管那些优先在“servletContextInitParams” ，并且在任一上述优先于那些在发现的
+	// 发现属性“jndiProperties” 。
+	// 上述任何属性都将优先于StandardEnvironment超类贡献的系统属性和环境变量。
+	// 与Servlet相关的属性源在此阶段作为stubs添加，一旦实际ServletContext对象可用，将完全初始化。
 	@Override
 	protected void customizePropertySources(MutablePropertySources propertySources) {
 		propertySources.addLast(new StubPropertySource(SERVLET_CONFIG_PROPERTY_SOURCE_NAME));

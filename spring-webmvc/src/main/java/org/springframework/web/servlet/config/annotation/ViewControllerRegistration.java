@@ -30,6 +30,7 @@ import org.springframework.web.servlet.mvc.ParameterizableViewController;
  * @author Keith Donald
  * @since 3.1
  */
+// 协助注册单个视图控制器
 public class ViewControllerRegistration {
 
 	private final String urlPath;

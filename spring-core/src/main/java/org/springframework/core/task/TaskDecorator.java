@@ -38,6 +38,14 @@ package org.springframework.core.task;
  * @see SimpleAsyncTaskExecutor#setTaskDecorator
  * @see org.springframework.core.task.support.TaskExecutorAdapter#setTaskDecorator
  */
+// 装饰器的回调接口，用于将要执行的任何Runnable 。
+//
+// 请注意，这样的装饰器不一定应用于用户提供的Runnable / Callable ，而是应用于实际的执行回调（可能是用户提供的任务的包装器）。
+//
+// 主要用例是围绕任务的调用设置一些执行上下文，或者为任务执行提供一些监控/统计。
+//
+// 注意： TaskDecorator 实现中的异常处理可能会受到限制。特别是在基于 Future 的操作的情况下，暴露的 Runnable 将是一个包装器，
+// 它不会从其 run 方法传播任何异常
 @FunctionalInterface
 public interface TaskDecorator {
 
@@ -48,6 +56,11 @@ public interface TaskDecorator {
 	 * @param runnable the original {@code Runnable}
 	 * @return the decorated {@code Runnable}
 	 */
+	// 装饰给定的Runnable ，返回一个可能包装的Runnable以供实际执行，内部委托给原始的Runnable.run()实现。
+	// 参形：
+	//			runnable – 原来的 Runnable
+	// 返回值：
+	//			装饰的 Runnable
 	Runnable decorate(Runnable runnable);
 
 }

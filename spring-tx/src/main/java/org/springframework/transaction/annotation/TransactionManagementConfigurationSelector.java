@@ -35,6 +35,10 @@ import org.springframework.util.ClassUtils;
  * @see TransactionManagementConfigUtils#TRANSACTION_ASPECT_CONFIGURATION_CLASS_NAME
  * @see TransactionManagementConfigUtils#JTA_TRANSACTION_ASPECT_CONFIGURATION_CLASS_NAME
  */
+// 根据导入 @Configuration 类的 EnableTransactionManagement.mode 的值选择应该使用
+// 哪个 AbstractTransactionManagementConfiguration实现。
+//
+// 事务管理配置选择器
 public class TransactionManagementConfigurationSelector extends AdviceModeImportSelector<EnableTransactionManagement> {
 
 	/**
@@ -43,13 +47,15 @@ public class TransactionManagementConfigurationSelector extends AdviceModeImport
 	 * and {@code ASPECTJ} values of {@link EnableTransactionManagement#mode()},
 	 * respectively.
 	 */
+	// 模式切换：分别为 EnableTransactionManagement.mode() 的 PROXY 和 ASPECTJ 值返回
+	// ProxyTransactionManagementConfiguration 或 AspectJ(Jta)TransactionManagementConfiguration
 	@Override
 	protected String[] selectImports(AdviceMode adviceMode) {
 		switch (adviceMode) {
-			case PROXY:
+			case PROXY: // PROXY 模式，JDK 自动代理的实现
 				return new String[] {AutoProxyRegistrar.class.getName(),
 						ProxyTransactionManagementConfiguration.class.getName()};
-			case ASPECTJ:
+			case ASPECTJ: // ASPECTJ 模式，ASPECTJ 的实现
 				return new String[] {determineTransactionAspectClass()};
 			default:
 				return null;
@@ -57,6 +63,9 @@ public class TransactionManagementConfigurationSelector extends AdviceModeImport
 	}
 
 	private String determineTransactionAspectClass() {
+		// 如果是 Java 标准的 JTA(Java Transation API) 如果存在的话，意味着他可能存在 EJB 容器内，他就会去
+		// 加载 TransactionManagementConfigUtils.JTA_TRANSACTION_ASPECT_CONFIGURATION_CLASS_NAME，
+		// 否则就到 TransactionManagementConfigUtils.TRANSACTION_ASPECT_CONFIGURATION_CLASS_NAME
 		return (ClassUtils.isPresent("javax.transaction.Transactional", getClass().getClassLoader()) ?
 				TransactionManagementConfigUtils.JTA_TRANSACTION_ASPECT_CONFIGURATION_CLASS_NAME :
 				TransactionManagementConfigUtils.TRANSACTION_ASPECT_CONFIGURATION_CLASS_NAME);

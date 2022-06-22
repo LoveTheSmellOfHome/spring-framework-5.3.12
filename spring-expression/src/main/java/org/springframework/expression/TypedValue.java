@@ -29,6 +29,7 @@ import org.springframework.util.ObjectUtils;
  * @author Juergen Hoeller
  * @since 3.0
  */
+// 封装一个对象和一个描述它的TypeDescriptor 。 类型描述符可以包含无法通过对对象的简单getClass()调用访问的通用声明。
 public class TypedValue {
 
 	/**
@@ -49,6 +50,8 @@ public class TypedValue {
 	 * is inferred from the object, so no generic declarations are preserved.
 	 * @param value the object value
 	 */
+	// 为一个简单的对象创建一个TypedValue 。 TypeDescriptor 是从对象推断出来的，因此没有保留泛型声明。
+	// 形参：value – 对象值
 	public TypedValue(@Nullable Object value) {
 		this.value = value;
 		this.typeDescriptor = null;  // initialized when/if requested

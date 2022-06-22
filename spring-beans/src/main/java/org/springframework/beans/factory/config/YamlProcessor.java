@@ -16,6 +16,21 @@
 
 package org.springframework.beans.factory.config;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.core.CollectionFactory;
+import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.reader.UnicodeReader;
+import org.yaml.snakeyaml.representer.Representer;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Arrays;
@@ -28,22 +43,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.LoaderOptions;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.reader.UnicodeReader;
-import org.yaml.snakeyaml.representer.Representer;
-
-import org.springframework.core.CollectionFactory;
-import org.springframework.core.io.Resource;
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
-
 /**
  * Base class for YAML factories.
  *
@@ -55,6 +54,7 @@ import org.springframework.util.StringUtils;
  * @author Brian Clozel
  * @since 4.1
  */
+// YAML 工厂的父类
 public abstract class YamlProcessor {
 
 	private final Log logger = LogFactory.getLog(getClass());
@@ -105,6 +105,8 @@ public abstract class YamlProcessor {
 	 * {@link #setDocumentMatchers(DocumentMatcher...) document matchers} abstain will
 	 * nevertheless match. Default is {@code true}.
 	 */
+	// 指示所有 {@link setDocumentMatchers(DocumentMatcher...) 文档匹配器}
+	// 弃权的文档仍然匹配的标志。默认值为 {@code true}。
 	public void setMatchDefault(boolean matchDefault) {
 		this.matchDefault = matchDefault;
 	}
@@ -114,6 +116,8 @@ public abstract class YamlProcessor {
 	 * so this property is used to decide which map entries to keep in the final output
 	 * from this factory. Default is {@link ResolutionMethod#OVERRIDE}.
 	 */
+	// 用于解析资源的方法。每个资源都将转换为 Map，因此此属性用于决定将哪些 Map 条目
+	// 保留在该工厂的最终输出中。默认值为 {@link ResolutionMethod#OVERRIDE}。
 	public void setResolutionMethod(ResolutionMethod resolutionMethod) {
 		Assert.notNull(resolutionMethod, "ResolutionMethod must not be null");
 		this.resolutionMethod = resolutionMethod;
@@ -123,6 +127,7 @@ public abstract class YamlProcessor {
 	 * Set locations of YAML {@link Resource resources} to be loaded.
 	 * @see ResolutionMethod
 	 */
+	// 设置要加载的 YAML {@link Resource resources} 的位置。
 	public void setResources(Resource... resources) {
 		this.resources = resources;
 	}
@@ -139,6 +144,11 @@ public abstract class YamlProcessor {
 	 * @since 5.1.16
 	 * @see #createYaml()
 	 */
+	// 设置可以从 YAML 文档加载的支持类型。
+	// <p>如果未配置支持的类型，则仅支持 YAML 文档中遇到的 Java
+	// 标准类（如 {@link org.yaml.snakeyaml.constructor.SafeConstructor} 中所定义）。
+	// 如果遇到不受支持的类型，则在处理相应的 YAML 节点时将抛出 {@link IllegalStateException}。
+	// @param supportedTypes 支持的类型，或者一个空数组来清除支持的类型
 	public void setSupportedTypes(Class<?>... supportedTypes) {
 		if (ObjectUtils.isEmpty(supportedTypes)) {
 			this.supportedTypes = Collections.emptySet();
@@ -160,6 +170,10 @@ public abstract class YamlProcessor {
 	 * @param callback a callback to delegate to once matching documents are found
 	 * @see #createYaml()
 	 */
+	// 为子类提供处理从提供的资源解析的 Yaml 的机会。依次解析每个资源，
+	// 并根据 {@link setDocumentMatchers(DocumentMatcher...) 匹配器}检查内部文档。
+	// 如果文档匹配，则将其连同其作为属性的表示一起传递到回调中。
+	// 根据 {@link setResolutionMethod(ResolutionMethod)}，并非所有文档都会被解析。
 	protected void process(MatchCallback callback) {
 		Yaml yaml = createYaml();
 		for (Resource resource : this.resources) {
@@ -181,6 +195,11 @@ public abstract class YamlProcessor {
 	 * {@link IllegalStateException} will be thrown when the node is processed.
 	 * @see LoaderOptions#setAllowDuplicateKeys(boolean)
 	 */
+	// 创建要使用的 {@link Yaml} 实例。
+	// <p>默认实现将“allowDuplicateKeys”标志设置为 {@code false}，从而在 SnakeYAML 1.18+ 中启用内置重复密钥处理。
+	// <p>从 Spring Framework 5.1.16 开始，如果已配置自定义 {@linkplain setSupportedTypes 支持类型}，
+	// 则默认实现会创建一个 {@code Yaml} 实例，用于过滤掉 YAML 文档中遇到的不受支持的类型。
+	// 如果遇到不受支持的类型，则在处理节点时将抛出 {@link IllegalStateException}。
 	protected Yaml createYaml() {
 		LoaderOptions loaderOptions = new LoaderOptions();
 		loaderOptions.setAllowDuplicateKeys(false);
@@ -228,9 +247,11 @@ public abstract class YamlProcessor {
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> asMap(Object object) {
 		// YAML can have numbers as keys
+		// YAML 可以将数字作为键
 		Map<String, Object> result = new LinkedHashMap<>();
 		if (!(object instanceof Map)) {
 			// A document can be a text literal
+			// 文档可以是文本文字
 			result.put("document", object);
 			return result;
 		}
@@ -245,6 +266,7 @@ public abstract class YamlProcessor {
 			}
 			else {
 				// It has to be a map key in this case
+				// 在这种情况下它必须是 map 的键
 				result.put("[" + key.toString() + "]", value);
 			}
 		});
@@ -299,6 +321,10 @@ public abstract class YamlProcessor {
 	 * @return a flattened map
 	 * @since 4.1.3
 	 */
+	// 返回给定地图的扁平版本，递归地遵循任何嵌套的 Map 或 Collection 值。结果映射中的条目与源保持相同的顺序。
+	// 当从 {@link MatchCallback} 使用 Map 调用时，结果将包含与 {@link MatchCallback} 属性相同的值。
+	// @param source 源 map
+	// @return 一个扁平化的 MAP
 	protected final Map<String, Object> getFlattenedMap(Map<String, Object> source) {
 		Map<String, Object> result = new LinkedHashMap<>();
 		buildFlattenedMap(result, source, null);
@@ -349,6 +375,7 @@ public abstract class YamlProcessor {
 	/**
 	 * Callback interface used to process the YAML parsing results.
 	 */
+	// 用于处理 YAML 解析结果的回调接口
 	@FunctionalInterface
 	public interface MatchCallback {
 
@@ -359,6 +386,9 @@ public abstract class YamlProcessor {
 		 * @param map the result map (preserving the original value structure
 		 * in the YAML document)
 		 */
+		// 处理解析结果的给定展示
+		// @param properties 要处理的属性（在集合或映射的情况下作为带有索引键的扁平表示）
+		// @param 映射结果映射（保留 YAML 文档中的原始值结构）
 		void process(Properties properties, Map<String, Object> map);
 	}
 
@@ -366,6 +396,7 @@ public abstract class YamlProcessor {
 	/**
 	 * Strategy interface used to test if properties match.
 	 */
+	// 用于测试属性是否匹配的策略接口
 	@FunctionalInterface
 	public interface DocumentMatcher {
 
@@ -374,6 +405,9 @@ public abstract class YamlProcessor {
 		 * @param properties the properties to test
 		 * @return the status of the match
 		 */
+		// 测试给定的属性是否匹配。
+		// @param properties 要测试的属性
+		// @return 匹配的状态
 		MatchStatus matches(Properties properties);
 	}
 
@@ -381,26 +415,31 @@ public abstract class YamlProcessor {
 	/**
 	 * Status returned from {@link DocumentMatcher#matches(java.util.Properties)}.
 	 */
+	// 从 {@link DocumentMatchermatches(java.util.Properties)} 返回的状态。
 	public enum MatchStatus {
 
 		/**
 		 * A match was found.
 		 */
+		// 找到了匹配项
 		FOUND,
 
 		/**
 		 * No match was found.
 		 */
+		// 未找到匹配项
 		NOT_FOUND,
 
 		/**
 		 * The matcher should not be considered.
 		 */
+		// 不应该考虑匹配器。
 		ABSTAIN;
 
 		/**
 		 * Compare two {@link MatchStatus} items, returning the most specific status.
 		 */
+		// 比较两个 {@link MatchStatus} 项目，返回最具体的状态
 		public static MatchStatus getMostSpecific(MatchStatus a, MatchStatus b) {
 			return (a.ordinal() < b.ordinal() ? a : b);
 		}
@@ -410,21 +449,25 @@ public abstract class YamlProcessor {
 	/**
 	 * Method to use for resolving resources.
 	 */
+	// 用于解析资源的方法
 	public enum ResolutionMethod {
 
 		/**
 		 * Replace values from earlier in the list.
 		 */
+		// 替换列表中前面的值
 		OVERRIDE,
 
 		/**
 		 * Replace values from earlier in the list, ignoring any failures.
 		 */
+		// 替换列表中较早的值，忽略任何失败
 		OVERRIDE_AND_IGNORE,
 
 		/**
 		 * Take the first resource in the list that exists and use just that.
 		 */
+		// 获取列表中存在的第一个资源并使用它
 		FIRST_FOUND
 	}
 
@@ -434,6 +477,8 @@ public abstract class YamlProcessor {
 	 * <p>If an unsupported type is encountered in a YAML document, an
 	 * {@link IllegalStateException} will be thrown from {@link #getClassForName}.
 	 */
+	// @link Constructor} 支持过滤不支持的类型。
+	// <p>如果在 YAML 文档中遇到不支持的类型，则会从 {@link getClassForName} 抛出一个 {@link IllegalStateException}
 	private class FilteringConstructor extends Constructor {
 
 		FilteringConstructor(LoaderOptions loaderOptions) {

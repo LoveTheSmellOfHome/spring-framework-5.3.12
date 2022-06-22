@@ -33,6 +33,8 @@ import org.springframework.lang.Nullable;
  * @see TransactionProxyFactoryBean#setTransactionAttributeSource
  * @see org.springframework.transaction.annotation.AnnotationTransactionAttributeSource
  */
+// TransactionInterceptor 用于元数据检索的策略接口。
+// 实现知道如何获取事务属性，无论是从配置、源级别的元数据属性（例如 Java 5 注释）还是其他任何地方。
 public interface TransactionAttributeSource {
 
 	/**
@@ -49,6 +51,14 @@ public interface TransactionAttributeSource {
 	 * implementation returns {@code true}, leading to regular introspection.
 	 * @since 5.2
 	 */
+	// 确定给定类是否是此TransactionAttributeSource元数据格式的事务属性的候选者。
+	//
+	// 如果此方法返回 false ，则不会遍历给定类上的方法以进行 getTransactionAttribute 内省。因此，
+	// 返回 false 是对不受影响的类的优化，而 true 仅表示该类需要针对给定类上的每个方法单独进行完全自省。
+	// 参形：
+	//			targetClass – 要自省的类
+	// 返回值：
+	//			如果已知该类在类或方法级别没有事务属性，则为false ；否则为true 。默认实现返回true ，导致定期自省。
 	default boolean isCandidateClass(Class<?> targetClass) {
 		return true;
 	}
@@ -61,6 +71,12 @@ public interface TransactionAttributeSource {
 	 * in which case the declaring class of the method must be used)
 	 * @return the matching transaction attribute, or {@code null} if none found
 	 */
+	// 返回给定方法的事务属性，如果方法是非事务性的，则返回null 。
+	// 参形：
+	//			method - 自省的方法
+	//			targetClass – 目标类（可能是null ，在这种情况下必须使用方法的声明类）
+	// 返回值：
+	//			匹配的事务属性，如果没有找到，则返回null
 	@Nullable
 	TransactionAttribute getTransactionAttribute(Method method, @Nullable Class<?> targetClass);
 

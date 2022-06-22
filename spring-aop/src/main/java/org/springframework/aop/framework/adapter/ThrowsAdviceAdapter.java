@@ -31,14 +31,17 @@ import org.springframework.aop.ThrowsAdvice;
  * @author Rod Johnson
  * @author Juergen Hoeller
  */
+// 使org.springframework.aop.MethodBeforeAdvice能够在 Spring AOP 框架中使用的适配器，将对应的 Advice 转换成拦截器
 @SuppressWarnings("serial")
 class ThrowsAdviceAdapter implements AdvisorAdapter, Serializable {
 
+	// 判断是否是异常 Advice
 	@Override
 	public boolean supportsAdvice(Advice advice) {
 		return (advice instanceof ThrowsAdvice);
 	}
 
+	// 将 Advice 转换称对应的方法拦截器 MethodInterceptor
 	@Override
 	public MethodInterceptor getInterceptor(Advisor advisor) {
 		return new ThrowsAdviceInterceptor(advisor.getAdvice());

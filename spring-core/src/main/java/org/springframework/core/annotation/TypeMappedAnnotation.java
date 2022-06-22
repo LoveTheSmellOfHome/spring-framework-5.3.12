@@ -68,6 +68,20 @@ import org.springframework.util.ReflectionUtils;
  * @param <A> the annotation type
  * @see TypeMappedAnnotations
  */
+// {@link MergedAnnotation} 通过应用 {@link AnnotationTypeMapping} 的映射和镜像规则来适应来自根注解的属性
+//
+// <p>使用提供的 {@code BiFunction} 从源对象中提取根属性值。这允许同一类支持各种不同的注释模型。
+// 例如，属性源可能是一个实际的 {@link Annotation} 实例，其中注解实例上的方法
+// {@linkplain ReflectionUtils#invokeMethod(Method, Object)被调用}以提取值。同样，源可以是一个简单的 {@link Map}，
+// 其值使用 {@link Mapget(Object)} 提取。
+//
+// <p>提取的根属性值必须与属性返回类型兼容，即：
+// 返回类型 						提取类型
+//	Class   					Class or String
+//	Class[]						Class[] or String[]
+//	Annotation					Annotation, Map, or Object compatible with the value extractor
+//	Annotation[]				Annotation[], Map[], or Object[] where elements are compatible with the value extractor
+//	Other types					An exact match or the appropriate primitive wrapper，精确匹配或适当的原始包装器
 final class TypeMappedAnnotation<A extends Annotation> extends AbstractMergedAnnotation<A> {
 
 	private static final Map<Class<?>, Object> EMPTY_ARRAYS;

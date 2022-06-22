@@ -91,6 +91,27 @@ import org.springframework.core.annotation.AliasFor;
  * @see org.springframework.core.env.PropertySource
  * @see org.springframework.context.annotation.PropertySource
  */
+// @TestPropertySource是一个类级注解，用于配置属性文件和内联properties的locations ，这些文件和内联properties
+// 要添加到Environment的PropertySources集中，用于集成测试的ApplicationContext 。
+// 优先级
+// 测试属性源的优先级高于从操作系统环境或 Java 系统属性加载的属性源，以及应用程序通过@PropertySource以声明方式
+// 或以编程方式（例如，通过ApplicationContextInitializer或某些其他方式）添加的属性源。 因此，测试属性源可用于选择性地
+// 覆盖系统和应用程序属性源中定义的属性。 此外，内联properties比从资源locations加载的properties具有更高的优先级。
+// 但是请注意，通过@DynamicPropertySource注册的属性比通过@TestPropertySource加载的属性具有更高的优先级。
+// 默认属性文件检测
+// 如果@TestPropertySource被声明为空注解（即，没有明确的locations或properties值），将尝试检测与声明该注解的类相关的
+// 默认属性文件。 例如，如果带注释的测试类是com.example.MyTest ，则对应的默认属性文件是
+// "classpath:com/example/MyTest.properties" 。 如果无法检测到默认值，则会IllegalStateException 。
+// 启用@TestPropertySource
+// 如果配置的上下文加载器支持@TestPropertySource则启用它。 作为AbstractGenericContextLoader或
+// AbstractGenericWebContextLoader的子类的每个SmartContextLoader都提供对@TestPropertySource自动支持，
+// 这包括 Spring TestContext Framework 提供的每个SmartContextLoader 。
+// 各种各样的
+// 通常， @TestPropertySource将与@ContextConfiguration结合使用。
+// 从 Spring Framework 5.2 开始， @TestPropertySource可以用作可重复的注解。
+// 此注释可用作元注释来创建自定义组合注释； 但是，如果将此注释和@ContextConfiguration组合在一个组合注释上，则应谨慎，
+// 因为这两个注释的locations和inheritLocations属性可能会在属性解析过程中导致歧义。
+// 从 Spring Framework 5.3 开始，默认情况下，此注释将从封闭的测试类继承。 有关详细信息，请参阅@NestedTestConfiguration 。
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

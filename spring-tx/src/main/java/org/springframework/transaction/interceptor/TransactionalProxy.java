@@ -28,6 +28,8 @@ import org.springframework.aop.SpringProxy;
  * @author Juergen Hoeller
  * @since 4.1.7
  */
+// 用于手动创建的事务代理的标记界面。
+// TransactionAttributeSourcePointcut 将在 AOP 自动代理期间忽略此类现有的事务代理，因此避免在它们上重新处理事务元数据。
 public interface TransactionalProxy extends SpringProxy {
 
 }

@@ -30,6 +30,8 @@ import org.springframework.lang.Nullable;
  * @author Rod Johnson
  * @author Juergen Hoeller
  */
+// 实现可以为特定的 bean 创建特殊的目标源(资源池)，例如池化目标源。 例如，他们可以根据目标类的属性（例如池属性）进行选择。
+// AbstractAutoProxyCreator 可以支持多个 TargetSourceCreator，它们将按顺序应用。
 @FunctionalInterface
 public interface TargetSourceCreator {
 
@@ -40,6 +42,12 @@ public interface TargetSourceCreator {
 	 * @return a special TargetSource or {@code null} if this TargetSourceCreator isn't
 	 * interested in the particular bean
 	 */
+	// 为给定的 bean 创建一个特殊的 TargetSource，如果有的话。
+	// 参形：
+	//			beanClass – 要为其创建 TargetSource 的 bean 的类
+	//			beanName – bean 的名称
+	// 返回值：
+	//			如果此 TargetSourceCreator 对特定 bean 不感兴趣，则为特殊 TargetSource 或null
 	@Nullable
 	TargetSource getTargetSource(Class<?> beanClass, String beanName);
 
